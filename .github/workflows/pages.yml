@@ -1,8 +1,8 @@
 name: Deploy UI to GitHub Pages
 
+# Manual for now: enabling Pages needs repo admin. Run it from the Actions
+# tab once Pages is switched on (Settings > Pages > Source: GitHub Actions).
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
