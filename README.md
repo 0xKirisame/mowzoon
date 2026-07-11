@@ -5,6 +5,8 @@
 
 A financial coach that reads how you actually behave with money, not just where it goes. Built at the Amad Hackathon.
 
+Live at [mowzoon.onrender.com](https://mowzoon.onrender.com), backed by the model API at [mowzoon-api.onrender.com](https://mowzoon-api.onrender.com/health).
+
 Mowzoon classifies you into one of four money archetypes, tracks three living scores (spending efficiency, proactive resilience, financial EQ), and coaches you day to day: one nudge, a weekly quest, and a forecast of the spending spikes ahead of you. English and Arabic with full RTL, light and dark mode, installable as a PWA. Amounts are in SAR and the forecast calendar is Saudi (both Eids, back to school, insurance renewal).
 
 <picture>
