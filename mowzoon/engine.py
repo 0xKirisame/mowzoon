@@ -67,31 +67,32 @@ class PredictiveEngine:
         exact_res = metrics['proactive_resilience']
         exact_eq = metrics['financial_eq']
         
+        # Nudges are written in Mowzoon's first-person coach voice.
         nudge = ""
-        
-        if archetype_id == 0: # Impulse Liver
+
+        if archetype_id == 0: # Impulse Spender
             if exact_eq < 40:
-                nudge = f"We noticed late-night spending is dragging down your Financial EQ ({exact_eq}/100). Take a pause tonight!"
+                nudge = f"Late-night buys are what's pulling your Financial EQ down ({exact_eq}/100). Give tonight a pause. I'll notice."
             else:
-                nudge = "Great job managing impulse buys recently! Keep that streak going."
-                
+                nudge = "Your impulse buys have gone quiet lately. That calm is worth keeping."
+
         elif archetype_id == 1: # Anxious Planner
             if exact_eff < 50:
-                nudge = f"Your Savings are great, but Spending Efficiency is {exact_eff}/100. It's okay to treat yourself to that coffee today without guilt."
+                nudge = f"You're saving plenty, but your Spending Efficiency sits at {exact_eff}/100. The coffee is allowed, no guilt."
             else:
-                nudge = "You've been balancing saving and enjoying life perfectly. Keep it up!"
-                
+                nudge = "Saving and still living a little. That's the balance I want for you."
+
         elif archetype_id == 2: # Blind Investor
             if exact_res < 40:
-                nudge = f"Your Proactive Resilience is critically low ({exact_res}/100). Consider keeping more cash on hand instead of over-investing this week."
+                nudge = f"Your cash cushion is thin (resilience {exact_res}/100). This week, let liquidity win over one more position."
             else:
-                nudge = "Your liquidity buffer is looking healthier. Great job protecting your investments."
-                
+                nudge = "Your buffer is filling back in. The bets can breathe now."
+
         elif archetype_id == 3: # Survivalist
             if predicted_spike:
-                nudge = f"Warning: '{predicted_spike[0]}' is coming up in {predicted_spike[1]} days. Let's stash $20 today to soften the blow."
+                nudge = f"{predicted_spike[0]} lands in {predicted_spike[1]} days. A small set-aside now beats a scramble later."
             else:
-                nudge = "No major spikes coming up soon. A perfect time to build a small buffer."
+                nudge = "No spikes in sight for a while. The quiet is the moment to tuck a little away."
 
         # Cache the generated nudge
         self.redis_cache[cache_key] = nudge

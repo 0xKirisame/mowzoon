@@ -47,9 +47,9 @@ export const determineArchetype = (metrics) => {
   
   if (eq < 40) return {
     id: 0,
-    name: "The Impulse Liver",
+    name: "The Impulse Spender",
     desc: "High emotion-driven spending, high weekend spikes, low efficiency.",
-    nudge: "We noticed late-night spending is dragging down your Financial EQ. Take a pause tonight!"
+    nudge: "Late-night buys are what's pulling your Financial EQ down. Give tonight a pause."
   };
   
   if (resilience > 60 && efficiency < 50) return {
@@ -70,7 +70,7 @@ export const determineArchetype = (metrics) => {
     id: 3,
     name: "The Survivalist",
     desc: "Income tightly consumed by fixed costs, highly vulnerable to periodic spikes.",
-    nudge: "No major spikes coming up soon. A perfect time to build a small buffer of $20."
+    nudge: "No major spikes coming up soon. A perfect time to build a small buffer of SAR 20."
   };
 };
 

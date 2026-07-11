@@ -1,0 +1,48 @@
+<svg width="1200" height="236" viewBox="0 0 1200 236" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', -apple-system, 'Helvetica Neue', Arial, sans-serif">
+  <!-- Impulse Spender -->
+  <g>
+    <rect x="0" y="8" width="282" height="220" rx="22" fill="#ff375f" fill-opacity="0.08"/>
+    <rect x="0.5" y="8.5" width="281" height="219" rx="21.5" stroke="#ff375f" stroke-opacity="0.25"/>
+    <circle cx="141" cy="78" r="30" fill="#ff375f" fill-opacity="0.13"/>
+    <g stroke="#ff375f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="translate(121 58) scale(1.66)">
+      <path d="M13 2 6 13.5h5L9.5 22 18 10.5h-5L13 2Z"/>
+    </g>
+    <text x="141" y="150" text-anchor="middle" font-size="17.5" font-weight="650" fill="#ff375f">The Impulse Spender</text>
+    <text x="141" y="178" text-anchor="middle" font-size="13" fill="#8e8e93">Feels first, spends second</text>
+  </g>
+  <!-- Anxious Planner -->
+  <g>
+    <rect x="306" y="8" width="282" height="220" rx="22" fill="#5e5ce6" fill-opacity="0.08"/>
+    <rect x="306.5" y="8.5" width="281" height="219" rx="21.5" stroke="#5e5ce6" stroke-opacity="0.25"/>
+    <circle cx="447" cy="78" r="30" fill="#5e5ce6" fill-opacity="0.13"/>
+    <g stroke="#5e5ce6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="translate(427 58) scale(1.66)">
+      <path d="M12 3l7 2.6v5.2c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2V5.6L12 3Z"/>
+      <path d="M9 11.6l2.2 2.2 4.3-4.6"/>
+    </g>
+    <text x="447" y="150" text-anchor="middle" font-size="17.5" font-weight="650" fill="#5e5ce6">The Anxious Planner</text>
+    <text x="447" y="178" text-anchor="middle" font-size="13" fill="#8e8e93">Saves everything, enjoys too little</text>
+  </g>
+  <!-- Blind Investor -->
+  <g>
+    <rect x="612" y="8" width="282" height="220" rx="22" fill="#e8890b" fill-opacity="0.08"/>
+    <rect x="612.5" y="8.5" width="281" height="219" rx="21.5" stroke="#e8890b" stroke-opacity="0.25"/>
+    <circle cx="753" cy="78" r="30" fill="#e8890b" fill-opacity="0.13"/>
+    <g stroke="#e8890b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="translate(733 58) scale(1.66)">
+      <path d="M3 17l6-6 3.5 3.5L20 7"/>
+      <path d="M14.5 7H20v5.5"/>
+    </g>
+    <text x="753" y="150" text-anchor="middle" font-size="17.5" font-weight="650" fill="#e8890b">The Blind Investor</text>
+    <text x="753" y="178" text-anchor="middle" font-size="13" fill="#8e8e93">Bold bets, thin cushion</text>
+  </g>
+  <!-- Survivalist -->
+  <g>
+    <rect x="918" y="8" width="282" height="220" rx="22" fill="#0fa38f" fill-opacity="0.08"/>
+    <rect x="918.5" y="8.5" width="281" height="219" rx="21.5" stroke="#0fa38f" stroke-opacity="0.25"/>
+    <circle cx="1059" cy="78" r="30" fill="#0fa38f" fill-opacity="0.13"/>
+    <g stroke="#0fa38f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="translate(1039 58) scale(1.66)">
+      <path d="M3 20 9.5 8l4 6.5L16 11l5 9H3Z"/>
+    </g>
+    <text x="1059" y="150" text-anchor="middle" font-size="17.5" font-weight="650" fill="#0fa38f">The Survivalist</text>
+    <text x="1059" y="178" text-anchor="middle" font-size="13" fill="#8e8e93">Steady hands, narrow margins</text>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+<svg width="1200" height="340" viewBox="0 0 1200 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="card"><rect width="1200" height="340" rx="28"/></clipPath>
+    <radialGradient id="b1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(180 10) scale(540)">
+      <stop stop-color="#a0c5ff" stop-opacity="0.95"/><stop offset="1" stop-color="#a0c5ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1070 330) scale(500)">
+      <stop stop-color="#ffcdb6" stop-opacity="0.85"/><stop offset="1" stop-color="#ffcdb6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(790 110) scale(430)">
+      <stop stop-color="#d0c0ff" stop-opacity="0.7"/><stop offset="1" stop-color="#d0c0ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(420 280) scale(380)">
+      <stop stop-color="#0a84ff" stop-opacity="0.16"/><stop offset="1" stop-color="#0a84ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wv" x1="0" y1="0" x2="1200" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0a84ff" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#0a84ff"/>
+      <stop offset="0.5" stop-color="#5e5ce6"/>
+      <stop offset="0.8" stop-color="#0fa38f"/>
+      <stop offset="1" stop-color="#0fa38f" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#card)">
+    <rect width="1200" height="340" fill="#eef0f4"/>
+    <rect width="1200" height="340" fill="url(#b1)"/>
+    <rect width="1200" height="340" fill="url(#b3)"/>
+    <rect width="1200" height="340" fill="url(#b2)"/>
+    <rect width="1200" height="340" fill="url(#b4)"/>
+    <path d="M0 314c50-12 100 12 150 0s100-12 150 0s100-12 150 0s100-12 150 0s100-12 150 0s100-12 150 0s100-12 150 0s100-12 150 0" stroke="url(#wv)" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  <g stroke="#1d1d1f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="translate(564 46) scale(3)">
+    <circle cx="12" cy="12" r="8.6"/>
+    <path d="M4.3 12c2.6-2.6 5.1 2.6 7.7 0s5.1-2.6 7.7 0"/>
+  </g>
+  <text x="600" y="212" text-anchor="middle" font-family="'Segoe UI', -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="58" font-weight="700" letter-spacing="-1.2" fill="#1d1d1f">Mowzoon</text>
+  <text x="600" y="248" text-anchor="middle" font-family="'Segoe UI', -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="23" fill="#6e6e73">موزون</text>
+  <text x="600" y="288" text-anchor="middle" font-family="'Segoe UI', -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="19" fill="#6e6e73">Money, in balance.</text>
+  <rect x="0.5" y="0.5" width="1199" height="339" rx="27.5" stroke="#000000" stroke-opacity="0.06"/>
+</svg>

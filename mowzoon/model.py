@@ -41,7 +41,7 @@ class MowzoonModel:
         features_df['cluster'] = clusters
         
         # Analyze centroids to map clusters to archetypes
-        # Archetype 0 (Impulse Liver): Lowest EQ
+        # Archetype 0 (Impulse Spender): Lowest EQ
         # Archetype 1 (Anxious Planner): Highest Resilience, High Efficiency
         # Archetype 2 (Blind Investor): (In Berka, high spend, low balance -> low resilience)
         # Archetype 3 (Survivalist): Low Efficiency, Low Resilience
@@ -52,7 +52,7 @@ class MowzoonModel:
         )
         
         # Sort centroids to map them logically
-        # 0: Impulse Liver (Lowest EQ)
+        # 0: Impulse Spender (Lowest EQ)
         impulse_cluster = centroids['financial_eq'].idxmin()
         
         # 1: Anxious Planner (Highest Resilience among remaining)

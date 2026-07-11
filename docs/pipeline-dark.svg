@@ -1,0 +1,51 @@
+<svg width="1200" height="280" viewBox="0 0 1200 280" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', -apple-system, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#8e8e93"/>
+    </marker>
+  </defs>
+
+  <rect x="6" y="52" width="168" height="64" rx="14" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.15"/>
+  <text x="90" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#f5f5f7">Berka dataset</text>
+  <text x="90" y="99" text-anchor="middle" font-size="12" fill="#a1a1a6">4,500 real accounts</text>
+
+  <rect x="210" y="52" width="168" height="64" rx="14" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.15"/>
+  <text x="294" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#f5f5f7">features.py</text>
+  <text x="294" y="99" text-anchor="middle" font-size="12" fill="#a1a1a6">three metrics</text>
+
+  <rect x="414" y="52" width="168" height="64" rx="14" fill="#5e5ce6" fill-opacity="0.07" stroke="#5e5ce6" stroke-opacity="0.5"/>
+  <text x="498" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#5e5ce6">K-Means</text>
+  <text x="498" y="99" text-anchor="middle" font-size="12" fill="#a1a1a6">discovers 4 clusters</text>
+
+  <rect x="618" y="52" width="168" height="64" rx="14" fill="#5e5ce6" fill-opacity="0.07" stroke="#5e5ce6" stroke-opacity="0.5"/>
+  <text x="702" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#5e5ce6">XGBoost</text>
+  <text x="702" y="99" text-anchor="middle" font-size="12" fill="#a1a1a6">classifies archetypes</text>
+
+  <rect x="822" y="52" width="168" height="64" rx="14" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.15"/>
+  <text x="906" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#f5f5f7">FastAPI</text>
+  <text x="906" y="99" text-anchor="middle" font-size="12" fill="#a1a1a6">api.py on port 8000</text>
+
+  <rect x="1026" y="52" width="168" height="64" rx="14" fill="#0a84ff" fill-opacity="0.07" stroke="#0a84ff" stroke-opacity="0.5"/>
+  <text x="1110" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#0a84ff">Mowzoon app</text>
+  <text x="1110" y="99" text-anchor="middle" font-size="12" fill="#a1a1a6">React PWA, EN and AR</text>
+
+  <line x1="178" y1="84" x2="204" y2="84" stroke="#8e8e93" stroke-width="1.6" marker-end="url(#ah)"/>
+  <line x1="382" y1="84" x2="408" y2="84" stroke="#8e8e93" stroke-width="1.6" marker-end="url(#ah)"/>
+  <line x1="586" y1="84" x2="612" y2="84" stroke="#8e8e93" stroke-width="1.6" marker-end="url(#ah)"/>
+  <line x1="790" y1="84" x2="816" y2="84" stroke="#8e8e93" stroke-width="1.6" marker-end="url(#ah)"/>
+  <line x1="994" y1="84" x2="1020" y2="84" stroke="#8e8e93" stroke-width="1.6" marker-end="url(#ah)"/>
+
+  <rect x="640" y="180" width="180" height="56" rx="14" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.15"/>
+  <text x="730" y="203" text-anchor="middle" font-size="14" font-weight="650" fill="#f5f5f7">10-question survey</text>
+  <text x="730" y="222" text-anchor="middle" font-size="12" fill="#a1a1a6">0-100 scores</text>
+
+  <rect x="880" y="180" width="180" height="56" rx="14" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.15"/>
+  <text x="970" y="203" text-anchor="middle" font-size="14" font-weight="650" fill="#f5f5f7">monthly ledger</text>
+  <text x="970" y="222" text-anchor="middle" font-size="12" fill="#a1a1a6">live re-read</text>
+
+  <path d="M760 178 C790 156 830 138 872 122" stroke="#8e8e93" stroke-width="1.6" fill="none" marker-end="url(#ah)"/>
+  <path d="M980 178 C965 158 950 140 934 122" stroke="#8e8e93" stroke-width="1.6" fill="none" marker-end="url(#ah)"/>
+  <text x="760" y="146" text-anchor="end" font-size="11.5" fill="#8e8e93">quantile calibration</text>
+
+  <text x="600" y="266" text-anchor="middle" font-size="12.5" fill="#a1a1a6">Survey answers and ledger months are quantile-mapped onto the real Berka distributions before classification.</text>
+</svg>

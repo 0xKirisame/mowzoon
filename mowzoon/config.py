@@ -5,7 +5,7 @@ Mowzoon - Configuration and Definitions
 # Archetypes definition
 ARCHETYPES = {
     0: {
-        'name': 'The Impulse Liver',
+        'name': 'The Impulse Spender',
         'description': 'High emotion-driven spending, high weekend spikes, low efficiency'
     },
     1: {
@@ -38,9 +38,10 @@ CATEGORIES = [
     'Investments'
 ]
 
-# Seasonal Spikes
+# Seasonal spikes (Eid dates drift each year; these are the 2026 dates)
 SEASONAL_SPIKES = [
-    {'name': 'Eid', 'month': 4, 'day': 10},
+    {'name': 'Eid al-Fitr', 'month': 3, 'day': 20},
+    {'name': 'Eid al-Adha', 'month': 5, 'day': 27},
     {'name': 'Back to School', 'month': 8, 'day': 25},
     {'name': 'Car Insurance Renewal', 'month': 11, 'day': 15}
 ]
