@@ -18,7 +18,7 @@
 
 import { deriveStats } from './character';
 import { computeWheel, resolveSpin } from './wheel';
-import { ABILITIES, abilityFor } from './abilities';
+import { abilityFor } from './abilities';
 
 const other = (side) => (side === 'player' ? 'enemy' : 'player');
 
