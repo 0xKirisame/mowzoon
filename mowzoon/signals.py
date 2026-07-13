@@ -1,8 +1,8 @@
 """
-Mowzoon - L1 Rational Signal Layer (Phase 1).
+Mowzoon - L1 Rational Signal Layer.
 
 Pure, stateless, archetype-blind. Computes the 7 locked signals from the app's
-ledger schema and grades each against thresholds derived in Phase 0
+ledger schema and grades each against thresholds derived from the Berka
 (mowzoon-analytic/berka-profiling.md) blended with normative anchors (CFPB
 3-6 month buffer, 20% savings norm, calendar-neutral 2/7 weekend share).
 
@@ -13,7 +13,7 @@ Ledger rows: {"type": "fixed"|"discretionary"|"savings"|"spike",
 Signals mature progressively: a signal whose maturity gate is not met is
 ABSENT from the result (never faked, never null-banded).
 
-Design doc: mowzoon-analytic/phase1-signals-design.md
+Design doc: mowzoon-analytic/signals-design.md
 """
 
 from datetime import date, datetime, timedelta
@@ -21,8 +21,8 @@ from datetime import date, datetime, timedelta
 import config
 
 # ---------------------------------------------------------------------------
-# Phase-0 calibration constants (traceable to berka-profiling.md §2-3).
-# Re-derive by re-running the Phase-0 script on new data; code stays unchanged.
+# Calibration constants (traceable to berka-profiling.md sections 2-3).
+# Re-derive by re-running the profiling script on new data; code stays unchanged.
 # ---------------------------------------------------------------------------
 
 # Saudi weekend (Fri, Sat) with Monday=0 indexing. Calibration used a 2/7
@@ -90,7 +90,7 @@ ANCHOR_LABELS = {
     "landmark": "seasonal-spike & fresh-start calendar",
 }
 
-# Phase-0 percentile grids (P10, P25, P50, P75, P90) for percentile_context.
+# Reference percentile grids (P10, P25, P50, P75, P90) for percentile_context.
 PERCENTILE_GRID = {
     "savings_rate": (-0.029, 0.042, 0.112, 0.248, 0.344),
     "lifestyle_share": (0.15, 0.377, 0.63, 0.804, 0.936),
@@ -101,14 +101,16 @@ PERCENTILE_GRID = {
 _GRID_PCTS = (10, 25, 50, 75, 90)
 
 # Maturity gates (see design doc §3).
-MIN_SPAN_DAYS_SHARES = 14      # savings_rate, lifestyle_share
+# SHARES raised 14 -> 28 (2026-07-13, known-issue 1): the shares divide a
+# trailing-30-day spend window by a full monthly income, so the window must be
+# essentially full before the ratio is honest. At 14-27 days of history the
+# window under-counts spend, inflating savings rate and deflating lifestyle
+# share, which misfired the Anxious Planner's deprivation rule at new users.
+MIN_SPAN_DAYS_SHARES = 28      # savings_rate, lifestyle_share
 MIN_SPAN_DAYS_RUNWAY = 56
 MIN_DISC_TX_WEEKEND = 8
 MIN_NONZERO_WEEKS_MOMENTUM = 4
 MIN_DISC_TX_ANOMALY = 20
-
-# Diagnostic: rows ignored by the last compute_signals call (never raises).
-last_skipped_rows = []
 
 
 # ---------------------------------------------------------------------------
@@ -274,7 +276,11 @@ def _momentum(rows, today):
 
 
 def _anomaly(rows, today):
-    amounts = sorted(a for _, t, a in rows if t == "discretionary")
+    # Fence is built from history EXCLUDING the last-7-day window under test
+    # (known-issue 3: a large recent buy must not raise its own fence).
+    window_start = today - timedelta(days=6)
+    amounts = sorted(a for d, t, a in rows
+                     if t == "discretionary" and d < window_start)
     if len(amounts) < MIN_DISC_TX_ANOMALY:
         return None
 
@@ -287,7 +293,7 @@ def _anomaly(rows, today):
     iqr = q3 - q1
     fence, extreme = q3 + 1.5 * iqr, q3 + 3.0 * iqr
     recent = [(d, a) for d, t, a in rows
-              if t == "discretionary" and today - timedelta(days=6) <= d <= today]
+              if t == "discretionary" and window_start <= d <= today]
     flagged = [a for _, a in recent if a > fence]
     n_extreme = sum(1 for a in flagged if a > extreme)
     band = "high" if n_extreme else ("elevated" if flagged else "calm")
@@ -338,10 +344,15 @@ def _landmark(today):
 # public API
 # ---------------------------------------------------------------------------
 
-def compute_signals(ledger, income, today):
-    """Compute all mature L1 signals. Pure; immature signals are absent."""
-    global last_skipped_rows
-    rows, last_skipped_rows = _clean(ledger)
+def compute_signals_with_skipped(ledger, income, today):
+    """Compute all mature L1 signals; return (signals, skipped_rows).
+
+    Pure and thread-safe (known-issue 2: the old module-level diagnostic
+    raced under threaded serving; diagnostics now travel in the return).
+    income is MONTHLY net income (known-issue 4; enforced upstream in api.py).
+    Immature signals are absent from the list, never faked.
+    """
+    rows, skipped = _clean(ledger)
     today = _parse_day(today)
     span_days = (today - rows[0][0]).days if rows else 0
 
@@ -354,4 +365,9 @@ def compute_signals(ledger, income, today):
         _anomaly(rows, today),
         _landmark(today),
     ]
-    return [s for s in candidates if s is not None]
+    return [s for s in candidates if s is not None], skipped
+
+
+def compute_signals(ledger, income, today):
+    """Signals only; see compute_signals_with_skipped for diagnostics."""
+    return compute_signals_with_skipped(ledger, income, today)[0]

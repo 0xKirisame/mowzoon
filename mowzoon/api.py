@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import config
+import delivery
 from data_ingestor import load_data
 from features import extract_features
 from model import MowzoonModel
@@ -247,6 +248,36 @@ def category_cohort():
     """Typical income allocation (Essential / Lifestyle / Savings) for each
     archetype, over the real Berka accounts. Shock has no Berka analogue."""
     return {"cohorts": ART["cohort_shares"], "total": int(len(FEATURES))}
+
+
+class LedgerRow(BaseModel):
+    """One app-ledger transaction. Unknown types and non-positive amounts are
+    quarantined by the signal layer, not rejected here (count in meta.skipped_rows)."""
+    type: str
+    amount: float
+    date: str
+
+
+class InsightsRequest(BaseModel):
+    """POST /insights body. income is MONTHLY net income (see api-contract.md)."""
+    archetype: int
+    income: float = Field(ge=0, description="MONTHLY net income, same currency as the ledger")
+    ledger: list[LedgerRow] = []
+    metrics: Metrics | None = None   # survey scores; legacy-nudge fallback only
+    today: str | None = None         # ISO date; lets the UI and tests pin the clock
+
+
+@app.post("/insights")
+def insights_post(req: InsightsRequest):
+    """Full signals -> insights -> quest response (non-breaking;
+    the GET route below still serves the legacy UI)."""
+    return delivery.build_response(
+        req.archetype,
+        [row.model_dump() for row in req.ledger],
+        req.income,
+        metrics=req.metrics.model_dump() if req.metrics else None,
+        today=req.today,
+    )
 
 
 @app.get("/insights")
