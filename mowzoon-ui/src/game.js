@@ -3,6 +3,7 @@
 // amounts live in DROPS.
 
 import { streakOf } from './store';
+import { applyMatchResult } from './battle/rank';
 
 export const DROPS = {
   log: 5,       // logging one transaction
@@ -10,7 +11,26 @@ export const DROPS = {
   calibrate: 25, // finishing (or retaking) the assessment
   badge: 15,    // each badge earned
   quest: 40,    // collecting a finished quest
+  battleWin: 30, // winning a battle (any mode) — feeds level → wheel
 };
+
+// Fold a finished battle back into progression. A win pays drops (which raise
+// the level, which improves the wheel); ranked matches (ghost/trade) also move
+// the leaderboard ladder. Single-player leaves rankScore untouched.
+export function applyBattleOutcome(setApp, { mode, ranked, won, health, myLevel, oppLevel, at }) {
+  setApp((s) => {
+    const rec = s.battle.record;
+    const record = { wins: rec.wins + (won ? 1 : 0), losses: rec.losses + (won ? 0 : 1) };
+    const rankScore = ranked
+      ? applyMatchResult(s.battle.rankScore, { won, health, myLevel, oppLevel })
+      : s.battle.rankScore;
+    return {
+      ...s,
+      game: { ...s.game, drops: s.game.drops + (won ? DROPS.battleWin : 0) },
+      battle: { ...s.battle, record, rankScore, lastResult: { mode, won, at } },
+    };
+  });
+}
 
 // level thresholds
 export const LEVELS = [0, 80, 200, 400, 700];
