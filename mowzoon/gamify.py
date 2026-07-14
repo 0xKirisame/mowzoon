@@ -93,8 +93,8 @@ def _rationale_from_insight(insight):
 def _fresh_start_rationale(ctx):
     days = ctx.get('days')
     if days == 0:
-        return "A new month starts today. A clean page is a good day to commit."
-    return f"A new month starts in {days} days. A clean page is a good day to commit."
+        return "A new month starts today. A good moment to start putting a little into savings."
+    return f"A new month starts in {days} days. A good moment to start putting a little into savings."
 
 
 def gamify(insight, archetype_id, signals, today):
@@ -117,8 +117,8 @@ def gamify(insight, archetype_id, signals, today):
         intervention = (insight.get('intervention') or {}).get('key')
         quest_key = INTERVENTION_QUEST.get(intervention) or ARCHETYPE_DEFAULT_QUEST[archetype_id]
         if insight_key == 'survivalist_spike_ahead' and ctx.get('event'):
-            rationale = (f"{ctx['event']} lands in {ctx['days']} days. "
-                         "A small set-aside each week beats a scramble later.")
+            rationale = (f"{ctx['event']} is {ctx['days']} days away. If you save a little "
+                         "each week from now, you won't have to find it all at once.")
         else:
             rationale = _rationale_from_insight(insight)
     elif moment == 'opportunity':

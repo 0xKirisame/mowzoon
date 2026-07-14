@@ -101,6 +101,41 @@ const STR = {
 
     'nudge.label': "Today's micro-nudge",
 
+    // Engine insights (one per insight_key in templates.py). Params come from
+    // the signal: {pct} {ratio} {cover} {months} {days} {event}. Plain, warm,
+    // no blame. {cover} is a phrase like "less than a month" or "about 3 months".
+    'insight.impulse_weekend_pattern': "Weekends are taking {ratio}x their usual share of your spending right now. One treat you plan beats five you don't. Pick the one you'll actually enjoy.",
+    'insight.impulse_hot_week': "This week you're spending {ratio}x your usual pace. Try waiting a day before your next non-essential buy. Often the urge passes on its own.",
+    'insight.impulse_big_buy': "Your last purchase was well above your usual range. There's nothing wrong with that. If you sleep on the next big one, the choice stays yours.",
+    'insight.impulse_lifestyle_creep': "Fun and lifestyle spending is taking {pct}% of your income this month. Set a limit for next month now, before the spending starts.",
+    'insight.impulse_savings_slip': "You saved {pct}% of your income this month, down from your usual. A small automatic transfer next month makes saving happen without you thinking about it.",
+    'insight.impulse_thin_cushion': "Right now your savings would cover {cover} of spending. A small regular transfer, even a tiny one, builds it back over time.",
+    'insight.impulse_quiet_week_praise': "Your spending this week is right at your normal pace. Keeping it steady like this is the hard part, and you're doing it.",
+    'insight.impulse_steady_weekend_praise': "Your weekends have stayed in line with the rest of your week lately. That's a hard habit to hold, so nice work.",
+    'insight.anxious_oversaving': "You're saving {pct}% of your income, well above the 20% that's considered healthy. Your plan is already covered. It's okay to spend some of this on yourself.",
+    'insight.anxious_deprivation': "You're spending only {pct}% of your income on yourself, less than 9 in 10 people. A planned treat won't hurt your plan. Go ahead.",
+    'insight.anxious_hoarded_buffer': "Your savings now cover about {months} months of spending, more than the 6 a healthy range needs. Anything above that is money you're free to use.",
+    'insight.anxious_balance_praise': "You let yourself enjoy some of your money this month. For someone who plans as carefully as you do, that's a good sign.",
+    'insight.anxious_secure_praise': "Your savings sit right in the healthy range of 3 to 6 months. You're covered, so try to let some of the worry go.",
+    'insight.blind_thin_runway': "Your cash would cover {cover} of spending. A healthy range is 3 to 6 months. This week, keep new money in cash instead of investing it.",
+    'insight.blind_big_position': "One recent outflow was far above your usual range. Before the next big move, check that your cash covers you first.",
+    'insight.blind_cashflow_leak': "Only {pct}% of your income stayed with you this month. Move a set amount into cash first, before you spend or invest the rest.",
+    'insight.blind_hot_week': "Your spending is at {ratio}x a typical week. Take a quick look at what's driving it before the month ends.",
+    'insight.blind_buffer_built_praise': "Your cash reserve is holding in the healthy range. That's a solid base for everything else you're doing.",
+    'insight.survivalist_no_cushion': "Right now your savings would cover {cover} of spending. Putting SAR 20 a week into a separate account is a good place to start.",
+    'insight.survivalist_spike_ahead': "{event} is {days} days away. If you save a little each week from now, you won't have to find it all at once.",
+    'insight.survivalist_dissaving': "You spent more than you earned this month. It happens. Cutting one regular bill and saving a little each week is how it starts to turn around.",
+    'insight.survivalist_shock_spend': "An unexpected expense hit this week. Once things settle, saving a small amount for the next one will make it easier to handle.",
+    'insight.survivalist_hot_week': "This week you spent {ratio}x your usual. If you planned for it, no worries. If not, next week you can get back on track.",
+    'insight.survivalist_headroom_praise': "You saved {pct}% of your income this month. On a tight budget like yours, that takes real discipline.",
+    'insight.survivalist_steady_praise': "Your spending stayed level with your normal week. Keeping it steady like this is how savings grow.",
+    // The engine's suggested focus (display-only panel under the weekly quest)
+    'focus.title': "Coach's focus",
+    'focus.sub': 'A suggestion based on your spending today.',
+    'focus.opportunity': 'Good moment',
+    'focus.vulnerability': 'Go gently',
+    'insight.more': 'More to look at',
+
     'home.late': 'Up late.',
     'home.morning': 'Good morning.',
     'home.afternoon': 'Good afternoon.',
@@ -391,6 +426,40 @@ const STR = {
     'results.home': 'انتقل إلى الرئيسية',
 
     'nudge.label': 'دفعة اليوم الصغيرة',
+
+    // رؤى المحرك (واحدة لكل insight_key). المعطيات من الإشارة نفسها.
+    // {cover} عبارة مثل «أقل من شهر» أو «نحو ٣ أشهر». لغة بسيطة ودافئة بلا لوم.
+    'insight.impulse_weekend_pattern': 'نهايات الأسبوع تأخذ الآن {ratio}× من حصتها المعتادة في إنفاقك. مكافأة واحدة تخطط لها خير من خمس بلا تخطيط. اختر التي ستستمتع بها فعلًا.',
+    'insight.impulse_hot_week': 'هذا الأسبوع تنفق {ratio}× من إيقاعك المعتاد. جرّب الانتظار يومًا قبل الشراء غير الضروري القادم. غالبًا تزول الرغبة وحدها.',
+    'insight.impulse_big_buy': 'آخر عملية شراء كانت أعلى بكثير من مدى إنفاقك المعتاد. لا شيء في ذلك يستحق القلق. إن نمت على القرار الكبير القادم، بقي الخيار لك.',
+    'insight.impulse_lifestyle_creep': 'إنفاق الترفيه ونمط الحياة يأخذ {pct}٪ من دخلك هذا الشهر. ضع حدًّا للشهر القادم الآن، قبل أن يبدأ الإنفاق.',
+    'insight.impulse_savings_slip': 'ادّخرت {pct}٪ من دخلك هذا الشهر، أقل من معتادك. تحويل تلقائي صغير الشهر القادم يجعل الادخار يحدث دون أن تفكّر فيه.',
+    'insight.impulse_thin_cushion': 'مدخراتك الآن تكفي لتغطية {cover} من إنفاقك. تحويل منتظم صغير، ولو بسيط، يعيد بناءها مع الوقت.',
+    'insight.impulse_quiet_week_praise': 'إنفاقك هذا الأسبوع عند إيقاعك الطبيعي تمامًا. الحفاظ على هذا الثبات هو الجزء الصعب، وأنت تفعله.',
+    'insight.impulse_steady_weekend_praise': 'بقيت نهايات أسبوعك متماشية مع بقية أيامك مؤخرًا. هذه عادة يصعب الحفاظ عليها، فأحسنت.',
+    'insight.anxious_oversaving': 'تدّخر {pct}٪ من دخلك، أعلى بكثير من الـ ٢٠٪ التي تُعدّ صحية. خطتك مغطّاة أصلًا. لا بأس أن تنفق بعضها على نفسك.',
+    'insight.anxious_deprivation': 'تنفق {pct}٪ فقط من دخلك على نفسك، أقل من ٩ من كل ١٠ أشخاص. مكافأة مخطط لها لن تضرّ خطتك. تفضّل ولا تتردد.',
+    'insight.anxious_hoarded_buffer': 'مدخراتك الآن تكفي نحو {months} أشهر من الإنفاق، أكثر من الـ ٦ التي يحتاجها النطاق الصحي. كل ما فوق ذلك مال أنت حر في استخدامه.',
+    'insight.anxious_balance_praise': 'سمحت لنفسك بالاستمتاع ببعض مالك هذا الشهر. لمن يخطط بعنايتك، هذه علامة جيدة.',
+    'insight.anxious_secure_praise': 'مدخراتك ضمن النطاق الصحي من ٣ إلى ٦ أشهر تمامًا. أنت مغطّى، فحاول أن تترك بعض القلق يذهب.',
+    'insight.blind_thin_runway': 'نقدك يكفي لتغطية {cover} من إنفاقك. النطاق الصحي من ٣ إلى ٦ أشهر. هذا الأسبوع، أبقِ المال الجديد نقدًا بدل استثماره.',
+    'insight.blind_big_position': 'تدفّق خارج حديث كان أعلى بكثير من مدى إنفاقك المعتاد. قبل الحركة الكبيرة القادمة، تأكّد أن نقدك يغطيك أولًا.',
+    'insight.blind_cashflow_leak': 'بقي معك {pct}٪ فقط من دخلك هذا الشهر. حوّل مبلغًا ثابتًا إلى النقد أولًا، قبل أن تنفق الباقي أو تستثمره.',
+    'insight.blind_hot_week': 'إنفاقك عند {ratio}× من أسبوع معتاد. ألقِ نظرة سريعة على مسبّبه قبل أن ينتهي الشهر.',
+    'insight.blind_buffer_built_praise': 'احتياطيك النقدي صامد ضمن النطاق الصحي. هذه قاعدة متينة لكل ما تفعله غير ذلك.',
+    'insight.survivalist_no_cushion': 'مدخراتك الآن تكفي لتغطية {cover} من إنفاقك. وضع ٢٠ ر.س أسبوعيًا في حساب منفصل مكان جيد للبدء.',
+    'insight.survivalist_spike_ahead': '{event} بعد {days} أيام. إن ادّخرت القليل كل أسبوع من الآن، لن تضطر لتدبيره كله دفعة واحدة.',
+    'insight.survivalist_dissaving': 'أنفقت أكثر مما كسبت هذا الشهر. يحدث هذا. تقليل فاتورة ثابتة واحدة وادّخار القليل كل أسبوع هو ما يبدأ به التحسن.',
+    'insight.survivalist_shock_spend': 'مصروف غير متوقع وقع هذا الأسبوع. حين تستقر الأمور، ادّخار مبلغ صغير للمرة القادمة سيجعلها أسهل.',
+    'insight.survivalist_hot_week': 'هذا الأسبوع أنفقت {ratio}× من معتادك. إن كنت خطّطت له، فلا بأس. وإن لم يكن، فالأسبوع القادم فرصة للعودة إلى المسار.',
+    'insight.survivalist_headroom_praise': 'ادّخرت {pct}٪ من دخلك هذا الشهر. على ميزانية ضيقة كميزانيتك، هذا يتطلب انضباطًا حقيقيًا.',
+    'insight.survivalist_steady_praise': 'بقي إنفاقك على مستوى أسبوعك الطبيعي. الحفاظ على هذا الثبات هو ما تنمو به المدخرات.',
+    // تركيز المحرك المقترح (لوحة عرض فقط تحت مهمة الأسبوع)
+    'focus.title': 'تركيز المدرّب',
+    'focus.sub': 'اقتراح بناءً على إنفاقك اليوم.',
+    'focus.opportunity': 'لحظة مناسبة',
+    'focus.vulnerability': 'بتروٍّ',
+    'insight.more': 'المزيد لتطّلع عليه',
 
     'home.late': 'ما زلت مستيقظًا.',
     'home.morning': 'صباح الخير.',
@@ -740,5 +809,36 @@ export function i18nFor(lang) {
   const arch = (id) => ARCH_I18N[lang][id];
   const desc = (s) => (lang === 'ar' ? DESC_AR[s] ?? s : s);
   const spikeName = (s) => (lang === 'ar' ? SPIKE_AR[s] ?? s : s);
-  return { lang, dir: lang === 'ar' ? 'rtl' : 'ltr', locale, t, fmtNum, fmtPct, fmtMoney, fmtDays, fmtStreak, arch, desc, spikeName };
+  // Render an engine insight in the active language from its signal object.
+  // Mirrors build_context() in templates.py so both languages read the same
+  // numbers; numerals/percent flow through Intl so Arabic stays Arabic.
+  // "months of spending covered" as a phrase, so a near-zero value reads
+  // "less than a month" instead of the nonsensical "about 0 months".
+  const coverPhrase = (n) => {
+    if (lang === 'ar') {
+      if (n < 1) return 'أقل من شهر';
+      if (n < 1.5) return 'نحو شهر';
+      return `نحو ${fmtNum(n)} شهر`;
+    }
+    if (n < 1) return 'less than a month';
+    if (n < 1.5) return 'about a month';
+    return `about ${fmtNum(n)} months`;
+  };
+  const insight = (key, signal) => {
+    const s = signal || {};
+    const v = typeof s.value === 'number' ? s.value : 0;
+    const ev = s.evidence || {};
+    const spike = ev.next_spike || ev.nearest || {};
+    const pctRaw = s.unit === 'fraction_of_income' ? Math.round(v * 100) : Math.round(v);
+    const m = Math.round(v * 10) / 10;
+    return t(`insight.${key}`, {
+      pct: fmtNum(pctRaw),
+      cover: coverPhrase(m),
+      months: fmtNum(m),
+      ratio: fmtNum(m),
+      days: fmtNum(spike.days ?? Math.round(v)),
+      event: spikeName(spike.event || spike.name || (lang === 'ar' ? 'مصروف متوقع' : 'A known expense')),
+    });
+  };
+  return { lang, dir: lang === 'ar' ? 'rtl' : 'ltr', locale, t, fmtNum, fmtPct, fmtMoney, fmtDays, fmtStreak, arch, desc, spikeName, insight };
 }

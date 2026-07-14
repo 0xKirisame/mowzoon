@@ -40,27 +40,27 @@ legacy `GET /insights` route still serves the current UI untouched.
 
 ## 3. The layers
 
-| Layer | File | Job | Key property |
-|---|---|---|---|
-| L1 Signals | `signals.py` | Turn the raw ledger into 7 graded measurements | Archetype-blind, pure math, maturity-gated |
-| L2 Matching | `engine.py` (module level) + `config.py` + `templates.py` | Read the signals through the archetype's psychology; rank and phrase | All personality logic is config data, not code branches |
-| L3 Gamify | `gamify.py` | Turn the top insight into a quest the UI economy can run; classify the moment | Knows when to do nothing |
-| L4 Delivery | `delivery.py` + `api.py` | Compose the HTTP response; keep the legacy field alive | Imports nothing from the classifier |
+| Layer       | File                                                      | Job                                                                           | Key property                                            |
+| ----------- | --------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------- |
+| L1 Signals  | `signals.py`                                              | Turn the raw ledger into 7 graded measurements                                | Archetype-blind, pure math, maturity-gated              |
+| L2 Matching | `engine.py` (module level) + `config.py` + `templates.py` | Read the signals through the archetype's psychology; rank and phrase          | All personality logic is config data, not code branches |
+| L3 Gamify   | `gamify.py`                                               | Turn the top insight into a quest the UI economy can run; classify the moment | Knows when to do nothing                                |
+| L4 Delivery | `delivery.py` + `api.py`                                  | Compose the HTTP response; keep the legacy field alive                        | Imports nothing from the classifier                     |
 
 ### L1 — signals (the facts)
 
 Seven measurements, each returned as
 `{name, value, unit, band, direction, evidence}`:
 
-| Signal | Measures | Matures after |
-|---|---|---|
-| savings_rate | (income - 30d spend) / income | 28 days of history |
-| runway | savings pot / avg monthly spend, in months | 56 days |
-| lifestyle_share | 30d discretionary / income | 28 days |
-| weekend_ratio | Fri-Sat share of spend vs the calendar-neutral 2/7 | 14 days, 8+ transactions |
-| momentum | this week vs own typical nonzero week | 4 nonzero prior weeks |
-| anomaly | purchases above the user's own Tukey fence (pre-window history) | 20 transactions |
-| landmark | days to next seasonal spike and next fresh start | instantly |
+| Signal          | Measures                                                        | Matures after            |
+| --------------- | --------------------------------------------------------------- | ------------------------ |
+| savings_rate    | (income - 30d spend) / income                                   | 28 days of history       |
+| runway          | savings pot / avg monthly spend, in months                      | 56 days                  |
+| lifestyle_share | 30d discretionary / income                                      | 28 days                  |
+| weekend_ratio   | Fri-Sat share of spend vs the calendar-neutral 2/7              | 14 days, 8+ transactions |
+| momentum        | this week vs own typical nonzero week                           | 4 nonzero prior weeks    |
+| anomaly         | purchases above the user's own Tukey fence (pre-window history) | 20 transactions          |
+| landmark        | days to next seasonal spike and next fresh start                | instantly                |
 
 `band` grades strength on calm / note / elevated / high, using thresholds derived from 4,417
 real accounts ([berka-profiling.md](berka-profiling.md)) blended with normative anchors (CFPB
@@ -112,6 +112,7 @@ tested, or replaced in isolation, and the same inputs always produce the same ou
 by determinism tests in every suite).
 
 Two consequences of statelessness worth understanding rather than fearing:
+
 - **Quest stability.** Within a day, identical inputs give the identical quest (pure
   function). Across days the proposal can change as the ledger moves, so the contract defines
   an adoption rule: a QuestSpec is a proposal for the next quest slot, and the UI never
@@ -128,27 +129,3 @@ Every threshold is a named constant in `signals.py` traceable to the Berka profi
 calibration, re-run the profiling script on the new ledger population and update the constants;
 no logic changes. Archetype behavior is tuned in `config.ARCHETYPE_PROFILES` (weights,
 directions, cutpoints) and `templates.py` (copy) — both data, both guarded by schema tests.
-
-## 6. Test map
-
-All suites live in `mowzoon/tests/`; run each with `python tests/test_<name>.py` from the
-backend folder. 67 tests total.
-
-| Suite | Guards |
-|---|---|
-| test_signals.py (17) | Band edges, maturity gates, direction logic, Saudi weekend, dirty-row tolerance, determinism |
-| test_profiles.py (8) | Profile schema integrity, praise-only-on-healthy-bands (the Robinhood pin), the Anxious-Planner direction inversion |
-| test_matching.py (15) | The proof case (same signals, different archetypes), ranking, praise suppression, landmark window, template completeness |
-| test_gamify.py (18) | Quest selection, moment classification, restraint, the treat-quest boundary, UI-vocabulary compliance |
-| test_delivery.py (9) | Response shape, nudge fallback chain, restraint path, skipped-row surfacing, JSON serializability |
-
-## 7. Document map
-
-| Where | What |
-|---|---|
-| [plans/](plans/) | The build plan (locked decisions D1-D8) and the five component design docs with rationale and trade-offs |
-| [evidence-base.md](evidence-base.md) | The research behind every design choice, source register, corrections log |
-| [berka-profiling.md](berka-profiling.md) + [figures/](figures/) | Threshold derivation study and its charts |
-| [api-contract.md](api-contract.md) | Frontend handoff for POST /insights |
-| [validation-log.md](validation-log.md) + `validate.py` | The validation run (6 of 6 criteria) and the script to reproduce it |
-| [known-issues.md](known-issues.md) | Review findings: 1-4 fixed, 5 open by design, 6 cosmetic |

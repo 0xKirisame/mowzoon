@@ -50,7 +50,8 @@ export async function getCategoryCohort() {
   return data;
 }
 
-// { nudge, spikes: [{name, days}] }
+// Legacy read: { nudge, spikes: [{name, days}] }. Still the source of the
+// seasonal spikes the horizon/brief/agenda render, so it stays as-is.
 export function getInsights(archetypeId, metrics) {
   const qs = new URLSearchParams({
     archetype: archetypeId,
@@ -59,4 +60,24 @@ export function getInsights(archetypeId, metrics) {
     eq: metrics.eq,
   });
   return get(`/insights?${qs}`);
+}
+
+// Engine read (POST /insights): the full signals -> insights -> quest payload.
+// { nudge, signals[], insights[], quest|null, meta }. Resolves to null on any
+// failure so the rail falls back to the archetype description, like every
+// other model claim in the app. `ledger` rows are {type, amount, date};
+// `income` is MONTHLY net income; `today` pins the clock for weekend logic.
+export async function getEngineInsights(archetype, income, ledger, metrics, today) {
+  try {
+    const res = await fetch(`${BASE}/insights`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archetype, income, ledger, metrics, today }),
+      signal: AbortSignal.timeout(3500),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }

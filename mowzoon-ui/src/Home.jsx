@@ -148,6 +148,16 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
     : '';
   const questDone = questProg && questProg.value >= questProg.target;
 
+  // The engine's suggested focus (display-only): a themed card under the
+  // weekly quest. Text is localized from the tied insight's signal when we
+  // have it, else the backend's English rationale.
+  const eng = app.insights && app.insights.aid === id ? app.insights : null;
+  const focus = eng?.quest || null;
+  const focusInsight = focus ? (eng.list || []).find((x) => x.insight_key === focus.insight_key) : null;
+  const focusText = focus
+    ? (focusInsight ? i.insight(focusInsight.insight_key, focusInsight.signal) : focus.rationale)
+    : null;
+
   // cohort chip only fires when a percentile crosses a tier boundary
   const standing = profile?.model?.cohort_percentiles;
   const [moved, setMoved] = useState(null);
@@ -317,6 +327,27 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                     {i.t('quest.collect', { n: i.fmtNum(DROPS.quest) })}
                   </motion.button>
                 )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* coach's focus: the engine's suggestion, under the weekly quest */}
+          {focus && focusText && (
+            <motion.div className="glass panel focus-panel" variants={item}>
+              <div className="panel-h">
+                <p className="panel-title" style={{ margin: 0 }}>{i.t('focus.title')}</p>
+                {focus.moment && focus.moment !== 'neutral' && (
+                  <span className={`focus-chip ${focus.moment}`}>{i.t(`focus.${focus.moment}`)}</span>
+                )}
+              </div>
+              <div className="quest-row">
+                <span className="quest-ic" style={{ background: `color-mix(in srgb, ${ARCHETYPE_META[id].tint} 14%, var(--surface))`, color: ARCHETYPE_META[id].tint }}>
+                  <Glyph id={QUEST_GLYPHS[focus.key] || 'spark'} size={19} strokeWidth={2} />
+                </span>
+                <div className="quest-body">
+                  <p className="focus-text">{focusText}</p>
+                  <p className="focus-sub">{i.t('focus.sub')}</p>
+                </div>
               </div>
             </motion.div>
           )}

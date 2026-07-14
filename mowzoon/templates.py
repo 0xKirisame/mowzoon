@@ -14,147 +14,159 @@ TEMPLATES = {
     # --- 0 The Impulse Spender -------------------------------------------
     'impulse_weekend_pattern': {
         'intervention': 'cooling_off',
-        'text': "Weekends are carrying {ratio}x their share of your spending right now. "
-                "One planned treat beats five unplanned ones; pick the one you'll actually remember.",
+        'text': "Weekends are taking {ratio}x their usual share of your spending right now. "
+                "One treat you plan beats five you don't. Pick the one you'll actually enjoy.",
     },
     'impulse_hot_week': {
         'intervention': 'cooling_off',
-        'text': "This week is running {ratio}x your usual pace. A 24-hour pause on the next "
-                "non-essential buy resets the streak without costing you anything.",
+        'text': "This week you're spending {ratio}x your usual pace. Try waiting a day before "
+                "your next non-essential buy. Often the urge passes on its own.",
     },
     'impulse_big_buy': {
         'intervention': 'cooling_off',
-        'text': "That last purchase sat well above your usual range. No judgment, just a note: "
-                "sleeping on the next one keeps the choice yours.",
+        'text': "Your last purchase was well above your usual range. There's nothing wrong "
+                "with that. If you sleep on the next big one, the choice stays yours.",
     },
     'impulse_lifestyle_creep': {
         'intervention': 'precommitment_smart',
-        'text': "Lifestyle spending is taking {pct}% of income this month. Set next month's "
-                "ceiling now, while it's still easy to promise.",
+        'text': "Fun and lifestyle spending is taking {pct}% of your income this month. Set a "
+                "limit for next month now, before the spending starts.",
     },
     'impulse_savings_slip': {
         'intervention': 'precommitment_smart',
-        'text': "Savings slipped to {pct}% this month. A small automatic set-aside starting "
-                "next month costs present-you nothing and pays future-you first.",
+        'text': "You saved {pct}% of your income this month, down from your usual. A small "
+                "automatic transfer next month makes saving happen without you thinking about it.",
     },
     'impulse_thin_cushion': {
         'intervention': 'micro_setaside',
-        'text': "Your cushion covers about {months} months right now. A standing transfer, "
-                "however small, rebuilds it without needing willpower.",
+        'text': "Right now your savings would cover {cover} of spending. A small regular "
+                "transfer, even a tiny one, builds it back over time.",
     },
     'impulse_quiet_week_praise': {
         'intervention': None,
-        'text': "Your spending pace is right at your normal this week. That steadiness is the "
-                "skill; everything else builds on it.",
+        'text': "Your spending this week is right at your normal pace. Keeping it steady like "
+                "this is the hard part, and you're doing it.",
     },
     'impulse_steady_weekend_praise': {
         'intervention': None,
-        'text': "Weekends have stayed level with the rest of your week lately. That's the "
-                "pattern most people never manage.",
+        'text': "Your weekends have stayed in line with the rest of your week lately. That's "
+                "a hard habit to hold, so nice work.",
     },
 
     # --- 1 The Anxious Planner -------------------------------------------
     'anxious_oversaving': {
         'intervention': 'permission_reframe',
-        'text': "You're keeping {pct}% of income, far beyond the 20% target. The plan is "
-                "funded; some of this money is allowed to buy you a life.",
+        'text': "You're saving {pct}% of your income, well above the 20% that's considered "
+                "healthy. Your plan is already covered. It's okay to spend some of this on yourself.",
     },
     'anxious_deprivation': {
         'intervention': 'permission_reframe',
-        'text': "Quality-of-life spending is down at {pct}% of income, lower than 9 in 10 "
-                "people. A planned treat will not dent the plan; you've earned it.",
+        'text': "You're spending only {pct}% of your income on yourself, less than 9 in 10 "
+                "people. A planned treat won't hurt your plan. Go ahead.",
     },
     'anxious_hoarded_buffer': {
         'intervention': 'permission_reframe',
-        'text': "Your buffer now covers {months} months, beyond the 6 the benchmark asks for. "
-                "Everything above that line is a choice, not a requirement.",
+        'text': "Your savings now cover about {months} months of spending, more than the 6 a "
+                "healthy range needs. Anything above that is money you're free to use.",
     },
     # Text claims only what the rule checks (lifestyle share above the
     # deprivation floor), not savings quality, which this rule does not see.
     'anxious_balance_praise': {
         'intervention': None,
-        'text': "You're letting quality of life have its share this month. For you, that is "
-                "the win worth noticing.",
+        'text': "You let yourself enjoy some of your money this month. For someone who plans "
+                "as carefully as you do, that's a good sign.",
     },
     'anxious_secure_praise': {
         'intervention': None,
-        'text': "Your buffer sits inside the healthy 3 to 6 month band. You are covered; let "
-                "that fact do some of the relaxing for you.",
+        'text': "Your savings sit right in the healthy range of 3 to 6 months. You're "
+                "covered, so try to let some of the worry go.",
     },
 
     # --- 2 The Blind Investor --------------------------------------------
     'blind_thin_runway': {
         'intervention': 'liquidity_first',
-        'text': "Cash on hand covers about {months} months of spending; the benchmark is 3 to "
-                "6. This week, let liquidity win over one more position.",
+        'text': "Your cash would cover {cover} of spending. A healthy range is 3 to 6 months. "
+                "This week, keep new money in cash instead of investing it.",
     },
     'blind_big_position': {
         'intervention': 'liquidity_first',
-        'text': "One recent outflow sat far above your usual range. Big moves deserve a cash "
-                "check first: buffer, then bets.",
+        'text': "One recent outflow was far above your usual range. Before the next big move, "
+                "check that your cash covers you first.",
     },
     'blind_cashflow_leak': {
         'intervention': 'precommitment_smart',
-        'text': "Only {pct}% of income stayed with you this month. Route a fixed slice to cash "
-                "before anything else gets allocated.",
+        'text': "Only {pct}% of your income stayed with you this month. Move a set amount into "
+                "cash first, before you spend or invest the rest.",
     },
     'blind_hot_week': {
         'intervention': 'liquidity_first',
-        'text': "Outflows are at {ratio}x your typical week. Worth one glance at what's "
-                "driving it before the month closes.",
+        'text': "Your spending is at {ratio}x a typical week. Take a quick look at what's "
+                "driving it before the month ends.",
     },
     'blind_buffer_built_praise': {
         'intervention': None,
-        'text': "Your cash floor is holding inside the healthy band. That buffer is what lets "
-                "the rest of your strategy breathe.",
+        'text': "Your cash reserve is holding in the healthy range. That's a solid base for "
+                "everything else you're doing.",
     },
 
     # --- 3 The Survivalist -------------------------------------------------
     'survivalist_no_cushion': {
         'intervention': 'micro_setaside',
-        'text': "The cushion covers about {months} months right now. Twenty riyals a week into "
-                "a labelled pot is a real start, and it adds up faster than it sounds.",
+        'text': "Right now your savings would cover {cover} of spending. Putting SAR 20 a week "
+                "into a separate account is a good place to start.",
     },
     'survivalist_spike_ahead': {
         'intervention': 'sinking_fund',
-        'text': "{event} lands in {days} days. A small set-aside each week from now beats a "
-                "scramble later.",
+        'text': "{event} is {days} days away. If you save a little each week from now, you "
+                "won't have to find it all at once.",
     },
     'survivalist_dissaving': {
         'intervention': 'micro_setaside',
-        'text': "Spending ran past income this month. No blame here: one fixed cost reviewed "
-                "and one small set-aside started is how the line turns.",
+        'text': "You spent more than you earned this month. It happens. Cutting one regular "
+                "bill and saving a little each week is how it starts to turn around.",
     },
     'survivalist_shock_spend': {
         'intervention': 'sinking_fund',
-        'text': "A shock expense hit this week. Once it settles, a small named pot for the "
-                "next one takes the sting out.",
+        'text': "An unexpected expense hit this week. Once things settle, saving a small "
+                "amount for the next one will make it easier to handle.",
     },
     'survivalist_hot_week': {
         'intervention': 'fresh_start_commit',
-        'text': "This week ran {ratio}x your usual. If it was planned, ignore me; if not, next "
-                "week is a clean page.",
+        'text': "This week you spent {ratio}x your usual. If you planned for it, no worries. "
+                "If not, next week you can get back on track.",
     },
     'survivalist_headroom_praise': {
         'intervention': None,
-        'text': "You kept {pct}% of income this month. With margins as tight as yours, that is "
-                "a genuine win.",
+        'text': "You saved {pct}% of your income this month. On a tight budget like yours, "
+                "that takes real discipline.",
     },
     'survivalist_steady_praise': {
         'intervention': None,
-        'text': "Spending stayed level with your normal week. Steady is exactly what builds "
-                "the cushion.",
+        'text': "Your spending stayed level with your normal week. Keeping it steady like "
+                "this is how savings grow.",
     },
 }
+
+
+def _cover_phrase(n):
+    """Months-of-spending covered, as a phrase. Keeps a near-zero runway from
+    reading as the nonsensical "about 0 months"."""
+    if n < 1:
+        return "less than a month"
+    if n < 1.5:
+        return "about a month"
+    return "about {} months".format(round(n, 1))
 
 
 def build_context(signal):
     """Derive template fields from an L1 signal object."""
     value = signal.get('value', 0)
+    months = round(value, 1) if isinstance(value, (int, float)) else 0
     ctx = {
         'value': value,
         'pct': round(value * 100) if signal.get('unit') == 'fraction_of_income' else round(value),
-        'months': round(value, 1),
+        'months': months,
+        'cover': _cover_phrase(months),
         'ratio': round(value, 1),
         'count': int(value) if isinstance(value, (int, float)) else value,
     }
