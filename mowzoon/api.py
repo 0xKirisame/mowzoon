@@ -23,6 +23,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import config
 import delivery
+import characters
 from data_ingestor import load_data
 from features import extract_features
 from model import MowzoonModel
@@ -114,6 +115,9 @@ ART = load_artifacts()
 MODEL: MowzoonModel = ART["model"]
 FEATURES: pd.DataFrame = ART["features"]
 ENGINE = PredictiveEngine()
+
+# Battle character registry (SQLite; see characters.py)
+characters.init_db()
 
 # Survey scores (0-100) don't live on the same scale as the raw Berka
 # features, so a raw survey point lands outside every cluster. Treat each
@@ -296,6 +300,67 @@ def insights(archetype: int, efficiency: float, resilience: float, eq: float):
         nearest,
     )
     return {"nudge": nudge, "spikes": spikes}
+
+
+# --- Battle: character registry + leaderboard -------------------------------
+
+
+class CharacterIn(BaseModel):
+    """A published battle character. `code` is optional — pass it to update your
+    existing card (e.g. after levelling up or rescoring)."""
+    name: str = Field(default="", max_length=40)
+    archetype: int = Field(ge=0, le=3)
+    level: int = Field(ge=1, le=5)
+    accent: str | None = None
+    rankScore: float = Field(default=0.0, ge=0)
+    code: str | None = None
+
+
+class CodesIn(BaseModel):
+    codes: list[str] = Field(default_factory=list)
+
+
+class ResultIn(BaseModel):
+    won: bool
+
+
+@app.post("/characters")
+def publish_character(body: CharacterIn):
+    return characters.upsert_character(
+        name=body.name,
+        archetype=body.archetype,
+        level=body.level,
+        accent=body.accent,
+        rank_score=body.rankScore,
+        code=body.code,
+    )
+
+
+@app.get("/characters/{code}")
+def get_character(code: str):
+    card = characters.get_character(code)
+    if card is None:
+        raise HTTPException(status_code=404, detail="Unknown character code")
+    return card
+
+
+@app.post("/characters/batch")
+def get_characters_batch(body: CodesIn):
+    # cap to keep a friends list request bounded
+    return {"characters": characters.get_many(body.codes[:200])}
+
+
+@app.get("/leaderboard")
+def leaderboard(top: int = 20):
+    return {"leaderboard": characters.list_top(max(1, min(top, 100)))}
+
+
+@app.post("/characters/{code}/result")
+def character_result(code: str, body: ResultIn):
+    card = characters.record_result(code, body.won)
+    if card is None:
+        raise HTTPException(status_code=404, detail="Unknown character code")
+    return card
 
 
 if __name__ == "__main__":

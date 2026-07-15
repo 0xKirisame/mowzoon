@@ -11,7 +11,9 @@ import Onboarding from './Onboarding';
 import Home from './Home';
 import Ledger from './Ledger';
 import Horizon from './Horizon';
+import Arena from './Arena';
 import ProfileSheet from './ProfileSheet';
+import { consumeAddParamFromUrl } from './battle/friends';
 import { useOverlayScrollbar } from './Scrollbar';
 import previewImg from './assets/glass-preview.jpg';
 import './index.css';
@@ -250,6 +252,7 @@ function Sidebar({ view, setView, i, app, profile, profileOpen, settingsBtnRef, 
         <SrcRow v="home" view={view} setView={setView} glyph="home" label={i.t('nav.home')} />
         <SrcRow v="ahead" view={view} setView={setView} glyph="calendar" label={i.t('nav.ahead')} />
         <SrcRow v="spending" view={view} setView={setView} glyph="cart" label={i.t('nav.spending')} />
+        <SrcRow v="arena" view={view} setView={setView} glyph="swords" label={i.t('nav.arena')} />
       </nav>
       <div className="sidebar-foot">
         <button
@@ -286,6 +289,7 @@ function TabBar({ view, setView, i, app, profile, profileOpen, onProfile }) {
       <TabItem v="home" view={view} setView={setView} glyph="home" label={i.t('nav.home')} />
       <TabItem v="ahead" view={view} setView={setView} glyph="calendar" label={i.t('nav.ahead')} />
       <TabItem v="spending" view={view} setView={setView} glyph="cart" label={i.t('nav.spending')} />
+      <TabItem v="arena" view={view} setView={setView} glyph="swords" label={i.t('nav.arena')} />
       <button className={`tab tab-you ${profileOpen ? 'on' : ''}`} onClick={onProfile}>
         <AvatarCircle className="avatar-circle tab-avatar" app={app} profile={profile} glyphSize={13} markSize={15} />
         <span className="tab-label">{i.t('nav.profile')}</span>
@@ -664,6 +668,19 @@ export default function App() {
     }
   }, [app]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // arriving on a friend's share link (?add=CODE) follows them once, then
+  // lands on the arena. Ref-guarded: StrictMode double-fires effects.
+  const addedRef = useRef(false);
+  useEffect(() => {
+    if (addedRef.current) return;
+    addedRef.current = true;
+    consumeAddParamFromUrl(app, setApp).then((res) => {
+      if (!res) return;
+      toast('people', i.t('arena.add.toast', { name: res.name }));
+      setView('arena');
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // toast only when the level actually increases
   const prevLvl = useRef(lvl.n);
   useEffect(() => {
@@ -975,6 +992,8 @@ export default function App() {
                 profile={profile}
                 onLoadSample={loadSample}
               />
+            ) : view === 'arena' ? (
+              <Arena key="arena" app={app} setApp={setApp} profile={profile} level={lvl} onJourney={begin} />
             ) : (
               <Horizon key="ahead" profile={profile} app={app} setApp={setApp} />
             )}
