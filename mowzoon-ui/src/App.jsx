@@ -3,7 +3,7 @@ import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { determineArchetype, calculateLedgerMetrics } from './scoring';
 import { ARCHETYPE_META, DEFAULT_TINT, METRIC_LABELS } from './data';
 import { Seg, Glyph, LogoMark, LiquidMark, LiquidOrb, Meter, spring } from './ui';
-import { classify, getPopulation } from './api';
+import { classify, getPopulation, getEngineInsights } from './api';
 import { DROPS, levelOf, issueQuest, questProgress, newlyEarned } from './game';
 import { useAppState, thisMonthTx, todayISO, monthKey, sampleMonth, streakOf } from './store';
 import { I18nProvider, i18nFor, useI18n, nudgeAr } from './i18n';
@@ -332,7 +332,7 @@ function RailMap({ profile, onOpen }) {
   );
 }
 
-function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, onQuest }) {
+function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, onQuest, onOpenRead }) {
   const i = useI18n();
   const title = i.lang === 'ar' ? 'قراءتك' : 'Your read';
   const live = i.lang === 'ar' ? 'مباشر' : 'live';
@@ -356,13 +356,26 @@ function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, on
   const meta = ARCHETYPE_META[id];
   const voice = i.arch(id);
   const confidence = profile.model ? Math.round(profile.model.probs[profile.model.id] * 100) : null;
-  // rail note = the engine's daily nudge, falling back to the archetype
-  // description when the engine hasn't answered today
+  // Rail read: the engine's ranked insights when it has answered for this
+  // archetype, localized from each insight's signal. The top insight is the
+  // headline; the rest stack below. Falls back to the legacy nudge, then the
+  // archetype description, exactly as before when the engine is quiet.
   const nd = app.nudge && app.nudge.archetypeId === id ? app.nudge : null;
   const visSpike = (nd?.spikes || []).filter((s) => !(app.spikeHidden || []).includes(s.name))[0];
-  const note = i.lang === 'ar'
-    ? (nd ? nudgeAr(id, profile.metrics, visSpike, i.fmtNum, i.fmtDays) : voice.desc)
-    : (nd?.text || voice.desc);
+  const eng = app.insights && app.insights.aid === id ? app.insights : null;
+  const engList = eng?.list || [];
+  const headline = engList.length ? i.insight(engList[0].insight_key, engList[0].signal) : null;
+  const restInsights = engList.slice(1);
+  const note = headline
+    || (i.lang === 'ar'
+      ? (nd ? nudgeAr(id, profile.metrics, visSpike, i.fmtNum, i.fmtDays) : voice.desc)
+      : (nd?.text || voice.desc));
+  const dotColor = (ins) =>
+    ins.kind === 'praise'
+      ? 'var(--pos)'
+      : ins.signal?.band === 'high' || ins.signal?.band === 'elevated'
+        ? 'var(--neg)'
+        : meta.tint;
   return (
     <aside className="rail">
       <div className="rail-head">
@@ -413,6 +426,28 @@ function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, on
       </div>
 
       <div className="rail-note">{note}</div>
+
+      {/* the rest of the engine's ranked read; risks first, praise last */}
+      {restInsights.length > 0 && (
+        <div className="rail-insights">
+          <span className="rail-insights-h">{i.t('insight.more')}</span>
+          {restInsights.map((ins) => (
+            <div key={ins.insight_key} className="rail-insight">
+              <span className="ri-dot" style={{ background: dotColor(ins) }} />
+              <p>{i.insight(ins.insight_key, ins.signal)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* opens the full "read in numbers" panel, like the map opens the full map */}
+      {eng && (eng.signals || []).length > 0 && (
+        <button className="rail-read" onClick={onOpenRead}>
+          <Glyph id="trend" size={15} strokeWidth={2.2} />
+          <span>{i.lang === 'ar' ? 'قراءتك بالأرقام' : 'Your read in numbers'}</span>
+          <svg className="rr-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+      )}
 
       {/* quest summary; details and Collect live on Home */}
       {questProg && app.game?.quest && (
@@ -652,6 +687,51 @@ export default function App() {
     if (lvl.n > prevLvl.current) toast('trend', i.t('toast.level', { lv: i.t(`game.lv.${lvl.n}`) }));
     prevLvl.current = lvl.n;
   }, [lvl.n]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Engine read (POST /insights): feeds the rail's insights and the coach's-
+  // focus panel on Home. Refetched (debounced) whenever the ledger moves so
+  // the read stays live; cached in app.insights. Display-only, so a mid-day
+  // change is harmless — the reward quest above owns its own lifecycle.
+  const ledgerSig = useMemo(() => {
+    let n = 0;
+    let sum = 0;
+    let last = '';
+    for (const t of app.tx) {
+      n += 1;
+      sum += t.amount;
+      if (t.date > last) last = t.date;
+    }
+    return `${n}|${sum}|${last}|${app.income}`;
+  }, [app.tx, app.income]);
+
+  useEffect(() => {
+    if (profileId == null || !profile) return undefined;
+    const cur = app.insights;
+    if (cur && cur.day === today && cur.aid === profileId && cur.sig === ledgerSig) return undefined;
+    let alive = true;
+    const timer = setTimeout(() => {
+      const ledger = app.tx.map((t) => ({ type: t.type, amount: t.amount, date: t.date }));
+      getEngineInsights(profileId, app.income, ledger, profile.metrics, today).then((d) => {
+        if (!alive || !d) return;
+        setApp((s) => ({
+          ...s,
+          insights: {
+            day: today,
+            aid: profileId,
+            sig: ledgerSig,
+            nudge: d.nudge,
+            list: d.insights || [],
+            quest: d.quest || null,
+            signals: d.signals || [],
+          },
+        }));
+      });
+    }, 900);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [profileId, today, ledgerSig]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // issue a quest; reissue when the archetype changes or the week runs out
   useEffect(() => {
@@ -928,6 +1008,7 @@ export default function App() {
           questProg={questProgress(app, gm.quest)}
           onOpenMap={() => openProfile('population')}
           onOpenProgress={() => openProfile('progress')}
+          onOpenRead={() => openProfile('signals')}
           onQuest={() => setView('home')}
         />
       </div>

@@ -1,9 +1,16 @@
 """
 Mowzoon - Recommendation and Predictive Engine
+
+PredictiveEngine.generate_micro_nudge serves the legacy GET path (no ledger,
+no signals). match_insights below is the L2 matching layer for the
+POST path: it scores L1 signals against config.ARCHETYPE_PROFILES and
+returns ranked, template-rendered insights. Design:
+mowzoon-analytic/matching-design.md
 """
 
 from datetime import datetime, timedelta
 import config
+import templates
 
 class PredictiveEngine:
     def __init__(self):
@@ -97,3 +104,104 @@ class PredictiveEngine:
         # Cache the generated nudge
         self.redis_cache[cache_key] = nudge
         return nudge
+
+
+# ---------------------------------------------------------------------------
+# L2 matching layer (module-level; PredictiveEngine untouched)
+# ---------------------------------------------------------------------------
+
+BAND_BASE = {"calm": 0, "note": 1, "elevated": 2, "high": 3}
+
+# A spike-landmark rule only fires inside this window (timing risk, not behavior).
+LANDMARK_FIRE_DAYS = 30
+LANDMARK_URGENT_DAYS = 14
+
+
+def _rule_fires(rule, sig):
+    """Direction gate plus optional archetype-specific cutpoints (profile convention)."""
+    if sig["name"] == "landmark":
+        spike = (sig.get("evidence") or {}).get("next_spike")
+        return bool(spike) and spike.get("days", 999) <= LANDMARK_FIRE_DAYS
+    if sig["direction"] != rule["risk_direction"]:
+        return False
+    if "value_lt" in rule and not sig["value"] < rule["value_lt"]:
+        return False
+    if "value_gt" in rule and not sig["value"] > rule["value_gt"]:
+        return False
+    return True
+
+
+def _base_score(rule, sig):
+    if sig["name"] == "landmark":
+        spike = (sig.get("evidence") or {}).get("next_spike") or {}
+        return 2 if spike.get("days", 999) <= LANDMARK_URGENT_DAYS else 1
+    base = BAND_BASE.get(sig["band"], 0)
+    # Fired-rule floor: inverted rules (e.g. Anxious Planner over-saving) fire in
+    # states the generic bands call calm; firing already proved the archetype-
+    # specific condition, so "elevated" is the honest minimum.
+    return base if base > 0 else 2
+
+
+def _praise_fires(rule, sig):
+    if sig["band"] not in rule["when_band"]:
+        return False
+    if "when_value_gt" in rule and not sig["value"] > rule["when_value_gt"]:
+        return False
+    return True
+
+
+def _insight(kind, key, score, sig, profile):
+    entry = templates.TEMPLATES[key]
+    intervention = None
+    if entry["intervention"]:
+        intervention = {
+            "key": entry["intervention"],
+            "label": config.INTERVENTIONS[entry["intervention"]]["label"],
+        }
+    return {
+        "insight_key": key,
+        "kind": kind,
+        "score": round(score, 2),
+        "signal": sig,
+        "mechanism": profile["mechanism"],
+        "tone": profile["tone"],
+        "intervention": intervention,
+        "text": templates.render(key, sig),
+    }
+
+
+def match_insights(signals, archetype_id, max_risks=2):
+    """Score signals against the archetype profile; return ranked insights.
+
+    Top max_risks risk insights plus at most one praise insight. An empty
+    list is a legitimate result (the JITAI "do nothing" option).
+    """
+    profile = config.ARCHETYPE_PROFILES.get(archetype_id)
+    if profile is None:
+        return []
+    by_name = {s["name"]: s for s in signals}
+
+    risks = []
+    fired_signals = set()
+    for order, (sig_name, rule) in enumerate(profile["watch"].items()):
+        sig = by_name.get(sig_name)
+        if sig is None or not _rule_fires(rule, sig):
+            continue
+        score = _base_score(rule, sig) * rule["weight"]
+        risks.append((score, rule["weight"], -order, rule["insight_key"], sig))
+        fired_signals.add(sig_name)
+    risks.sort(reverse=True)
+
+    out = [
+        _insight("risk", key, score, sig, profile)
+        for score, _w, _o, key, sig in risks[:max_risks]
+    ]
+
+    for rule in profile["praise"]:
+        sig = by_name.get(rule["signal"])
+        if sig is None or rule["signal"] in fired_signals:
+            continue
+        if _praise_fires(rule, sig):
+            out.append(_insight("praise", rule["insight_key"], 0.0, sig, profile))
+            break
+    return out
