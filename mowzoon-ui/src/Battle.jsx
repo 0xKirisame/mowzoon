@@ -336,22 +336,6 @@ export default function Battle({ mode, player, enemy, difficulty = 0.55, rewards
           )}
         </AnimatePresence>
 
-        {/* ability notice for non-trade mode */}
-        <AnimatePresence>
-          {!trade && abilityNotice && st.phase !== 'ended' && (
-            <motion.div
-              className="bt-ability-toast"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-              transition={spring}
-            >
-              <Glyph id="spark" size={14} strokeWidth={2.2} />
-              {i.t('battle.ability.used', { name: abilityNotice.actorName, ability: abilityNotice.name })}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* end card */}
         <AnimatePresence>
           {st.phase === 'ended' && (
@@ -388,6 +372,22 @@ export default function Battle({ mode, player, enemy, difficulty = 0.55, rewards
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* ability notice for non-trade mode */}
+      <AnimatePresence>
+        {!trade && abilityNotice && st.phase !== 'ended' && (
+          <motion.div
+            className="bt-ability-toast"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
+            transition={spring}
+          >
+            <Glyph id="spark" size={14} strokeWidth={2.2} />
+            {i.t('battle.ability.used', { name: abilityNotice.actorName, ability: abilityNotice.name })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
