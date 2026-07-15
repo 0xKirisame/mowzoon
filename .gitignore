@@ -1,1 +1,7 @@
-mowzoon-ui/package-lock.json
+# Generated at runtime / large binaries — never commit
+data/
+__pycache__/
+*.pyc
+*.pkl
+*.asc
+.DS_Store
