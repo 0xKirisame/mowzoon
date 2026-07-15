@@ -43,6 +43,17 @@ const EMPTY = {
     badges: {},      // { [badgeId]: ISO day earned }
     flags: {},       // one-shot event flags (e.g. opened the map)
   },
+
+  // battle layer, see src/battle/. Combat state is ephemeral (lives in the
+  // reducer); only this meta persists.
+  battle: {
+    code: null,            // my published registry code (backend)
+    record: { wins: 0, losses: 0 },
+    friends: [],           // followed friends' codes ['AB12CD', ...]
+    friendCards: {},       // cache { [code]: { name, aid, level, rankScore, updatedAt } }
+    rankScore: 0,          // my leaderboard standing (see battle/rank.js)
+    lastResult: null,      // { mode, won, at }
+  },
 };
 
 export const todayISO = () => {
@@ -56,12 +67,17 @@ function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (!raw || typeof raw !== 'object') return { ...EMPTY };
-    // deep-merge profile/game so new sub-fields land on older saved docs
+    // deep-merge profile/game/battle so new sub-fields land on older saved docs
     return {
       ...EMPTY,
       ...raw,
       profile: { ...EMPTY.profile, ...(raw.profile || {}) },
       game: { ...EMPTY.game, ...(raw.game || {}) },
+      battle: {
+        ...EMPTY.battle,
+        ...(raw.battle || {}),
+        record: { ...EMPTY.battle.record, ...(raw.battle?.record || {}) },
+      },
     };
   } catch {
     return { ...EMPTY };

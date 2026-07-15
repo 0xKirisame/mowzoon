@@ -60,3 +60,43 @@ export function getInsights(archetypeId, metrics) {
   });
   return get(`/insights?${qs}`);
 }
+
+// --- Battle: character registry + leaderboard (see mowzoon/characters.py) ----
+// All resolve to null on failure so the caller can fall back to the offline
+// share-string path (decodeCard) or simply hide the online feature.
+
+async function post(path, body, timeout = 3500) {
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeout),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// Publish (or update, by passing your existing code) my character card.
+// card: { name, archetype, level, accent, rankScore, code? } → { code, ...card }
+export function publishCharacter(card) {
+  return post('/characters', card);
+}
+
+// Resolve a friend's card by code (challenge / add-friend). → card | null
+export function fetchCharacter(code) {
+  return get(`/characters/${encodeURIComponent(code)}`);
+}
+
+// Batch-resolve cards for the friends leaderboard. → [card] | null
+export function getCharacters(codes) {
+  return post('/characters/batch', { codes });
+}
+
+// Global leaderboard, top N by rank_score. → [{rank, code, name, aid, level, rankScore}] | null
+export function getLeaderboard(top = 20) {
+  return get(`/leaderboard?top=${top}`);
+}
