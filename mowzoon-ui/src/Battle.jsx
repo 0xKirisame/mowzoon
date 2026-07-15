@@ -11,7 +11,7 @@ import { initBattle, battleReducer } from './battle/engine';
 import { abilityFor } from './battle/abilities';
 import { sampleStopFrac, chooseAction } from './battle/ai';
 
-const REV_PER_SEC = 0.75; // base pointer speed; the wheel's speed multiplies it
+const REV_PER_SEC = 1.75; // base pointer speed; the wheel's speed multiplies it
 
 const STATUS_GLYPHS = { shield: 'shield', allIn: 'bolt', lastStand: 'peak' };
 
@@ -79,10 +79,10 @@ function Fighter({ actor, active, mirror }) {
 function Wheel({ wheel, needleRef, spinning, onTap, label }) {
   const segs = wheel
     ? [
-        { key: 'miss', f0: 0, len: wheel.miss },
-        { key: 'hit', f0: wheel.miss, len: wheel.hit },
-        { key: 'crit', f0: wheel.miss + wheel.hit, len: wheel.crit },
-      ]
+      { key: 'miss', f0: 0, len: wheel.miss },
+      { key: 'hit', f0: wheel.miss, len: wheel.hit },
+      { key: 'crit', f0: wheel.miss + wheel.hit, len: wheel.crit },
+    ]
     : [];
   return (
     <button className={`bt-wheel ${spinning ? 'spinning' : ''}`} onClick={onTap} dir="ltr" aria-label={label}>
@@ -119,7 +119,9 @@ export default function Battle({ mode, player, enemy, difficulty = 0.55, rewards
   const [spinning, setSpinning] = useState(false);
   const [flash, setFlash] = useState(null); // { id, region }
   const [handoff, setHandoff] = useState(false);
+  const [abilityNotice, setAbilityNotice] = useState(null); // { side, name }
   const doneRef = useRef(false);
+  const prevLogLen = useRef(0);
 
   const setNeedle = (deg) => {
     angleRef.current = ((deg % 360) + 360) % 360;
@@ -176,7 +178,7 @@ export default function Battle({ mode, player, enemy, difficulty = 0.55, rewards
     if (st.phase === 'spin' && st.pending) {
       const frac = sampleStopFrac(st.pending.wheel, difficulty);
       const from = angleRef.current;
-      const target = from + 630 + ((frac * 360 - from) % 360 + 360) % 360;
+      const target = from + 720 + ((frac * 360 - from) % 360 + 360) % 360;
       const controls = animate(from, target, {
         duration: 1.5,
         ease: [0.25, 0.7, 0.25, 1],
@@ -188,12 +190,41 @@ export default function Battle({ mode, player, enemy, difficulty = 0.55, rewards
     return undefined;
   }, [st.turn, st.phase, st.pending]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Detect ability usage from log entries
+  useEffect(() => {
+    if (st.log.length > prevLogLen.current) {
+      const newest = st.log.slice(prevLogLen.current);
+      for (const entry of newest) {
+        const m = entry.match(/^(player|enemy) uses (.+)$/);
+        if (m) {
+          const side = m[1];
+          const abName = m[2];
+          const ab = abilityFor(st.actors[side].card.aid);
+          // buff abilities skip the turn — show a notice
+          if (ab && ab.kind === 'buff') {
+            setAbilityNotice({ side, name: abName, actorName: actorName(side) });
+          }
+        }
+      }
+    }
+    prevLogLen.current = st.log.length;
+  }, [st.log.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // trade mode: announce the hand-off whenever the turn flips
   const prevTurn = useRef(st.turn);
   useEffect(() => {
     if (trade && st.phase === 'choose' && st.turn !== prevTurn.current) setHandoff(true);
     prevTurn.current = st.turn;
   }, [st.turn, st.phase, trade]);
+
+  // Non-trade mode: clear ability notice after a short delay
+  useEffect(() => {
+    if (!trade && abilityNotice) {
+      const id = setTimeout(() => setAbilityNotice(null), 2200);
+      return () => clearTimeout(id);
+    }
+    return undefined;
+  }, [abilityNotice, trade]);
 
   // report the outcome exactly once
   useEffect(() => {
@@ -283,10 +314,40 @@ export default function Battle({ mode, player, enemy, difficulty = 0.55, rewards
         <AnimatePresence>
           {handoff && st.phase !== 'ended' && (
             <motion.div className="bt-cover" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {(() => {
+                const turnMeta = ARCHETYPE_META[st.actors[st.turn].card.aid];
+                return (
+                  <span className="bt-handoff-glyph" style={{ '--ft': turnMeta.tint }}>
+                    <Glyph id={turnMeta.glyph} size={28} strokeWidth={1.9} />
+                  </span>
+                );
+              })()}
+              {abilityNotice && (
+                <p className="bt-ability-notice">
+                  <Glyph id="spark" size={14} strokeWidth={2.2} />
+                  {i.t('battle.ability.used', { name: abilityNotice.actorName, ability: abilityNotice.name })}
+                </p>
+              )}
               <p className="bt-pass">{i.t('battle.pass', { name: actorName(st.turn) })}</p>
-              <motion.button className="btn-ink" whileTap={{ scale: 0.96 }} onClick={() => setHandoff(false)}>
+              <motion.button className="btn-ink" whileTap={{ scale: 0.96 }} onClick={() => { setHandoff(false); setAbilityNotice(null); }}>
                 {i.t('battle.ready')}
               </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ability notice for non-trade mode */}
+        <AnimatePresence>
+          {!trade && abilityNotice && st.phase !== 'ended' && (
+            <motion.div
+              className="bt-ability-toast"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
+              transition={spring}
+            >
+              <Glyph id="spark" size={14} strokeWidth={2.2} />
+              {i.t('battle.ability.used', { name: abilityNotice.actorName, ability: abilityNotice.name })}
             </motion.div>
           )}
         </AnimatePresence>

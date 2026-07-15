@@ -155,6 +155,7 @@ export default function Arena({ app, setApp, profile, level, onJourney }) {
   };
 
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const link = b.code ? shareLink(b.code) : null;
   const copyLink = () => {
@@ -360,7 +361,7 @@ export default function Arena({ app, setApp, profile, level, onJourney }) {
 
         {link ? (
           <div className="ar-share">
-            <span className="ar-code glass-lite" dir="ltr">{b.code}</span>
+            <button className="ar-code glass-lite" dir="ltr" onClick={() => { navigator.clipboard?.writeText(b.code); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); }}>{codeCopied ? i.t('arena.copied') : b.code}</button>
             <button className="ar-share-btn glass-lite" onClick={copyLink}>
               <Glyph id="link" size={15} strokeWidth={2.1} />
               {copied ? i.t('arena.copied') : i.t('arena.copy')}

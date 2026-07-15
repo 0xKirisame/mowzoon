@@ -2821,7 +2821,9 @@ html[dir='rtl'] .ob-switch.on i { transform: translateX(-18px); }
   font-variant-numeric: tabular-nums;
   font-size: 16px; font-weight: 800; letter-spacing: 0.14em;
   padding: 9px 16px; border-radius: var(--r-md); color: var(--tint);
+  cursor: pointer; transition: opacity 0.15s ease;
 }
+.ar-code:hover { opacity: 0.75; }
 .ar-share-btn {
   display: inline-flex; align-items: center; gap: 7px;
   font-size: 13.5px; font-weight: 650; color: var(--ink);
@@ -3072,6 +3074,35 @@ html.dark .bt-attack { color: #111; }
   backdrop-filter: blur(calc(var(--gb) + 8px)) saturate(var(--gs));
 }
 html.dark .bt-cover { background: rgba(24, 24, 30, calc(var(--ga) + 0.55)); }
+.bt-handoff-glyph {
+  width: 68px; height: 68px; display: grid; place-items: center;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ft) 14%, var(--surface));
+  color: var(--ft);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--ft) 25%, transparent);
+}
+.bt-ability-notice {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 650; color: var(--tint);
+  padding: 8px 16px; border-radius: 999px;
+  background: color-mix(in srgb, var(--tint) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tint) 22%, transparent);
+  margin: 0;
+}
+.bt-ability-toast {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 4;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 650; color: var(--tint);
+  padding: 8px 16px; border-radius: 999px; white-space: nowrap;
+  background: rgba(255, 255, 255, calc(var(--ga) + 0.65));
+  -webkit-backdrop-filter: blur(10px) saturate(var(--gs));
+  backdrop-filter: blur(10px) saturate(var(--gs));
+  border: 1px solid color-mix(in srgb, var(--tint) 30%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+html.dark .bt-ability-toast {
+  background: rgba(30, 30, 36, calc(var(--ga) + 0.6));
+}
 .bt-pass { font-size: 19px; font-weight: 750; letter-spacing: -0.015em; max-width: 300px; }
 .bt-end-mark {
   width: 78px; height: 78px; display: grid; place-items: center;

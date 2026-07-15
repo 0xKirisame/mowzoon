@@ -362,6 +362,7 @@ const STR = {
     'battle.rank.up': '+{n} rank',
     'battle.rank.down': '−{n} rank',
     'battle.practice.note': 'Practice never moves your rank.',
+    'battle.ability.used': '{name} used {ability} — turn skipped',
 
     'ability.0.name': 'Splurge',
     'ability.0.d': 'Attack twice; faster wheel',
@@ -729,6 +730,7 @@ const STR = {
     'battle.rank.up': '‎+{n} تصنيف',
     'battle.rank.down': '‎−{n} تصنيف',
     'battle.practice.note': 'التدريب لا يغيّر تصنيفك.',
+    'battle.ability.used': '{name} استخدم {ability} — تخطّى الدور',
 
     'ability.0.name': 'فورة إنفاق',
     'ability.0.d': 'هجومان في دور واحد، وعجلة أسرع',
