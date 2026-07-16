@@ -18,7 +18,35 @@
 // The camel is drawn in side profile facing LEFT (the enemy pose); the
 // front-facing three just mirror for the player's back view.
 
+import { useEffect, useRef, useState } from 'react';
+
 const ANIMAL_SLUG = { 0: 'raccoon', 1: 'squirrel', 2: 'peacock', 3: 'camel' };
+
+// CSS can't blend between two keyframe animations — switching classes snaps
+// to the new cycle's first frame. So state changes pass through a short
+// neutral beat: drop the old animation (the rig's transform transitions
+// glide every part home), then start the new cycle, which always begins at
+// neutral. 'strike' skips the beat — it's timed to the damage and its first
+// frame IS the wind-up pose it interrupts.
+const BLEND_MS = 320;
+
+function useBlendedAnim(anim) {
+  const [shown, setShown] = useState(anim);
+  const prev = useRef(anim);
+  useEffect(() => {
+    if (anim === prev.current) return undefined;
+    const from = prev.current;
+    prev.current = anim;
+    if (anim === 'strike' || anim == null || from == null) {
+      setShown(anim);
+      return undefined;
+    }
+    setShown(null);
+    const t = setTimeout(() => setShown(anim), BLEND_MS);
+    return () => clearTimeout(t);
+  }, [anim]);
+  return shown;
+}
 
 // artwork is 1202×1037; feet land on the shadow line at y=104
 function Raccoon() {
@@ -244,13 +272,14 @@ const ANIMALS = { 0: Raccoon, 1: Squirrel, 2: Peacock, 3: Camel };
 export function ArchSprite({ archetype, view = 'front', tint, size = 120, anim = null }) {
   const Animal = ANIMALS[archetype] || Raccoon;
   const slug = ANIMAL_SLUG[archetype] || 'raccoon';
+  const shown = useBlendedAnim(anim);
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 120 120"
       aria-hidden="true"
-      className={`arch-sprite spx-${slug}${anim ? ` anim-${anim}` : ''}`}
+      className={`arch-sprite spx-${slug}${shown ? ` anim-${shown}` : ''}`}
       style={tint ? { '--sp-tint': tint } : undefined}
     >
       <ellipse cx="60" cy="110" rx="34" ry="5.5" className="sp-shadow" />

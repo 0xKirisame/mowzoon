@@ -200,6 +200,7 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
   const [handoff, setHandoff] = useState(mode === 'pass');
   const human = (side) => side === 'A' || mode === 'pass';
   const endedRef = useRef(false);
+  const strikeAt = useRef(0); // when the last attack resolved (drives the one-shot strike)
 
   // 1s heartbeat that drives the bored "idle2" windows, staggered per side
   const [tick, setTick] = useState(0);
@@ -207,9 +208,13 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
     const t = setInterval(() => setTick((x) => x + 1), 1000);
     return () => clearInterval(t);
   }, []);
+  // while the wheel spins the attacker holds an anticipation pose; the
+  // strike itself plays ONCE, on the remount that lands the damage
   const animFor = (side) => {
     if (st.winner) return st.winner === side ? 'cheer' : null; // loser lies still
-    if (spin?.side === side) return 'attack';
+    if (spin?.side === side) return 'windup';
+    const l = st.log[st.log.length - 1];
+    if (l?.kind === 'attack' && l.actor === side && Date.now() - strikeAt.current < 900) return 'strike';
     return (tick + (side === 'A' ? 0 : 5)) % 11 >= 8 ? 'idle2' : 'idle';
   };
 
@@ -222,6 +227,7 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
   const onSpinDone = () => {
     if (!spin) return;
     const next = resolveAttack(st, spin.side, spin.outcome);
+    strikeAt.current = Date.now();
     setSt(next);
     setSpin(null);
     if (mode === 'pass' && !next.winner && next.turn !== spin.side) setHandoff(true);
@@ -486,7 +492,7 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
 
 /* --------------------------------- loadout -------------------------------- */
 
-function LoadoutPanel({ me, loadout, level, setApp, i }) {
+function LoadoutPanel({ me, loadout, level, setApp, i, bare }) {
   const slots = slotsFor(level);
   const abilities = ABILITIES[me.archetype] || ABILITIES[0];
   const chosenAbility =
@@ -509,8 +515,8 @@ function LoadoutPanel({ me, loadout, level, setApp, i }) {
   };
 
   return (
-    <motion.div className="glass panel loadout" variants={item}>
-      <div className="panel-title">{i.t('arena.loadout')}</div>
+    <motion.div className={bare ? 'loadout' : 'glass panel loadout'} variants={bare ? undefined : item}>
+      {!bare && <div className="panel-title">{i.t('arena.loadout')}</div>}
       <div className="loadout-sec">
         <span className="loadout-cap">
           {i.t('arena.effects')} · {i.fmtNum(Math.min(loadout.effects.length, slots.effectSlots))}/{i.fmtNum(slots.effectSlots)}
@@ -610,43 +616,123 @@ function PassSetup({ onStart, onClose, i }) {
   );
 }
 
-/* ---------------------------------- lobby --------------------------------- */
+/* ---------------------------------- sheets --------------------------------- */
 
-function RivalCard({ c, mine, onChallenge, i }) {
-  const meta = ARCHETYPE_META[c.archetype];
-  const adv = matchup(mine, c.archetype);
+function ArenaSheet({ open, title, onClose, children }) {
   return (
-    <motion.div className="glass friend rival" variants={item} style={{ '--ft': meta.tint }}>
-      <div className="friend-top">
-        <span className="rival-sprite">
-          <ArchSprite archetype={c.archetype} view="front" tint={c.accent || meta.tint} size={54} anim="idle" />
-        </span>
-        <div>
-          <div className="friend-name">{botName(c, i.lang)}</div>
-          <div className="friend-arch">{i.arch(c.archetype).name}</div>
-          <div className="rival-meta">
-            <span>{i.t('arena.lv', { n: i.fmtNum(c.level) })}</span>
-            {(c.rankScore ?? 0) > 0 && (
-              <span className="rival-rank">
-                <Glyph id="trophy" size={11} strokeWidth={2.4} />
-                {i.fmtNum(c.rankScore)}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="arena-scrim"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="glass arena-sheet"
+            initial={{ opacity: 0, y: 26, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 30 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="arena-sheet-head">
+              <b>{title}</b>
+              <button className="arena-sheet-x" onClick={onClose} aria-label={title}>
+                <Glyph id="plus" size={16} strokeWidth={2.3} />
+              </button>
+            </div>
+            <div className="arena-sheet-body">{children}</div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ------------------------------- matchmaking ------------------------------- */
+
+// The FIGHT theatre. 'search' cycles silhouettes in the rival slot, 'found'
+// pops the real opponent in, 'load' runs a progress bar of made-up chores.
+function MatchOverlay({ match, me, meTint, i, onCancel }) {
+  const [beat, setBeat] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setBeat((x) => x + 1), match.phase === 'search' ? 240 : 700);
+    return () => clearInterval(t);
+  }, [match.phase]);
+  const opp = match.opp;
+  const oppMeta = opp ? ARCHETYPE_META[opp.archetype] : null;
+  const statusKey =
+    match.phase === 'search'
+      ? `arena.search.${(Math.floor(beat / 3) % 3) + 1}`
+      : `arena.load.${(beat % 3) + 1}`;
+  return (
+    <motion.div
+      className="arena-scrim match-scrim"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <div className="glass battle-card match-card">
+        <div className="match-slots" dir="ltr">
+          <div className="match-slot">
+            <ArchSprite archetype={me.archetype} view="front" tint={meTint} size={92} anim="idle" />
+            <b>{me.name}</b>
+          </div>
+          <span className={`match-vs ${match.phase !== 'search' ? 'on' : ''}`}>
+            {match.phase === 'search' ? '?' : i.t('arena.vs')}
+          </span>
+          <div className={`match-slot ${match.phase === 'search' ? 'seeking' : ''}`}>
+            {match.phase === 'search' ? (
+              <span className="match-cycler">
+                <ArchSprite archetype={beat % 4} view="front" tint={ARCHETYPE_META[beat % 4].tint} size={92} />
               </span>
+            ) : (
+              <motion.span
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 15 }}
+              >
+                <ArchSprite
+                  archetype={opp.archetype}
+                  view="front"
+                  tint={opp.accent || oppMeta.tint}
+                  size={92}
+                  anim={match.phase === 'found' ? 'idle2' : 'idle'}
+                />
+              </motion.span>
             )}
+            {match.phase !== 'search' && <b>{botName(opp, i.lang)}</b>}
           </div>
         </div>
-        <span className={`rival-adv ${adv > 0 ? 'good' : adv < 0 ? 'bad' : ''}`}>
-          {i.t(adv > 0 ? 'arena.adv.up' : adv < 0 ? 'arena.adv.down' : 'arena.adv.even')}
-        </span>
+
+        <h2>{i.t(match.phase === 'search' ? 'arena.search' : match.phase === 'found' ? 'arena.found' : 'arena.loading')}</h2>
+        {match.phase === 'found' ? (
+          <p className="match-status">
+            {i.arch(opp.archetype).name} · {i.t('arena.lv', { n: i.fmtNum(opp.level) })}
+            {(opp.rankScore ?? 0) > 0 ? ` · ${i.fmtNum(opp.rankScore)}` : ''}
+          </p>
+        ) : (
+          <p className="match-status" key={statusKey}>{i.t(statusKey)}</p>
+        )}
+
+        {match.phase === 'load' && (
+          <span className="match-bar">
+            <motion.i initial={{ width: '4%' }} animate={{ width: '100%' }} transition={{ duration: 1.55, ease: 'easeInOut' }} />
+          </span>
+        )}
+        {match.phase === 'search' && (
+          <button className="btn-ability match-cancel" onClick={onCancel}>{i.t('arena.cancel')}</button>
+        )}
       </div>
-      <motion.button className="btn-attack rival-btn" whileTap={{ scale: 0.97 }} transition={gel} onClick={onChallenge}>
-        <Glyph id="swords" size={15} strokeWidth={2.2} />
-        {i.t('arena.challenge')}
-      </motion.button>
     </motion.div>
   );
 }
 
-function LbRow({ r, i }) {
+/* ---------------------------------- lobby --------------------------------- */
+
+function LbRow({ r, i, onChallenge }) {
   const meta = ARCHETYPE_META[r.archetype] ?? ARCHETYPE_META[0];
   return (
     <div className={`lb-row ${r.isMe ? 'me' : ''}`}>
@@ -660,6 +746,16 @@ function LbRow({ r, i }) {
       </span>
       <span className="lb-lv">{i.t('arena.lv', { n: i.fmtNum(r.level) })}</span>
       <b className="lb-score">{i.fmtNum(Math.round(r.rankScore ?? 0))}</b>
+      {!r.isMe && r.handle && onChallenge && (
+        <motion.button
+          className="ar-challenge lb-duel"
+          whileTap={{ scale: 0.94 }}
+          onClick={() => onChallenge(r.handle)}
+          title={i.t('arena.challenge')}
+        >
+          <Glyph id="swords" size={13} strokeWidth={2.3} />
+        </motion.button>
+      )}
     </div>
   );
 }
@@ -672,7 +768,10 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   const [inbox, setInbox] = useState(null);
   const [board, setBoard] = useState(null); // global ladder, null = offline
   const [rankDelta, setRankDelta] = useState(null); // shown on the result card
-  const [lobbyTick, setLobbyTick] = useState(0); // drives the fighter panel's bored special
+  const [lobbyTick, setLobbyTick] = useState(0); // drives the hero's bored special
+  const [sheet, setSheet] = useState(null); // 'loadout' | 'friends' | 'lb' | null
+  const [match, setMatch] = useState(null); // { phase: 'search' | 'found' | 'load', opp? }
+  const matchTimers = useRef([]);
   const [lbTab, setLbTab] = useState('global');
   const [addVal, setAddVal] = useState('');
   const [addState, setAddState] = useState(null); // 'busy' | 'ok' | 'err'
@@ -782,6 +881,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     return () => clearInterval(t);
   }, [battle]);
   const lobbyAnim = lobbyTick % 10 >= 8 ? 'idle2' : 'idle';
+  useEffect(() => () => matchTimers.current.forEach(clearTimeout), []);
 
   if (!profile) {
     return (
@@ -886,6 +986,30 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     if (c) setBattle({ opp: { ...c, name: botName(c, i.lang) }, mode: 'ghost', key: `${handle}-${Date.now()}` });
   };
 
+  // FIGHT: the opponent is picked instantly (level-neighbours first), the
+  // search / found / loading beats are pure theatre
+  const startMatchmaking = () => {
+    const pool = rivals.filter((c) => c.handle !== myHandle);
+    if (!pool.length || match) return;
+    const near = pool.filter((c) => Math.abs((c.level || 1) - lvl.n) <= 1);
+    const from = near.length ? near : pool;
+    const opp = from[Math.floor(Math.random() * from.length)];
+    setSheet(null);
+    setMatch({ phase: 'search' });
+    matchTimers.current = [
+      setTimeout(() => setMatch({ phase: 'found', opp }), 2300),
+      setTimeout(() => setMatch({ phase: 'load', opp }), 3800),
+      setTimeout(() => {
+        setMatch(null);
+        setBattle({ opp: { ...opp, name: botName(opp, i.lang) }, mode: 'ghost', key: `${opp.handle}-${Date.now()}` });
+      }, 5450),
+    ];
+  };
+  const cancelMatch = () => {
+    matchTimers.current.forEach(clearTimeout);
+    setMatch(null);
+  };
+
   // follow a pasted handle or share link
   const doAdd = async () => {
     let code = addVal.trim();
@@ -914,74 +1038,103 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
           <h1>{i.t('arena.title')}</h1>
           <p className="home-sub">{i.t('arena.sub')}</p>
         </div>
-        <span className="streak glass-lite arena-rank-chip" title={i.t('arena.lb.cap')}>
+        <button className="streak glass-lite arena-rank-chip" title={i.t('arena.lb')} onClick={() => setSheet('lb')}>
           <Glyph id="trophy" size={15} strokeWidth={2} />
           <NumberFlow value={Math.round(app.arena.rankScore || 0)} duration={0.6} format={i.fmtNum} />
-        </span>
+        </button>
       </motion.header>
 
-      <motion.div className="glass panel fighter-panel" variants={item} style={{ '--ft': meta.tint }}>
-        <div className="fighter-top">
-          <span className="fighter-sprite">
-            <ArchSprite archetype={aid} view="front" tint={app.profile.accent || meta.tint} size={84} anim={lobbyAnim} />
+      {/* the stage: stats+items | hero | actions */}
+      <motion.div className="glass stage" variants={item} style={{ '--ft': meta.tint }}>
+        <div className="stage-id">
+          <b className="stage-name">{meF.name}</b>
+          <span className="stage-sub">
+            {i.arch(aid).name} · {i.t('arena.lv', { n: i.fmtNum(meF.level) })} · {i.t(`game.lv.${lvl.n}`)}
           </span>
-          <div>
-            <div className="fighter-name">{meF.name}</div>
-            <div className="fighter-arch">{i.arch(aid).name} · {i.t('arena.lv', { n: i.fmtNum(meF.level) })}</div>
-            {(rec.wins > 0 || rec.losses > 0) && (
-              <div className="fighter-record">{i.t('arena.record', { w: i.fmtNum(rec.wins), l: i.fmtNum(rec.losses) })}</div>
-            )}
+          {(rec.wins > 0 || rec.losses > 0) && (
+            <span className="stage-record">{i.t('arena.record', { w: i.fmtNum(rec.wins), l: i.fmtNum(rec.losses) })}</span>
+          )}
+        </div>
+
+        <aside className="stage-stats">
+          <div className="stat-row">
+            <span>{i.t('arena.stat.hp')}</span>
+            <i className="stat-meter"><b style={{ width: `${Math.min(100, (meF.maxHp / 130) * 100)}%` }} /></i>
+            <b className="stat-val">{i.fmtNum(meF.maxHp)}</b>
           </div>
-        </div>
-        <div className="fighter-stats">
-          <div><b>{i.fmtNum(meF.maxHp)}</b><span>{i.t('arena.stat.hp')}</span></div>
-          <div><b>{i.fmtNum(meF.atk)}</b><span>{i.t('arena.stat.atk')}</span></div>
-          <div><b>{Math.round((meF.critDeg / 360) * 100)}%</b><span>{i.t('arena.stat.crit')}</span></div>
-        </div>
-        <div className="ar-traits">
-          <span className="ar-trait up">
-            <Glyph id={ARCHETYPE_META[BEATS[aid]].glyph} size={13} strokeWidth={2.2} />
-            {i.t('arena.strong', { name: i.arch(BEATS[aid]).name })}
-          </span>
-          <span className="ar-trait down">
-            <Glyph id={ARCHETYPE_META[weakVs].glyph} size={13} strokeWidth={2.2} />
-            {i.t('arena.weak', { name: i.arch(weakVs).name })}
-          </span>
-        </div>
-        <p className="fighter-note">{i.t('arena.statNote')}</p>
-      </motion.div>
+          <div className="stat-row">
+            <span>{i.t('arena.stat.atk')}</span>
+            <i className="stat-meter"><b style={{ width: `${Math.min(100, (meF.atk / 40) * 100)}%` }} /></i>
+            <b className="stat-val">{i.fmtNum(meF.atk)}</b>
+          </div>
+          <div className="stat-row">
+            <span>{i.t('arena.stat.crit')}</span>
+            <i className="stat-meter"><b style={{ width: `${Math.min(100, Math.round((meF.critDeg / 360) * 100) * 2)}%` }} /></i>
+            <b className="stat-val">{Math.round((meF.critDeg / 360) * 100)}%</b>
+          </div>
 
-      <LoadoutPanel me={meChar} loadout={app.arena.loadout} level={lvl.n} setApp={setApp} i={i} />
+          <div className="stage-items-cap">
+            <span>{i.t('arena.loadout')}</span>
+            <button className="stage-edit" onClick={() => setSheet('loadout')}>{i.t('arena.edit')}</button>
+          </div>
+          <div className="stage-items">
+            <button className="stage-item" onClick={() => setSheet('loadout')} title={i.t(`arena.ab.${meF.ability}.d`)}>
+              <Glyph id={ABILITY_GLYPH[meF.ability]} size={13} strokeWidth={2.2} />
+              {i.t(`arena.ab.${meF.ability}`)}
+            </button>
+            {app.arena.loadout.effects.filter((x) => EFFECTS.includes(x)).map((id) => (
+              <button key={id} className="stage-item" onClick={() => setSheet('loadout')} title={i.t(`arena.fx.${id}.d`)}>
+                <Glyph id={EFFECT_GLYPH[id]} size={13} strokeWidth={2.2} />
+                {i.t(`arena.fx.${id}`)}
+              </button>
+            ))}
+          </div>
 
-      <motion.div className="arena-rivals-head" variants={item}>
-        <span className="panel-title">{i.t('arena.rivals')}</span>
-        <button className="btn-ability pass-btn" onClick={() => setPassOpen(true)}>
-          <Glyph id="people" size={15} strokeWidth={2.1} />
-          {i.t('arena.pass')}
-        </button>
+          <div className="ar-traits stage-traits">
+            <span className="ar-trait up">
+              <Glyph id={ARCHETYPE_META[BEATS[aid]].glyph} size={13} strokeWidth={2.2} />
+              {i.t('arena.strong', { name: i.arch(BEATS[aid]).name })}
+            </span>
+            <span className="ar-trait down">
+              <Glyph id={ARCHETYPE_META[weakVs].glyph} size={13} strokeWidth={2.2} />
+              {i.t('arena.weak', { name: i.arch(weakVs).name })}
+            </span>
+          </div>
+        </aside>
+
+        <div className="stage-hero">
+          <ArchSprite archetype={aid} view="front" tint={app.profile.accent || meta.tint} size={208} anim={lobbyAnim} />
+        </div>
+
+        <div className="stage-actions">
+          <motion.button
+            className="fight-btn"
+            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.02 }}
+            transition={gel}
+            onClick={startMatchmaking}
+            disabled={!!match}
+          >
+            <Glyph id="swords" size={19} strokeWidth={2.2} />
+            {i.t('arena.fight')}
+          </motion.button>
+          <button className="stage-btn glass-lite" onClick={() => setSheet('friends')}>
+            <Glyph id="people" size={16} strokeWidth={2.1} />
+            {i.t('arena.friends')}
+          </button>
+          <button className="stage-btn glass-lite" onClick={() => setPassOpen(true)}>
+            <Glyph id="redo" size={16} strokeWidth={2.1} />
+            {i.t('arena.pass')}
+          </button>
+        </div>
       </motion.div>
 
       {roster === null && (
         <motion.p className="arena-offline" variants={item}>{i.t('arena.offline')}</motion.p>
       )}
 
-      <div className="friends arena-roster">
-        {rivals.map((c) => (
-          <RivalCard
-            key={c.handle}
-            c={c}
-            mine={aid}
-            i={i}
-            onChallenge={() => setBattle({ opp: { ...c, name: botName(c, i.lang) }, mode: 'ghost', key: `${c.handle}-${Date.now()}` })}
-          />
-        ))}
-      </div>
-
-      {/* friends: share my handle (code / link / QR), follow theirs */}
-      <motion.div className="glass panel" variants={item}>
-        <div className="panel-h">
-          <p className="panel-title" style={{ margin: 0 }}>{i.t('arena.friends')}</p>
-        </div>
+      {/* friends sheet: share my handle (code / link / QR), follow theirs */}
+      <ArenaSheet open={sheet === 'friends'} title={i.t('arena.friends')} onClose={() => setSheet(null)}>
 
         {myHandle ? (
           <div className="ar-share">
@@ -1084,32 +1237,49 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             })}
           </div>
         )}
-      </motion.div>
+      </ArenaSheet>
 
-      {/* leaderboard */}
-      <motion.div className="glass panel" variants={item}>
-        <div className="panel-h">
-          <p className="panel-title" style={{ margin: 0 }}>{i.t('arena.lb')}</p>
-          <div className="ar-lb-seg">
-            <Seg
-              options={[
-                { id: 'global', label: i.t('arena.lb.global') },
-                { id: 'friends', label: i.t('arena.lb.friends') },
-              ]}
-              value={lbTab}
-              onChange={setLbTab}
-            />
-          </div>
+      {/* leaderboard sheet */}
+      <ArenaSheet open={sheet === 'lb'} title={i.t('arena.lb')} onClose={() => setSheet(null)}>
+        <div className="ar-lb-seg">
+          <Seg
+            options={[
+              { id: 'global', label: i.t('arena.lb.global') },
+              { id: 'friends', label: i.t('arena.lb.friends') },
+            ]}
+            value={lbTab}
+            onChange={setLbTab}
+          />
         </div>
         {lbRows.length === 0 ? (
           <p className="ar-setup-cap">{lbTab === 'global' && board === null ? i.t('arena.lb.offline') : i.t('arena.lb.empty')}</p>
         ) : (
           <div className="lb-rows">
-            {lbRows.map((r) => <LbRow key={`${lbTab}-${r.handle ?? r.rank}`} r={r} i={i} />)}
+            {lbRows.map((r) => (
+              <LbRow key={`${lbTab}-${r.handle ?? r.rank}`} r={r} i={i} onChallenge={challengeHandle} />
+            ))}
           </div>
         )}
         <p className="ar-setup-cap ar-lb-cap">{i.t('arena.lb.cap')}</p>
-      </motion.div>
+      </ArenaSheet>
+
+      {/* loadout sheet */}
+      <ArenaSheet open={sheet === 'loadout'} title={i.t('arena.loadout')} onClose={() => setSheet(null)}>
+        <LoadoutPanel me={meChar} loadout={app.arena.loadout} level={lvl.n} setApp={setApp} i={i} bare />
+      </ArenaSheet>
+
+      {/* matchmaking theatre */}
+      <AnimatePresence>
+        {match && (
+          <MatchOverlay
+            match={match}
+            me={{ archetype: aid, name: meF.name }}
+            meTint={app.profile.accent || meta.tint}
+            i={i}
+            onCancel={cancelMatch}
+          />
+        )}
+      </AnimatePresence>
 
       {inbox && inbox.length > 0 && (
         <>
