@@ -60,3 +60,46 @@ export function getInsights(archetypeId, metrics) {
   });
   return get(`/insights?${qs}`);
 }
+
+// --- Arena (arena.py). Same contract: null on failure, the Arena falls
+// back to the local training-bot roster and keeps results on-device.
+
+async function post(path, body, timeout = 3500) {
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeout),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// upsert your character snapshot; returns the stored character
+export function registerArenaCharacter(character) {
+  return post('/arena/register', character);
+}
+
+// { characters: [{handle, name, archetype, metrics, level, loadout, wins, losses, bot}] }
+export function getArenaRoster(exclude) {
+  const qs = new URLSearchParams({ exclude: exclude || '' });
+  return get(`/arena/roster?${qs}`, 6000);
+}
+
+export function getArenaCharacter(handle) {
+  return get(`/arena/character/${encodeURIComponent(handle)}`);
+}
+
+// { ok, id }
+export function postArenaBattle(result) {
+  return post('/arena/battle', result);
+}
+
+// { battles: [{id, challenger, defender, winner, rounds, unseen, createdAt}] }
+export function getArenaInbox(handle, markSeen = false) {
+  return get(`/arena/inbox/${encodeURIComponent(handle)}${markSeen ? '?markSeen=1' : ''}`);
+}

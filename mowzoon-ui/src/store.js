@@ -34,6 +34,16 @@ const EMPTY = {
   recurring: null,   // memoized detection { series, scannedAt }
   spikeHidden: [],   // forecast names the user marked "not mine"
 
+  // arena battles, see arena/engine.js
+  arena: {
+    wins: 0,
+    losses: 0,
+    streak: 0,     // current win streak
+    bestStreak: 0,
+    history: [],   // last 10 results { opp, oppArch, won, rounds, dateISO }
+    loadout: { effects: [], ability: null }, // chosen effects + affinity ability
+  },
+
   // game layer, see game.js
   game: {
     drops: 0,        // lifetime total; levels derive from it
@@ -62,6 +72,11 @@ function load() {
       ...raw,
       profile: { ...EMPTY.profile, ...(raw.profile || {}) },
       game: { ...EMPTY.game, ...(raw.game || {}) },
+      arena: {
+        ...EMPTY.arena,
+        ...(raw.arena || {}),
+        loadout: { ...EMPTY.arena.loadout, ...(raw.arena?.loadout || {}) },
+      },
     };
   } catch {
     return { ...EMPTY };

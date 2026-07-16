@@ -1,0 +1,53 @@
+<svg width="480" height="480" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- PEACOCK — archetype 2 · The Blind Investor (oval peacock).
+       Exported from src/arena/sprites.jsx. Keep class names + viewBox;
+       sp-main/dark/soft recolor from the user accent in the app;
+       the tint here is the archetype color, preview-only.
+       The sweat drop (squirrel) is hidden in-app until the idle2 animation. -->
+  <style>
+    svg { --spt: #e8890b; --spt-dark: color-mix(in srgb, #e8890b 66%, #231628); --spt-soft: color-mix(in srgb, #e8890b 62%, #fff); }
+    .sp-main{fill:var(--spt)} .sp-dark{fill:var(--spt-dark)} .sp-soft{fill:var(--spt-soft)}
+    .sp-white{fill:#fff} .sp-ink{fill:#2a2a30} .sp-shadow{fill:#000;opacity:.08}
+    .sp-darkline{stroke:var(--spt-dark);fill:none;stroke-linecap:round}
+    .sq-rim{stroke:var(--spt-dark)} .pc-ring{stroke:var(--spt-dark);fill:none}
+    .sp-cash{fill:#43b96f} .sp-cash2{fill:#2f9d58} .sp-cashline{stroke:#2f9d58;fill:none}
+    .sp-coin{fill:#f2b62c} .sp-coinline{stroke:#f8d977;fill:none}
+    .sp-bag{fill:#8a5a34} .sp-bag2{fill:#66422a} .sp-bagline{stroke:#66422a;fill:none}
+    .sp-sweat{fill:#7cc9f2;opacity:1}
+  </style>
+  <ellipse cx="60" cy="110" rx="34" ry="5.5" class="sp-shadow"/>
+  <g class="sp-puppet">
+      <g class="pc-fan">
+        <g class="pc-f pc-f1">
+          <ellipse cx="25" cy="52" rx="11" ry="20" class="sp-soft" transform="rotate(-62 25 52)" />
+          <circle cx="25" cy="52" r="5.5" class="pc-ring" stroke-width="3" />
+        </g>
+        <g class="pc-f pc-f2">
+          <ellipse cx="38" cy="30" rx="11" ry="20" class="sp-soft" transform="rotate(-32 38 30)" />
+          <circle cx="38" cy="30" r="5.5" class="pc-ring" stroke-width="3" />
+        </g>
+        <g class="pc-f pc-f3">
+          <ellipse cx="60" cy="22" rx="11" ry="20" class="sp-soft" />
+          <circle cx="60" cy="22" r="5.5" class="pc-ring" stroke-width="3" />
+        </g>
+        <g class="pc-f pc-f4">
+          <ellipse cx="82" cy="30" rx="11" ry="20" class="sp-soft" transform="rotate(32 82 30)" />
+          <circle cx="82" cy="30" r="5.5" class="pc-ring" stroke-width="3" />
+        </g>
+        <g class="pc-f pc-f5">
+          <ellipse cx="95" cy="52" rx="11" ry="20" class="sp-soft" transform="rotate(62 95 52)" />
+          <circle cx="95" cy="52" r="5.5" class="pc-ring" stroke-width="3" />
+        </g>
+      </g>
+      <path d="M39 106 a8.5 8.5 0 0 1 17 0 Z" class="sp-main" />
+      <path d="M64 106 a8.5 8.5 0 0 1 17 0 Z" class="sp-main" />
+      <ellipse cx="60" cy="82" rx="23" ry="20" class="sp-main" />
+      <g class="pc-head">
+        <rect x="53" y="44" width="14" height="34" rx="7" class="sp-main" />
+        <circle cx="60" cy="38" r="13.5" class="sp-main" />
+        <path d="M50.5 36.5 Q54 40 57.5 36.5" class="sp-darkline" stroke-width="2.4" />
+        <path d="M62.5 36.5 Q66 40 69.5 36.5" class="sp-darkline" stroke-width="2.4" />
+        <path d="M54.5 45.5 L65.5 45.5 L60 54.5 Z" class="sp-dark" />
+      </g>
+    </g>
+</svg>

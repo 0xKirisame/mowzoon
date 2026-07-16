@@ -10,6 +10,7 @@ export const DROPS = {
   calibrate: 25, // finishing (or retaking) the assessment
   badge: 15,    // each badge earned
   quest: 40,    // collecting a finished quest
+  arenaWin: 20, // winning a ghost battle in the arena (losses pay nothing)
 };
 
 // level thresholds
@@ -80,6 +81,8 @@ export const BADGES = [
       const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       return sinceDays(app.tx, iso) >= 5;
     } },
+  { id: 'arena-first', glyph: 'swords', check: (app) => (app.arena?.wins || 0) >= 1 },
+  { id: 'arena-streak-3', glyph: 'swords', check: (app) => (app.arena?.bestStreak || 0) >= 3 },
 ];
 
 export function newlyEarned(app) {

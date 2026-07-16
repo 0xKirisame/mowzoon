@@ -132,6 +132,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from arena import router as arena_router  # noqa: E402  (needs the chdir above)
+
+app.include_router(arena_router)
+
 
 class Metrics(BaseModel):
     """The three core scores in UI naming (0-100)."""
