@@ -1,5 +1,5 @@
 {
- "date": "2026-07-13",
+ "baseline": "Firefly III (behaviour model)",
  "criteria": {
   "C1_distinct_top_outputs": {
    "S1 weekend splurger": 4,
@@ -7,6 +7,13 @@
    "S3 thin buffer, hot week": 4,
    "S4a tight margins (neutral date)": 4,
    "S4b tight margins (spike 13d out)": 4
+  },
+  "C1b_firefly_distinct_outputs_across_archetypes": {
+   "S1 weekend splurger": 1,
+   "S2 frugal over-saver": 1,
+   "S3 thin buffer, hot week": 1,
+   "S4a tight margins (neutral date)": 1,
+   "S4b tight margins (spike 13d out)": 1
   },
   "C2_oversaver_risks_by_archetype": {
    "The Impulse Spender": [],
@@ -17,30 +24,51 @@
    "The Blind Investor": [],
    "The Survivalist": []
   },
+  "C2b_firefly_on_oversaver": "You have SAR 2,400 left in your 'Lifestyle' budget this period.",
   "C3_jaccard": {
    "mean_pairwise_archetype": 0.08,
-   "mean_vs_generic": 0.011
+   "mean_vs_firefly": 0.012
   },
   "C4_blame": {
-   "template_hits": {},
-   "emitted_hits": [],
-   "generic_baseline_hits_count": 0
+   "engine_template_hits": {},
+   "engine_emitted_hits": [],
+   "firefly_blame_lines": [
+    "You have overspent your 'Lifestyle' budget by SAR 2,000 (spent SAR 5,000 of SAR 3,000).",
+    "You have overspent your 'Lifestyle' budget by SAR 5,650 (spent SAR 8,650 of SAR 3,000).",
+    "You have overspent your 'Lifestyle' budget by SAR 120 (spent SAR 3,120 of SAR 3,000)."
+   ],
+   "firefly_blame_count": 3
   },
   "C5_restraint": {
    "runs": 28,
    "no_quest_runs": 13,
    "no_insight_runs": 5,
-   "generic_advises_every_time": true
+   "firefly_advises_every_scenario": true
   },
-  "C6_nudge_always_present": true
+  "C6_nudge_always_present": true,
+  "differentiation_headline": {
+   "engine_distinct_top_outputs_per_scenario": {
+    "S1 weekend splurger": 4,
+    "S2 frugal over-saver": 4,
+    "S3 thin buffer, hot week": 4,
+    "S4a tight margins (neutral date)": 4,
+    "S4b tight margins (spike 13d out)": 4
+   },
+   "firefly_distinct_outputs_per_scenario": {
+    "S1 weekend splurger": 1,
+    "S2 frugal over-saver": 1,
+    "S3 thin buffer, hot week": 1,
+    "S4a tight margins (neutral date)": 1,
+    "S4b tight margins (spike 13d out)": 1
+   },
+   "note": "Firefly output is identical across all 4 archetypes on every scenario (archetype-blind); the engine differentiates 4 of 4."
+  }
  },
  "scenarios": [
   {
    "scenario": "S1 weekend splurger",
    "income": 10000,
    "today": "2026-07-13",
-   "ledger_rows": 41,
-   "skipped_rows": 0,
    "signals": [
     {
      "name": "savings_rate",
@@ -144,7 +172,11 @@
      }
     }
    ],
-   "generic_nudge": "Your savings rate is low. Try to save at least 20% of your income.",
+   "firefly_lines": [
+    "You have overspent your 'Lifestyle' budget by SAR 2,000 (spent SAR 5,000 of SAR 3,000).",
+    "Piggy bank 'Emergency fund' is 27% funded. Keep saving toward your goal."
+   ],
+   "firefly_primary": "You have overspent your 'Lifestyle' budget by SAR 2,000 (spent SAR 5,000 of SAR 3,000).",
    "archetypes": {
     "The Impulse Spender": {
      "nudge": "Weekends are taking 2.3x their usual share of your spending right now. One treat you plan beats five you don't. Pick the one you'll actually enjoy.",
@@ -809,8 +841,6 @@
    "scenario": "S2 frugal over-saver",
    "income": 10000,
    "today": "2026-07-13",
-   "ledger_rows": 18,
-   "skipped_rows": 0,
    "signals": [
     {
      "name": "savings_rate",
@@ -901,7 +931,11 @@
      }
     }
    ],
-   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "firefly_lines": [
+    "You have SAR 2,400 left in your 'Lifestyle' budget this period.",
+    "Piggy bank 'Emergency fund' has reached its target."
+   ],
+   "firefly_primary": "You have SAR 2,400 left in your 'Lifestyle' budget this period.",
    "archetypes": {
     "The Impulse Spender": {
      "nudge": "Your spending this week is right at your normal pace. Keeping it steady like this is the hard part, and you're doing it.",
@@ -1461,8 +1495,6 @@
    "scenario": "S3 thin buffer, hot week",
    "income": 10000,
    "today": "2026-07-13",
-   "ledger_rows": 44,
-   "skipped_rows": 0,
    "signals": [
     {
      "name": "savings_rate",
@@ -1566,7 +1598,11 @@
      }
     }
    ],
-   "generic_nudge": "Your savings rate is low. Try to save at least 20% of your income.",
+   "firefly_lines": [
+    "You have overspent your 'Lifestyle' budget by SAR 5,650 (spent SAR 8,650 of SAR 3,000).",
+    "Piggy bank 'Emergency fund' is 7% funded. Keep saving toward your goal."
+   ],
+   "firefly_primary": "You have overspent your 'Lifestyle' budget by SAR 5,650 (spent SAR 8,650 of SAR 3,000).",
    "archetypes": {
     "The Impulse Spender": {
      "nudge": "This week you're spending 8.2x your usual pace. Try waiting a day before your next non-essential buy. Often the urge passes on its own.",
@@ -2209,8 +2245,6 @@
    "scenario": "S4a tight margins (neutral date)",
    "income": 9500,
    "today": "2026-07-13",
-   "ledger_rows": 29,
-   "skipped_rows": 0,
    "signals": [
     {
      "name": "savings_rate",
@@ -2314,7 +2348,11 @@
      }
     }
    ],
-   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "firefly_lines": [
+    "You have SAR 1,590 left in your 'Lifestyle' budget this period.",
+    "Piggy bank 'Emergency fund' is 0% funded. Keep saving toward your goal."
+   ],
+   "firefly_primary": "Piggy bank 'Emergency fund' is 0% funded. Keep saving toward your goal.",
    "archetypes": {
     "The Impulse Spender": {
      "nudge": "You saved 7% of your income this month, down from your usual. A small automatic transfer next month makes saving happen without you thinking about it.",
@@ -3033,8 +3071,6 @@
    "scenario": "S4b tight margins (spike 13d out)",
    "income": 9500,
    "today": "2026-08-12",
-   "ledger_rows": 28,
-   "skipped_rows": 0,
    "signals": [
     {
      "name": "savings_rate",
@@ -3138,7 +3174,12 @@
      }
     }
    ],
-   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "firefly_lines": [
+    "You have SAR 1,590 left in your 'Lifestyle' budget this period.",
+    "Bill 'Back to School' is expected in 13 days. Make sure funds are available.",
+    "Piggy bank 'Emergency fund' is 0% funded. Keep saving toward your goal."
+   ],
+   "firefly_primary": "Bill 'Back to School' is expected in 13 days. Make sure funds are available.",
    "archetypes": {
     "The Impulse Spender": {
      "nudge": "You saved 7% of your income this month, down from your usual. A small automatic transfer next month makes saving happen without you thinking about it.",
@@ -3870,8 +3911,6 @@
    "scenario": "S5 brand-new user (10 days)",
    "income": 10000,
    "today": "2026-07-13",
-   "ledger_rows": 3,
-   "skipped_rows": 0,
    "signals": [
     {
      "name": "landmark",
@@ -3899,7 +3938,11 @@
      }
     }
    ],
-   "generic_nudge": "A big expense period is coming up. Prepare for it.",
+   "firefly_lines": [
+    "You have SAR 2,730 left in your 'Lifestyle' budget this period.",
+    "Piggy bank 'Emergency fund' is 0% funded. Keep saving toward your goal."
+   ],
+   "firefly_primary": "Piggy bank 'Emergency fund' is 0% funded. Keep saving toward your goal.",
    "archetypes": {
     "The Impulse Spender": {
      "nudge": "Late-night buys are what's pulling your Financial EQ down (35/100). Give tonight a pause. I'll notice.",
@@ -4059,8 +4102,6 @@
    "scenario": "S6 balanced healthy user",
    "income": 10000,
    "today": "2026-07-13",
-   "ledger_rows": 44,
-   "skipped_rows": 0,
    "signals": [
     {
      "name": "savings_rate",
@@ -4164,7 +4205,11 @@
      }
     }
    ],
-   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "firefly_lines": [
+    "You have overspent your 'Lifestyle' budget by SAR 120 (spent SAR 3,120 of SAR 3,000).",
+    "Piggy bank 'Emergency fund' has reached its target."
+   ],
+   "firefly_primary": "You have overspent your 'Lifestyle' budget by SAR 120 (spent SAR 3,120 of SAR 3,000).",
    "archetypes": {
     "The Impulse Spender": {
      "nudge": "Your spending this week is right at your normal pace. Keeping it steady like this is the hard part, and you're doing it.",
