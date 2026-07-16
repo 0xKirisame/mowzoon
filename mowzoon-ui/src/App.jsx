@@ -871,7 +871,7 @@ export default function App() {
     <I18nProvider value={app.lang}>
     <MotionConfig reducedMotion="user">
       <div
-        className={disp > 0 ? 'app macos lensing' : 'app macos'}
+        className={`app macos${disp > 0 ? ' lensing' : ''}${view === 'arena' ? ' rail-away' : ''}`}
         style={{
           '--tint': tint,
           '--ga': ga,

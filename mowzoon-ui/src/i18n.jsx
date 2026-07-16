@@ -412,7 +412,20 @@ const STR = {
     'settings.reset': 'Reset the app',
     'settings.data.cap': 'Everything stays on this device until you choose to link your bank. Reset wipes your ledger and assessment for a fresh start.',
 
-    // Arena — friends, sharing, and the ladder
+    // Arena — the stage, matchmaking theatre, friends, and the ladder
+    'arena.fight': 'Fight',
+    'arena.edit': 'Edit',
+    'arena.search': 'Searching for a rival…',
+    'arena.search.1': 'Scanning the arena…',
+    'arena.search.2': 'Reading the ladder…',
+    'arena.search.3': 'Matching your level…',
+    'arena.found': 'Rival found!',
+    'arena.loading': 'Setting up the duel…',
+    'arena.load.1': 'Setting the stage…',
+    'arena.load.2': 'Balancing the wheel…',
+    'arena.load.3': 'Counting the coins…',
+    'arena.vs': 'VS',
+    'arena.cancel': 'Cancel',
     'arena.lv': 'Lv {n}',
     'arena.adv.up': 'Favored',
     'arena.adv.down': 'Risky',
@@ -847,7 +860,20 @@ const STR = {
     'settings.reset': 'أعد تعيين التطبيق',
     'settings.data.cap': 'كل شيء يبقى على هذا الجهاز حتى تقرر ربط حسابك البنكي. إعادة التعيين تمسح سجلّك وتقييمك لبداية جديدة.',
 
-    // الساحة — الأصدقاء والمشاركة ولوحة الصدارة
+    // الساحة — المسرح ومسرحية البحث والأصدقاء ولوحة الصدارة
+    'arena.fight': 'نازِل',
+    'arena.edit': 'عدّل',
+    'arena.search': 'نبحث عن منافس…',
+    'arena.search.1': 'نمسح الساحة…',
+    'arena.search.2': 'نقرأ لوحة الصدارة…',
+    'arena.search.3': 'نطابق مستواك…',
+    'arena.found': 'وجدنا منافسًا!',
+    'arena.loading': 'نجهّز المبارزة…',
+    'arena.load.1': 'نرتّب الساحة…',
+    'arena.load.2': 'نوازن العجلة…',
+    'arena.load.3': 'نعدّ العملات…',
+    'arena.vs': 'ضد',
+    'arena.cancel': 'إلغاء',
     'arena.lv': 'مستوى {n}',
     'arena.adv.up': 'أفضلية',
     'arena.adv.down': 'مجازفة',
