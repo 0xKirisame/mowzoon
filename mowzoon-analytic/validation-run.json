@@ -1,0 +1,4726 @@
+{
+ "date": "2026-07-13",
+ "criteria": {
+  "C1_distinct_top_outputs": {
+   "S1 weekend splurger": 4,
+   "S2 frugal over-saver": 4,
+   "S3 thin buffer, hot week": 4,
+   "S4a tight margins (neutral date)": 4,
+   "S4b tight margins (spike 13d out)": 4
+  },
+  "C2_oversaver_risks_by_archetype": {
+   "The Impulse Spender": [],
+   "The Anxious Planner": [
+    "anxious_oversaving",
+    "anxious_deprivation"
+   ],
+   "The Blind Investor": [],
+   "The Survivalist": []
+  },
+  "C3_jaccard": {
+   "mean_pairwise_archetype": 0.032,
+   "mean_vs_generic": 0.014
+  },
+  "C4_blame": {
+   "template_hits": {},
+   "emitted_hits": [],
+   "generic_baseline_hits_count": 0
+  },
+  "C5_restraint": {
+   "runs": 28,
+   "no_quest_runs": 13,
+   "no_insight_runs": 5,
+   "generic_advises_every_time": true
+  },
+  "C6_nudge_always_present": true
+ },
+ "scenarios": [
+  {
+   "scenario": "S1 weekend splurger",
+   "income": 10000,
+   "today": "2026-07-13",
+   "ledger_rows": 41,
+   "skipped_rows": 0,
+   "signals": [
+    {
+     "name": "savings_rate",
+     "value": -0.05,
+     "unit": "fraction_of_income",
+     "band": "high",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 30d spend vs monthly income"
+     }
+    },
+    {
+     "name": "runway",
+     "value": 0.798,
+     "unit": "months",
+     "band": "high",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "CFPB 3-6 month emergency buffer",
+      "percentile_context": "<=P10 of reference population",
+      "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+      "note": "pot = in-app savings only; buffer held elsewhere not visible"
+     }
+    },
+    {
+     "name": "lifestyle_share",
+     "value": 0.5,
+     "unit": "fraction_of_income",
+     "band": "note",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+      "percentile_context": "~P37 of reference population",
+      "window": "trailing 30d discretionary vs monthly income"
+     }
+    },
+    {
+     "name": "weekend_ratio",
+     "value": 2.251,
+     "unit": "ratio",
+     "band": "high",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "calendar-neutral weekend share (2/7)",
+      "percentile_context": ">=P90 of reference population",
+      "window": "trailing 56d",
+      "weekend_days": "Fri-Sat"
+     }
+    },
+    {
+     "name": "momentum",
+     "value": 2.707,
+     "unit": "ratio_to_typical_week",
+     "band": "elevated",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "own typical nonzero week (=1.0)",
+      "percentile_context": "~P76 of reference population",
+      "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+      "baseline_week": 820.0
+     }
+    },
+    {
+     "name": "anomaly",
+     "value": 1,
+     "unit": "flagged_tx_last_7d",
+     "band": "high",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+      "fence": 530.0,
+      "extreme_fence": 740.0,
+      "history_n": 33
+     }
+    },
+    {
+     "name": "landmark",
+     "value": 19,
+     "unit": "days_to_event",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "seasonal-spike & fresh-start calendar",
+      "nearest": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      },
+      "next_spike": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 43
+      },
+      "next_fresh_start": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      }
+     }
+    }
+   ],
+   "generic_nudge": "Your savings rate is low. Try to save at least 20% of your income.",
+   "archetypes": {
+    "The Impulse Spender": {
+     "nudge": "Weekends are carrying 2.3x their share of your spending right now. One planned treat beats five unplanned ones; pick the one you'll actually remember.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.05,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.798,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.5,
+       "unit": "fraction_of_income",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P37 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 2.251,
+       "unit": "ratio",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 2.707,
+       "unit": "ratio_to_typical_week",
+       "band": "elevated",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P76 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 820.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 1,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 530.0,
+        "extreme_fence": 740.0,
+        "history_n": 33
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "impulse_weekend_pattern",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "weekend_ratio",
+        "value": 2.251,
+        "unit": "ratio",
+        "band": "high",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "calendar-neutral weekend share (2/7)",
+         "percentile_context": ">=P90 of reference population",
+         "window": "trailing 56d",
+         "weekend_days": "Fri-Sat"
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "cooling_off",
+        "label": "Cooling-off pause before non-essential buys"
+       },
+       "text": "Weekends are carrying 2.3x their share of your spending right now. One planned treat beats five unplanned ones; pick the one you'll actually remember."
+      },
+      {
+       "insight_key": "impulse_big_buy",
+       "kind": "risk",
+       "score": 7.5,
+       "signal": {
+        "name": "anomaly",
+        "value": 1,
+        "unit": "flagged_tx_last_7d",
+        "band": "high",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+         "fence": 530.0,
+         "extreme_fence": 740.0,
+         "history_n": 33
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "cooling_off",
+        "label": "Cooling-off pause before non-essential buys"
+       },
+       "text": "That last purchase sat well above your usual range. No judgment, just a note: sleeping on the next one keeps the choice yours."
+      }
+     ],
+     "quest": {
+      "key": "mindful",
+      "kind": "days",
+      "target": 4,
+      "tx_type": null,
+      "moment": "neutral",
+      "insight_key": "impulse_weekend_pattern",
+      "rationale": "Weekends are carrying 2.3x their share of your spending right now.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Anxious Planner": {
+     "nudge": "You're letting quality of life have its share this month. For you, that is the win worth noticing.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.05,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.798,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.5,
+       "unit": "fraction_of_income",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P37 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 2.251,
+       "unit": "ratio",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 2.707,
+       "unit": "ratio_to_typical_week",
+       "band": "elevated",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P76 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 820.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 1,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 530.0,
+        "extreme_fence": 740.0,
+        "history_n": 33
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "anxious_balance_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "lifestyle_share",
+        "value": 0.5,
+        "unit": "fraction_of_income",
+        "band": "note",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+         "percentile_context": "~P37 of reference population",
+         "window": "trailing 30d discretionary vs monthly income"
+        }
+       },
+       "mechanism": "scarcity_vigilance",
+       "tone": "reassuring, permission-granting, gentle",
+       "intervention": null,
+       "text": "You're letting quality of life have its share this month. For you, that is the win worth noticing."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Blind Investor": {
+     "nudge": "Cash on hand covers about 0.8 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.05,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.798,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.5,
+       "unit": "fraction_of_income",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P37 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 2.251,
+       "unit": "ratio",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 2.707,
+       "unit": "ratio_to_typical_week",
+       "band": "elevated",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P76 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 820.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 1,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 530.0,
+        "extreme_fence": 740.0,
+        "history_n": 33
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "blind_thin_runway",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.798,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "liquidity_first",
+        "label": "Let the cash buffer win over one more position"
+       },
+       "text": "Cash on hand covers about 0.8 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position."
+      },
+      {
+       "insight_key": "blind_big_position",
+       "kind": "risk",
+       "score": 4.5,
+       "signal": {
+        "name": "anomaly",
+        "value": 1,
+        "unit": "flagged_tx_last_7d",
+        "band": "high",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+         "fence": 530.0,
+         "extreme_fence": 740.0,
+         "history_n": 33
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "liquidity_first",
+        "label": "Let the cash buffer win over one more position"
+       },
+       "text": "One recent outflow sat far above your usual range. Big moves deserve a cash check first: buffer, then bets."
+      }
+     ],
+     "quest": {
+      "key": "buffer",
+      "kind": "money",
+      "target": 100,
+      "tx_type": "savings",
+      "moment": "neutral",
+      "insight_key": "blind_thin_runway",
+      "rationale": "Cash on hand covers about 0.8 months of spending; the benchmark is 3 to 6.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Survivalist": {
+     "nudge": "The cushion covers about 0.8 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.05,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.798,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.5,
+       "unit": "fraction_of_income",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P37 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 2.251,
+       "unit": "ratio",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 2.707,
+       "unit": "ratio_to_typical_week",
+       "band": "elevated",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P76 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 820.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 1,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 530.0,
+        "extreme_fence": 740.0,
+        "history_n": 33
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "survivalist_no_cushion",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.798,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "The cushion covers about 0.8 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds."
+      },
+      {
+       "insight_key": "survivalist_dissaving",
+       "kind": "risk",
+       "score": 6.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": -0.05,
+        "unit": "fraction_of_income",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "<=P10 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "Spending ran past income this month. No blame here: one fixed cost reviewed and one small set-aside started is how the line turns."
+      }
+     ],
+     "quest": {
+      "key": "setaside",
+      "kind": "money",
+      "target": 20,
+      "tx_type": "savings",
+      "moment": "neutral",
+      "insight_key": "survivalist_no_cushion",
+      "rationale": "The cushion covers about 0.8 months right now.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    }
+   }
+  },
+  {
+   "scenario": "S2 frugal over-saver",
+   "income": 10000,
+   "today": "2026-07-13",
+   "ledger_rows": 18,
+   "skipped_rows": 0,
+   "signals": [
+    {
+     "name": "savings_rate",
+     "value": 0.64,
+     "unit": "fraction_of_income",
+     "band": "calm",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+      "percentile_context": ">=P90 of reference population",
+      "window": "trailing 30d spend vs monthly income"
+     }
+    },
+    {
+     "name": "runway",
+     "value": 3.417,
+     "unit": "months",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "CFPB 3-6 month emergency buffer",
+      "percentile_context": "~P56 of reference population",
+      "window": "savings pot vs avg monthly spend (last 82d, incl. spikes)",
+      "note": "pot = in-app savings only; buffer held elsewhere not visible"
+     }
+    },
+    {
+     "name": "lifestyle_share",
+     "value": 0.06,
+     "unit": "fraction_of_income",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 30d discretionary vs monthly income"
+     }
+    },
+    {
+     "name": "weekend_ratio",
+     "value": 0.0,
+     "unit": "ratio",
+     "band": "calm",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "calendar-neutral weekend share (2/7)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 56d",
+      "weekend_days": "Fri-Sat"
+     }
+    },
+    {
+     "name": "momentum",
+     "value": 1.0,
+     "unit": "ratio_to_typical_week",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "own typical nonzero week (=1.0)",
+      "percentile_context": "~P50 of reference population",
+      "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+      "baseline_week": 150.0
+     }
+    },
+    {
+     "name": "landmark",
+     "value": 19,
+     "unit": "days_to_event",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "seasonal-spike & fresh-start calendar",
+      "nearest": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      },
+      "next_spike": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 43
+      },
+      "next_fresh_start": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      }
+     }
+    }
+   ],
+   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "archetypes": {
+    "The Impulse Spender": {
+     "nudge": "Your spending pace is right at your normal this week. That steadiness is the skill; everything else builds on it.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.64,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.417,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P56 of reference population",
+        "window": "savings pot vs avg monthly spend (last 82d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.06,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 150.0
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "impulse_quiet_week_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "momentum",
+        "value": 1.0,
+        "unit": "ratio_to_typical_week",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "own typical nonzero week (=1.0)",
+         "percentile_context": "~P50 of reference population",
+         "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+         "baseline_week": 150.0
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": null,
+       "text": "Your spending pace is right at your normal this week. That steadiness is the skill; everything else builds on it."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 6,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Anxious Planner": {
+     "nudge": "You're keeping 64% of income, far beyond the 20% target. The plan is funded; some of this money is allowed to buy you a life.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.64,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.417,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P56 of reference population",
+        "window": "savings pot vs avg monthly spend (last 82d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.06,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 150.0
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "anxious_oversaving",
+       "kind": "risk",
+       "score": 6.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.64,
+        "unit": "fraction_of_income",
+        "band": "calm",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": ">=P90 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "scarcity_vigilance",
+       "tone": "reassuring, permission-granting, gentle",
+       "intervention": {
+        "key": "permission_reframe",
+        "label": "Explicit permission to spend on quality of life"
+       },
+       "text": "You're keeping 64% of income, far beyond the 20% target. The plan is funded; some of this money is allowed to buy you a life."
+      },
+      {
+       "insight_key": "anxious_deprivation",
+       "kind": "risk",
+       "score": 6.0,
+       "signal": {
+        "name": "lifestyle_share",
+        "value": 0.06,
+        "unit": "fraction_of_income",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+         "percentile_context": "<=P10 of reference population",
+         "window": "trailing 30d discretionary vs monthly income"
+        }
+       },
+       "mechanism": "scarcity_vigilance",
+       "tone": "reassuring, permission-granting, gentle",
+       "intervention": {
+        "key": "permission_reframe",
+        "label": "Explicit permission to spend on quality of life"
+       },
+       "text": "Quality-of-life spending is down at 6% of income, lower than 9 in 10 people. A planned treat will not dent the plan; you've earned it."
+      },
+      {
+       "insight_key": "anxious_secure_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "runway",
+        "value": 3.417,
+        "unit": "months",
+        "band": "note",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "~P56 of reference population",
+         "window": "savings pot vs avg monthly spend (last 82d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "scarcity_vigilance",
+       "tone": "reassuring, permission-granting, gentle",
+       "intervention": null,
+       "text": "Your buffer sits inside the healthy 3 to 6 month band. You are covered; let that fact do some of the relaxing for you."
+      }
+     ],
+     "quest": {
+      "key": "treat",
+      "kind": "count",
+      "target": 1,
+      "tx_type": "discretionary",
+      "moment": "neutral",
+      "insight_key": "anxious_oversaving",
+      "rationale": "You're keeping 64% of income, far beyond the 20% target.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 6,
+      "insights_count": 3,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Blind Investor": {
+     "nudge": "Your cash floor is holding inside the healthy band. That buffer is what lets the rest of your strategy breathe.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.64,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.417,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P56 of reference population",
+        "window": "savings pot vs avg monthly spend (last 82d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.06,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 150.0
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "blind_buffer_built_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "runway",
+        "value": 3.417,
+        "unit": "months",
+        "band": "note",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "~P56 of reference population",
+         "window": "savings pot vs avg monthly spend (last 82d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": null,
+       "text": "Your cash floor is holding inside the healthy band. That buffer is what lets the rest of your strategy breathe."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 6,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Survivalist": {
+     "nudge": "You kept 64% of income this month. With margins as tight as yours, that is a genuine win.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.64,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.417,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P56 of reference population",
+        "window": "savings pot vs avg monthly spend (last 82d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.06,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 150.0
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "survivalist_headroom_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.64,
+        "unit": "fraction_of_income",
+        "band": "calm",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": ">=P90 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": null,
+       "text": "You kept 64% of income this month. With margins as tight as yours, that is a genuine win."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 6,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    }
+   }
+  },
+  {
+   "scenario": "S3 thin buffer, hot week",
+   "income": 10000,
+   "today": "2026-07-13",
+   "ledger_rows": 44,
+   "skipped_rows": 0,
+   "signals": [
+    {
+     "name": "savings_rate",
+     "value": -0.265,
+     "unit": "fraction_of_income",
+     "band": "high",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 30d spend vs monthly income"
+     }
+    },
+    {
+     "name": "runway",
+     "value": 0.21,
+     "unit": "months",
+     "band": "high",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "CFPB 3-6 month emergency buffer",
+      "percentile_context": "<=P10 of reference population",
+      "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+      "note": "pot = in-app savings only; buffer held elsewhere not visible"
+     }
+    },
+    {
+     "name": "lifestyle_share",
+     "value": 0.865,
+     "unit": "fraction_of_income",
+     "band": "high",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+      "percentile_context": "~P82 of reference population",
+      "window": "trailing 30d discretionary vs monthly income"
+     }
+    },
+    {
+     "name": "weekend_ratio",
+     "value": 1.142,
+     "unit": "ratio",
+     "band": "note",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "calendar-neutral weekend share (2/7)",
+      "percentile_context": "~P78 of reference population",
+      "window": "trailing 56d",
+      "weekend_days": "Fri-Sat"
+     }
+    },
+    {
+     "name": "momentum",
+     "value": 8.2,
+     "unit": "ratio_to_typical_week",
+     "band": "high",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "own typical nonzero week (=1.0)",
+      "percentile_context": ">=P90 of reference population",
+      "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+      "baseline_week": 750.0
+     }
+    },
+    {
+     "name": "anomaly",
+     "value": 3,
+     "unit": "flagged_tx_last_7d",
+     "band": "high",
+     "direction": "above_anchor",
+     "evidence": {
+      "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+      "fence": 250.0,
+      "extreme_fence": 250.0,
+      "history_n": 34
+     }
+    },
+    {
+     "name": "landmark",
+     "value": 19,
+     "unit": "days_to_event",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "seasonal-spike & fresh-start calendar",
+      "nearest": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      },
+      "next_spike": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 43
+      },
+      "next_fresh_start": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      }
+     }
+    }
+   ],
+   "generic_nudge": "Your savings rate is low. Try to save at least 20% of your income.",
+   "archetypes": {
+    "The Impulse Spender": {
+     "nudge": "This week is running 8.2x your usual pace. A 24-hour pause on the next non-essential buy resets the streak without costing you anything.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.265,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.21,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.865,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P82 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 1.142,
+       "unit": "ratio",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "~P78 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 8.2,
+       "unit": "ratio_to_typical_week",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 750.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 3,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 250.0,
+        "extreme_fence": 250.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "impulse_hot_week",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "momentum",
+        "value": 8.2,
+        "unit": "ratio_to_typical_week",
+        "band": "high",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "own typical nonzero week (=1.0)",
+         "percentile_context": ">=P90 of reference population",
+         "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+         "baseline_week": 750.0
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "cooling_off",
+        "label": "Cooling-off pause before non-essential buys"
+       },
+       "text": "This week is running 8.2x your usual pace. A 24-hour pause on the next non-essential buy resets the streak without costing you anything."
+      },
+      {
+       "insight_key": "impulse_big_buy",
+       "kind": "risk",
+       "score": 7.5,
+       "signal": {
+        "name": "anomaly",
+        "value": 3,
+        "unit": "flagged_tx_last_7d",
+        "band": "high",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+         "fence": 250.0,
+         "extreme_fence": 250.0,
+         "history_n": 34
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "cooling_off",
+        "label": "Cooling-off pause before non-essential buys"
+       },
+       "text": "That last purchase sat well above your usual range. No judgment, just a note: sleeping on the next one keeps the choice yours."
+      }
+     ],
+     "quest": {
+      "key": "mindful",
+      "kind": "days",
+      "target": 4,
+      "tx_type": null,
+      "moment": "neutral",
+      "insight_key": "impulse_hot_week",
+      "rationale": "This week is running 8.2x your usual pace.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Anxious Planner": {
+     "nudge": "Nothing needs your attention today. Back to School is 43 days out; a small set-aside now stays ahead of it.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.265,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.21,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.865,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P82 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 1.142,
+       "unit": "ratio",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "~P78 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 8.2,
+       "unit": "ratio_to_typical_week",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 750.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 3,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 250.0,
+        "extreme_fence": 250.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [],
+     "quest": null,
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 0,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Blind Investor": {
+     "nudge": "Cash on hand covers about 0.2 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.265,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.21,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.865,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P82 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 1.142,
+       "unit": "ratio",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "~P78 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 8.2,
+       "unit": "ratio_to_typical_week",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 750.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 3,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 250.0,
+        "extreme_fence": 250.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "blind_thin_runway",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.21,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "liquidity_first",
+        "label": "Let the cash buffer win over one more position"
+       },
+       "text": "Cash on hand covers about 0.2 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position."
+      },
+      {
+       "insight_key": "blind_big_position",
+       "kind": "risk",
+       "score": 4.5,
+       "signal": {
+        "name": "anomaly",
+        "value": 3,
+        "unit": "flagged_tx_last_7d",
+        "band": "high",
+        "direction": "above_anchor",
+        "evidence": {
+         "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+         "fence": 250.0,
+         "extreme_fence": 250.0,
+         "history_n": 34
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "liquidity_first",
+        "label": "Let the cash buffer win over one more position"
+       },
+       "text": "One recent outflow sat far above your usual range. Big moves deserve a cash check first: buffer, then bets."
+      }
+     ],
+     "quest": {
+      "key": "buffer",
+      "kind": "money",
+      "target": 100,
+      "tx_type": "savings",
+      "moment": "neutral",
+      "insight_key": "blind_thin_runway",
+      "rationale": "Cash on hand covers about 0.2 months of spending; the benchmark is 3 to 6.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Survivalist": {
+     "nudge": "The cushion covers about 0.2 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": -0.265,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.21,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.865,
+       "unit": "fraction_of_income",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P82 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 1.142,
+       "unit": "ratio",
+       "band": "note",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "~P78 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 8.2,
+       "unit": "ratio_to_typical_week",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": ">=P90 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 750.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 3,
+       "unit": "flagged_tx_last_7d",
+       "band": "high",
+       "direction": "above_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 250.0,
+        "extreme_fence": 250.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "survivalist_no_cushion",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.21,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "The cushion covers about 0.2 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds."
+      },
+      {
+       "insight_key": "survivalist_dissaving",
+       "kind": "risk",
+       "score": 6.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": -0.265,
+        "unit": "fraction_of_income",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "<=P10 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "Spending ran past income this month. No blame here: one fixed cost reviewed and one small set-aside started is how the line turns."
+      }
+     ],
+     "quest": {
+      "key": "setaside",
+      "kind": "money",
+      "target": 20,
+      "tx_type": "savings",
+      "moment": "neutral",
+      "insight_key": "survivalist_no_cushion",
+      "rationale": "The cushion covers about 0.2 months right now.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    }
+   }
+  },
+  {
+   "scenario": "S4a tight margins (neutral date)",
+   "income": 9500,
+   "today": "2026-07-13",
+   "ledger_rows": 29,
+   "skipped_rows": 0,
+   "signals": [
+    {
+     "name": "savings_rate",
+     "value": 0.067,
+     "unit": "fraction_of_income",
+     "band": "elevated",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+      "percentile_context": "~P34 of reference population",
+      "window": "trailing 30d spend vs monthly income"
+     }
+    },
+    {
+     "name": "runway",
+     "value": 0.0,
+     "unit": "months",
+     "band": "high",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "CFPB 3-6 month emergency buffer",
+      "percentile_context": "<=P10 of reference population",
+      "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+      "note": "pot = in-app savings only; buffer held elsewhere not visible"
+     }
+    },
+    {
+     "name": "lifestyle_share",
+     "value": 0.133,
+     "unit": "fraction_of_income",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 30d discretionary vs monthly income"
+     }
+    },
+    {
+     "name": "weekend_ratio",
+     "value": 0.0,
+     "unit": "ratio",
+     "band": "calm",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "calendar-neutral weekend share (2/7)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 56d",
+      "weekend_days": "Fri-Sat"
+     }
+    },
+    {
+     "name": "momentum",
+     "value": 1.0,
+     "unit": "ratio_to_typical_week",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "own typical nonzero week (=1.0)",
+      "percentile_context": "~P50 of reference population",
+      "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+      "baseline_week": 280.0
+     }
+    },
+    {
+     "name": "anomaly",
+     "value": 0,
+     "unit": "flagged_tx_last_7d",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+      "fence": 140.0,
+      "extreme_fence": 140.0,
+      "history_n": 23
+     }
+    },
+    {
+     "name": "landmark",
+     "value": 19,
+     "unit": "days_to_event",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "seasonal-spike & fresh-start calendar",
+      "nearest": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      },
+      "next_spike": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 43
+      },
+      "next_fresh_start": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      }
+     }
+    }
+   ],
+   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "archetypes": {
+    "The Impulse Spender": {
+     "nudge": "Savings slipped to 7% this month. A small automatic set-aside starting next month costs present-you nothing and pays future-you first.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 23
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "impulse_savings_slip",
+       "kind": "risk",
+       "score": 3.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.067,
+        "unit": "fraction_of_income",
+        "band": "elevated",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "~P34 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "precommitment_smart",
+        "label": "Commit now to a change that starts later"
+       },
+       "text": "Savings slipped to 7% this month. A small automatic set-aside starting next month costs present-you nothing and pays future-you first."
+      },
+      {
+       "insight_key": "impulse_thin_cushion",
+       "kind": "risk",
+       "score": 3.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.0,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "Your cushion covers about 0.0 months right now. A standing transfer, however small, rebuilds it without needing willpower."
+      },
+      {
+       "insight_key": "impulse_quiet_week_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "momentum",
+        "value": 1.0,
+        "unit": "ratio_to_typical_week",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "own typical nonzero week (=1.0)",
+         "percentile_context": "~P50 of reference population",
+         "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+         "baseline_week": 280.0
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": null,
+       "text": "Your spending pace is right at your normal this week. That steadiness is the skill; everything else builds on it."
+      }
+     ],
+     "quest": {
+      "key": "mindful",
+      "kind": "days",
+      "target": 4,
+      "tx_type": null,
+      "moment": "neutral",
+      "insight_key": "impulse_savings_slip",
+      "rationale": "Savings slipped to 7% this month.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 3,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Anxious Planner": {
+     "nudge": "Quality-of-life spending is down at 13% of income, lower than 9 in 10 people. A planned treat will not dent the plan; you've earned it.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 23
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "anxious_deprivation",
+       "kind": "risk",
+       "score": 6.0,
+       "signal": {
+        "name": "lifestyle_share",
+        "value": 0.133,
+        "unit": "fraction_of_income",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+         "percentile_context": "<=P10 of reference population",
+         "window": "trailing 30d discretionary vs monthly income"
+        }
+       },
+       "mechanism": "scarcity_vigilance",
+       "tone": "reassuring, permission-granting, gentle",
+       "intervention": {
+        "key": "permission_reframe",
+        "label": "Explicit permission to spend on quality of life"
+       },
+       "text": "Quality-of-life spending is down at 13% of income, lower than 9 in 10 people. A planned treat will not dent the plan; you've earned it."
+      }
+     ],
+     "quest": {
+      "key": "treat",
+      "kind": "count",
+      "target": 1,
+      "tx_type": "discretionary",
+      "moment": "neutral",
+      "insight_key": "anxious_deprivation",
+      "rationale": "Quality-of-life spending is down at 13% of income, lower than 9 in 10 people.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Blind Investor": {
+     "nudge": "Cash on hand covers about 0.0 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 23
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "blind_thin_runway",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.0,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "liquidity_first",
+        "label": "Let the cash buffer win over one more position"
+       },
+       "text": "Cash on hand covers about 0.0 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position."
+      },
+      {
+       "insight_key": "blind_cashflow_leak",
+       "kind": "risk",
+       "score": 3.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.067,
+        "unit": "fraction_of_income",
+        "band": "elevated",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "~P34 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "precommitment_smart",
+        "label": "Commit now to a change that starts later"
+       },
+       "text": "Only 7% of income stayed with you this month. Route a fixed slice to cash before anything else gets allocated."
+      }
+     ],
+     "quest": {
+      "key": "buffer",
+      "kind": "money",
+      "target": 100,
+      "tx_type": "savings",
+      "moment": "neutral",
+      "insight_key": "blind_thin_runway",
+      "rationale": "Cash on hand covers about 0.0 months of spending; the benchmark is 3 to 6.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Survivalist": {
+     "nudge": "The cushion covers about 0.0 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 23
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "survivalist_no_cushion",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.0,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "The cushion covers about 0.0 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds."
+      },
+      {
+       "insight_key": "survivalist_dissaving",
+       "kind": "risk",
+       "score": 4.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.067,
+        "unit": "fraction_of_income",
+        "band": "elevated",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "~P34 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "Spending ran past income this month. No blame here: one fixed cost reviewed and one small set-aside started is how the line turns."
+      },
+      {
+       "insight_key": "survivalist_steady_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "momentum",
+        "value": 1.0,
+        "unit": "ratio_to_typical_week",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "own typical nonzero week (=1.0)",
+         "percentile_context": "~P50 of reference population",
+         "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+         "baseline_week": 280.0
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": null,
+       "text": "Spending stayed level with your normal week. Steady is exactly what builds the cushion."
+      }
+     ],
+     "quest": {
+      "key": "setaside",
+      "kind": "money",
+      "target": 20,
+      "tx_type": "savings",
+      "moment": "neutral",
+      "insight_key": "survivalist_no_cushion",
+      "rationale": "The cushion covers about 0.0 months right now.",
+      "issued_for": "2026-07-13"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 3,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    }
+   }
+  },
+  {
+   "scenario": "S4b tight margins (spike 13d out)",
+   "income": 9500,
+   "today": "2026-08-12",
+   "ledger_rows": 28,
+   "skipped_rows": 0,
+   "signals": [
+    {
+     "name": "savings_rate",
+     "value": 0.067,
+     "unit": "fraction_of_income",
+     "band": "elevated",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+      "percentile_context": "~P34 of reference population",
+      "window": "trailing 30d spend vs monthly income"
+     }
+    },
+    {
+     "name": "runway",
+     "value": 0.0,
+     "unit": "months",
+     "band": "high",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "CFPB 3-6 month emergency buffer",
+      "percentile_context": "<=P10 of reference population",
+      "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+      "note": "pot = in-app savings only; buffer held elsewhere not visible"
+     }
+    },
+    {
+     "name": "lifestyle_share",
+     "value": 0.133,
+     "unit": "fraction_of_income",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 30d discretionary vs monthly income"
+     }
+    },
+    {
+     "name": "weekend_ratio",
+     "value": 0.0,
+     "unit": "ratio",
+     "band": "calm",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "calendar-neutral weekend share (2/7)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 56d",
+      "weekend_days": "Fri-Sat"
+     }
+    },
+    {
+     "name": "momentum",
+     "value": 1.0,
+     "unit": "ratio_to_typical_week",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "own typical nonzero week (=1.0)",
+      "percentile_context": "~P50 of reference population",
+      "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+      "baseline_week": 280.0
+     }
+    },
+    {
+     "name": "anomaly",
+     "value": 0,
+     "unit": "flagged_tx_last_7d",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+      "fence": 140.0,
+      "extreme_fence": 140.0,
+      "history_n": 22
+     }
+    },
+    {
+     "name": "landmark",
+     "value": 13,
+     "unit": "days_to_event",
+     "band": "elevated",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "seasonal-spike & fresh-start calendar",
+      "nearest": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 13
+      },
+      "next_spike": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 13
+      },
+      "next_fresh_start": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 20
+      }
+     }
+    }
+   ],
+   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "archetypes": {
+    "The Impulse Spender": {
+     "nudge": "Savings slipped to 7% this month. A small automatic set-aside starting next month costs present-you nothing and pays future-you first.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 22
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 13,
+       "unit": "days_to_event",
+       "band": "elevated",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 20
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "impulse_savings_slip",
+       "kind": "risk",
+       "score": 3.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.067,
+        "unit": "fraction_of_income",
+        "band": "elevated",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "~P34 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "precommitment_smart",
+        "label": "Commit now to a change that starts later"
+       },
+       "text": "Savings slipped to 7% this month. A small automatic set-aside starting next month costs present-you nothing and pays future-you first."
+      },
+      {
+       "insight_key": "impulse_thin_cushion",
+       "kind": "risk",
+       "score": 3.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.0,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "Your cushion covers about 0.0 months right now. A standing transfer, however small, rebuilds it without needing willpower."
+      },
+      {
+       "insight_key": "impulse_quiet_week_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "momentum",
+        "value": 1.0,
+        "unit": "ratio_to_typical_week",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "own typical nonzero week (=1.0)",
+         "percentile_context": "~P50 of reference population",
+         "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+         "baseline_week": 280.0
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": null,
+       "text": "Your spending pace is right at your normal this week. That steadiness is the skill; everything else builds on it."
+      }
+     ],
+     "quest": {
+      "key": "mindful",
+      "kind": "days",
+      "target": 4,
+      "tx_type": null,
+      "moment": "neutral",
+      "insight_key": "impulse_savings_slip",
+      "rationale": "Savings slipped to 7% this month.",
+      "issued_for": "2026-08-12"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 3,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Anxious Planner": {
+     "nudge": "Quality-of-life spending is down at 13% of income, lower than 9 in 10 people. A planned treat will not dent the plan; you've earned it.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 22
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 13,
+       "unit": "days_to_event",
+       "band": "elevated",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 20
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "anxious_deprivation",
+       "kind": "risk",
+       "score": 6.0,
+       "signal": {
+        "name": "lifestyle_share",
+        "value": 0.133,
+        "unit": "fraction_of_income",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+         "percentile_context": "<=P10 of reference population",
+         "window": "trailing 30d discretionary vs monthly income"
+        }
+       },
+       "mechanism": "scarcity_vigilance",
+       "tone": "reassuring, permission-granting, gentle",
+       "intervention": {
+        "key": "permission_reframe",
+        "label": "Explicit permission to spend on quality of life"
+       },
+       "text": "Quality-of-life spending is down at 13% of income, lower than 9 in 10 people. A planned treat will not dent the plan; you've earned it."
+      }
+     ],
+     "quest": {
+      "key": "treat",
+      "kind": "count",
+      "target": 1,
+      "tx_type": "discretionary",
+      "moment": "neutral",
+      "insight_key": "anxious_deprivation",
+      "rationale": "Quality-of-life spending is down at 13% of income, lower than 9 in 10 people.",
+      "issued_for": "2026-08-12"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Blind Investor": {
+     "nudge": "Cash on hand covers about 0.0 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 22
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 13,
+       "unit": "days_to_event",
+       "band": "elevated",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 20
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "blind_thin_runway",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.0,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "liquidity_first",
+        "label": "Let the cash buffer win over one more position"
+       },
+       "text": "Cash on hand covers about 0.0 months of spending; the benchmark is 3 to 6. This week, let liquidity win over one more position."
+      },
+      {
+       "insight_key": "blind_cashflow_leak",
+       "kind": "risk",
+       "score": 3.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.067,
+        "unit": "fraction_of_income",
+        "band": "elevated",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "~P34 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": {
+        "key": "precommitment_smart",
+        "label": "Commit now to a change that starts later"
+       },
+       "text": "Only 7% of income stayed with you this month. Route a fixed slice to cash before anything else gets allocated."
+      }
+     ],
+     "quest": {
+      "key": "buffer",
+      "kind": "money",
+      "target": 100,
+      "tx_type": "savings",
+      "moment": "neutral",
+      "insight_key": "blind_thin_runway",
+      "rationale": "Cash on hand covers about 0.0 months of spending; the benchmark is 3 to 6.",
+      "issued_for": "2026-08-12"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 2,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Survivalist": {
+     "nudge": "The cushion covers about 0.0 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.067,
+       "unit": "fraction_of_income",
+       "band": "elevated",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P34 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 0.0,
+       "unit": "months",
+       "band": "high",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "<=P10 of reference population",
+        "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.133,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 280.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 140.0,
+        "extreme_fence": 140.0,
+        "history_n": 22
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 13,
+       "unit": "days_to_event",
+       "band": "elevated",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 13
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 20
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "survivalist_no_cushion",
+       "kind": "risk",
+       "score": 9.0,
+       "signal": {
+        "name": "runway",
+        "value": 0.0,
+        "unit": "months",
+        "band": "high",
+        "direction": "below_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "<=P10 of reference population",
+         "window": "savings pot vs avg monthly spend (last 83d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "micro_setaside",
+        "label": "Very small recurring set-aside (start tiny, start now)"
+       },
+       "text": "The cushion covers about 0.0 months right now. Twenty riyals a week into a labelled pot is a real start, and it adds up faster than it sounds."
+      },
+      {
+       "insight_key": "survivalist_spike_ahead",
+       "kind": "risk",
+       "score": 5.0,
+       "signal": {
+        "name": "landmark",
+        "value": 13,
+        "unit": "days_to_event",
+        "band": "elevated",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "seasonal-spike & fresh-start calendar",
+         "nearest": {
+          "event": "Back to School",
+          "kind": "spike",
+          "days": 13
+         },
+         "next_spike": {
+          "event": "Back to School",
+          "kind": "spike",
+          "days": 13
+         },
+         "next_fresh_start": {
+          "event": "New month",
+          "kind": "fresh_start",
+          "days": 20
+         }
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": {
+        "key": "sinking_fund",
+        "label": "Labelled set-aside toward a known upcoming spike"
+       },
+       "text": "Back to School lands in 13 days. A small set-aside each week from now beats a scramble later."
+      },
+      {
+       "insight_key": "survivalist_steady_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "momentum",
+        "value": 1.0,
+        "unit": "ratio_to_typical_week",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "own typical nonzero week (=1.0)",
+         "percentile_context": "~P50 of reference population",
+         "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+         "baseline_week": 280.0
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": null,
+       "text": "Spending stayed level with your normal week. Steady is exactly what builds the cushion."
+      }
+     ],
+     "quest": {
+      "key": "setaside",
+      "kind": "money",
+      "target": 20,
+      "tx_type": "savings",
+      "moment": "vulnerability",
+      "insight_key": "survivalist_no_cushion",
+      "rationale": "The cushion covers about 0.0 months right now.",
+      "issued_for": "2026-08-12"
+     },
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 3,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    }
+   }
+  },
+  {
+   "scenario": "S5 brand-new user (10 days)",
+   "income": 10000,
+   "today": "2026-07-13",
+   "ledger_rows": 3,
+   "skipped_rows": 0,
+   "signals": [
+    {
+     "name": "landmark",
+     "value": 19,
+     "unit": "days_to_event",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "seasonal-spike & fresh-start calendar",
+      "nearest": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      },
+      "next_spike": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 43
+      },
+      "next_fresh_start": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      }
+     }
+    }
+   ],
+   "generic_nudge": "A big expense period is coming up. Prepare for it.",
+   "archetypes": {
+    "The Impulse Spender": {
+     "nudge": "Late-night buys are what's pulling your Financial EQ down (35/100). Give tonight a pause. I'll notice.",
+     "signals": [
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [],
+     "quest": null,
+     "meta": {
+      "signals_computed": 1,
+      "insights_count": 0,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Anxious Planner": {
+     "nudge": "You're saving plenty, but your Spending Efficiency sits at 40/100. The coffee is allowed, no guilt.",
+     "signals": [
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [],
+     "quest": null,
+     "meta": {
+      "signals_computed": 1,
+      "insights_count": 0,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Blind Investor": {
+     "nudge": "Your buffer is filling back in. The bets can breathe now.",
+     "signals": [
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [],
+     "quest": null,
+     "meta": {
+      "signals_computed": 1,
+      "insights_count": 0,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Survivalist": {
+     "nudge": "Back to School lands in 43 days. A small set-aside now beats a scramble later.",
+     "signals": [
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [],
+     "quest": null,
+     "meta": {
+      "signals_computed": 1,
+      "insights_count": 0,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    }
+   }
+  },
+  {
+   "scenario": "S6 balanced healthy user",
+   "income": 10000,
+   "today": "2026-07-13",
+   "ledger_rows": 44,
+   "skipped_rows": 0,
+   "signals": [
+    {
+     "name": "savings_rate",
+     "value": 0.238,
+     "unit": "fraction_of_income",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+      "percentile_context": "~P73 of reference population",
+      "window": "trailing 30d spend vs monthly income"
+     }
+    },
+    {
+     "name": "runway",
+     "value": 3.691,
+     "unit": "months",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "CFPB 3-6 month emergency buffer",
+      "percentile_context": "~P58 of reference population",
+      "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+      "note": "pot = in-app savings only; buffer held elsewhere not visible"
+     }
+    },
+    {
+     "name": "lifestyle_share",
+     "value": 0.312,
+     "unit": "fraction_of_income",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+      "percentile_context": "~P21 of reference population",
+      "window": "trailing 30d discretionary vs monthly income"
+     }
+    },
+    {
+     "name": "weekend_ratio",
+     "value": 0.0,
+     "unit": "ratio",
+     "band": "calm",
+     "direction": "below_anchor",
+     "evidence": {
+      "anchor": "calendar-neutral weekend share (2/7)",
+      "percentile_context": "<=P10 of reference population",
+      "window": "trailing 56d",
+      "weekend_days": "Fri-Sat"
+     }
+    },
+    {
+     "name": "momentum",
+     "value": 1.0,
+     "unit": "ratio_to_typical_week",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "own typical nonzero week (=1.0)",
+      "percentile_context": "~P50 of reference population",
+      "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+      "baseline_week": 720.0
+     }
+    },
+    {
+     "name": "anomaly",
+     "value": 0,
+     "unit": "flagged_tx_last_7d",
+     "band": "calm",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+      "fence": 240.0,
+      "extreme_fence": 240.0,
+      "history_n": 34
+     }
+    },
+    {
+     "name": "landmark",
+     "value": 19,
+     "unit": "days_to_event",
+     "band": "note",
+     "direction": "at_anchor",
+     "evidence": {
+      "anchor": "seasonal-spike & fresh-start calendar",
+      "nearest": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      },
+      "next_spike": {
+       "event": "Back to School",
+       "kind": "spike",
+       "days": 43
+      },
+      "next_fresh_start": {
+       "event": "New month",
+       "kind": "fresh_start",
+       "days": 19
+      }
+     }
+    }
+   ],
+   "generic_nudge": "Your emergency fund is below the recommended 3-6 months. Build it up.",
+   "archetypes": {
+    "The Impulse Spender": {
+     "nudge": "Your spending pace is right at your normal this week. That steadiness is the skill; everything else builds on it.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.238,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P73 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.691,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P58 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.312,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P21 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 720.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 240.0,
+        "extreme_fence": 240.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "impulse_quiet_week_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "momentum",
+        "value": 1.0,
+        "unit": "ratio_to_typical_week",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "own typical nonzero week (=1.0)",
+         "percentile_context": "~P50 of reference population",
+         "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+         "baseline_week": 720.0
+        }
+       },
+       "mechanism": "present_bias",
+       "tone": "playful, zero-guilt, momentum-focused",
+       "intervention": null,
+       "text": "Your spending pace is right at your normal this week. That steadiness is the skill; everything else builds on it."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Anxious Planner": {
+     "nudge": "You're letting quality of life have its share this month. For you, that is the win worth noticing.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.238,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P73 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.691,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P58 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.312,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P21 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 720.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 240.0,
+        "extreme_fence": 240.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "anxious_balance_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "lifestyle_share",
+        "value": 0.312,
+        "unit": "fraction_of_income",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+         "percentile_context": "~P21 of reference population",
+         "window": "trailing 30d discretionary vs monthly income"
+        }
+       },
+       "mechanism": "scarcity_vigilance",
+       "tone": "reassuring, permission-granting, gentle",
+       "intervention": null,
+       "text": "You're letting quality of life have its share this month. For you, that is the win worth noticing."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Blind Investor": {
+     "nudge": "Your cash floor is holding inside the healthy band. That buffer is what lets the rest of your strategy breathe.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.238,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P73 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.691,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P58 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.312,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P21 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 720.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 240.0,
+        "extreme_fence": 240.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "blind_buffer_built_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "runway",
+        "value": 3.691,
+        "unit": "months",
+        "band": "note",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "CFPB 3-6 month emergency buffer",
+         "percentile_context": "~P58 of reference population",
+         "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+         "note": "pot = in-app savings only; buffer held elsewhere not visible"
+        }
+       },
+       "mechanism": "overconfidence_illiquidity",
+       "tone": "competence-respecting, data-forward",
+       "intervention": null,
+       "text": "Your cash floor is holding inside the healthy band. That buffer is what lets the rest of your strategy breathe."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    },
+    "The Survivalist": {
+     "nudge": "You kept 24% of income this month. With margins as tight as yours, that is a genuine win.",
+     "signals": [
+      {
+       "name": "savings_rate",
+       "value": 0.238,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+        "percentile_context": "~P73 of reference population",
+        "window": "trailing 30d spend vs monthly income"
+       }
+      },
+      {
+       "name": "runway",
+       "value": 3.691,
+       "unit": "months",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "CFPB 3-6 month emergency buffer",
+        "percentile_context": "~P58 of reference population",
+        "window": "savings pot vs avg monthly spend (last 84d, incl. spikes)",
+        "note": "pot = in-app savings only; buffer held elsewhere not visible"
+       }
+      },
+      {
+       "name": "lifestyle_share",
+       "value": 0.312,
+       "unit": "fraction_of_income",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "reference-population quartiles (50/30/20 not directly applicable)",
+        "percentile_context": "~P21 of reference population",
+        "window": "trailing 30d discretionary vs monthly income"
+       }
+      },
+      {
+       "name": "weekend_ratio",
+       "value": 0.0,
+       "unit": "ratio",
+       "band": "calm",
+       "direction": "below_anchor",
+       "evidence": {
+        "anchor": "calendar-neutral weekend share (2/7)",
+        "percentile_context": "<=P10 of reference population",
+        "window": "trailing 56d",
+        "weekend_days": "Fri-Sat"
+       }
+      },
+      {
+       "name": "momentum",
+       "value": 1.0,
+       "unit": "ratio_to_typical_week",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own typical nonzero week (=1.0)",
+        "percentile_context": "~P50 of reference population",
+        "window": "last 7d vs median of own nonzero weeks (prior 12w)",
+        "baseline_week": 720.0
+       }
+      },
+      {
+       "name": "anomaly",
+       "value": 0,
+       "unit": "flagged_tx_last_7d",
+       "band": "calm",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "own spending history (Tukey fences: Q3+1.5*IQR, 3*IQR extreme)",
+        "fence": 240.0,
+        "extreme_fence": 240.0,
+        "history_n": 34
+       }
+      },
+      {
+       "name": "landmark",
+       "value": 19,
+       "unit": "days_to_event",
+       "band": "note",
+       "direction": "at_anchor",
+       "evidence": {
+        "anchor": "seasonal-spike & fresh-start calendar",
+        "nearest": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        },
+        "next_spike": {
+         "event": "Back to School",
+         "kind": "spike",
+         "days": 43
+        },
+        "next_fresh_start": {
+         "event": "New month",
+         "kind": "fresh_start",
+         "days": 19
+        }
+       }
+      }
+     ],
+     "insights": [
+      {
+       "insight_key": "survivalist_headroom_praise",
+       "kind": "praise",
+       "score": 0.0,
+       "signal": {
+        "name": "savings_rate",
+        "value": 0.238,
+        "unit": "fraction_of_income",
+        "band": "calm",
+        "direction": "at_anchor",
+        "evidence": {
+         "anchor": "20% savings norm (50/30/20; ~P70 of reference population)",
+         "percentile_context": "~P73 of reference population",
+         "window": "trailing 30d spend vs monthly income"
+        }
+       },
+       "mechanism": "fixed_cost_trap",
+       "tone": "steady, practical, small-wins",
+       "intervention": null,
+       "text": "You kept 24% of income this month. With margins as tight as yours, that is a genuine win."
+      }
+     ],
+     "quest": null,
+     "meta": {
+      "signals_computed": 7,
+      "insights_count": 1,
+      "skipped_rows": 0,
+      "engine": "v1"
+     }
+    }
+   }
+  }
+ ],
+ "verdict": {
+  "C1_differentiation": true,
+  "C2_direction_flip": true,
+  "C3_low_text_overlap": true,
+  "C4_no_blame_framing": true,
+  "C5_restraint_exists": true,
+  "C6_always_answers": true
+ }
+}
