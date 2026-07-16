@@ -3017,9 +3017,13 @@ html.dark .arena {
 .arch-sprite .cm-head, .arch-sprite .cm-bag, .arch-sprite .cm-eyes { transform-box: fill-box; }
 .arch-sprite .sp-puppet,
 .arch-sprite .rc-tail, .arch-sprite .rc-arm,
+.arch-sprite .rc-t1, .arch-sprite .rc-t2, .arch-sprite .rc-t3,
 .arch-sprite .sq-tail, .arch-sprite .sq-hold,
 .arch-sprite .pc-f, .arch-sprite .pc-head,
-.arch-sprite .cm-head, .arch-sprite .cm-bag { transition: transform 0.45s cubic-bezier(0.34, 1.45, 0.64, 1); }
+.arch-sprite .cm-head, .arch-sprite .cm-bag, .arch-sprite .cm-eyes {
+  /* matches the sprite's neutral blend beat (BLEND_MS in sprites.jsx) */
+  transition: transform 0.3s cubic-bezier(0.33, 1.2, 0.55, 1);
+}
 .arch-sprite .sp-puppet { transform-origin: 50% 100%; }
 .arch-sprite .rc-tail { transform-origin: 10% 70%; }
 .arch-sprite .rc-t1, .arch-sprite .rc-t2, .arch-sprite .rc-t3 { transform-origin: 50% 50%; }
@@ -3083,14 +3087,19 @@ html.dark .arena {
 .anim-idle2.spx-raccoon .sp-puppet { animation: rc-hopset 1.5s cubic-bezier(0.34, 0.9, 0.4, 1) infinite; }
 .anim-idle2.spx-raccoon .rc-arm { animation: rc-fan 1.5s ease-in-out infinite; }
 .anim-idle2.spx-raccoon .rc-tail { animation: spr-wag 0.75s ease-in-out infinite; }
-/* wind-up: crouched, arm cocked, tail buzzing — the wheel decides */
+/* wind-up: crouched, arm cocked, tail buzzing — the wheel decides.
+   The crouch is a static pose the settle transition eases into; the
+   tremble loop starts on a delay from that exact pose, so no snap. */
 @keyframes rc-windup {
   0%, 100% { transform: scale(1.04, 0.93); }
   50% { transform: scale(1.055, 0.92); }
 }
-.anim-windup.spx-raccoon .sp-puppet { animation: rc-windup 0.5s ease-in-out infinite; }
+.anim-windup.spx-raccoon .sp-puppet {
+  transform: scale(1.04, 0.93);
+  animation: rc-windup 0.5s ease-in-out 0.35s infinite;
+}
 .anim-windup.spx-raccoon .rc-arm { transform: rotate(18deg); }
-.anim-windup.spx-raccoon .rc-tail { animation: spr-wag 0.45s ease-in-out infinite; }
+.anim-windup.spx-raccoon .rc-tail { animation: spr-wag 0.45s ease-in-out 0.35s infinite; }
 /* the strike: one big swing, then done */
 @keyframes rc-strike {
   0% { transform: rotate(18deg); }
@@ -3202,8 +3211,9 @@ html.dark .arena {
 .anim-strike.spx-peacock .pc-head { animation: pc-strike 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1; }
 .anim-strike.spx-peacock .pc-f1, .anim-strike.spx-peacock .pc-f2 { animation: pc-strikeflareL 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1; }
 .anim-strike.spx-peacock .pc-f4, .anim-strike.spx-peacock .pc-f5 { animation: pc-strikeflareR 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1; }
-@keyframes pc-cheerL { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(-13deg); } }
-@keyframes pc-cheerR { 0%, 100% { transform: rotate(10deg); } 50% { transform: rotate(13deg); } }
+/* neutral-start loop: the fan opens, holds proud, and eases shut each cycle */
+@keyframes pc-cheerL { 0%, 100% { transform: rotate(0); } 28%, 72% { transform: rotate(-12deg); } 50% { transform: rotate(-9deg); } }
+@keyframes pc-cheerR { 0%, 100% { transform: rotate(0); } 28%, 72% { transform: rotate(12deg); } 50% { transform: rotate(9deg); } }
 @keyframes pc-proud { 0%, 100% { transform: rotate(0) translateY(0); } 50% { transform: rotate(-2deg) translateY(-10px); } }
 .anim-cheer.spx-peacock .sp-puppet { animation: spr-bob 2.2s ease-in-out infinite; }
 .anim-cheer.spx-peacock .pc-f1, .anim-cheer.spx-peacock .pc-f2 { animation: pc-cheerL 2.2s ease-in-out infinite; }
@@ -3260,12 +3270,13 @@ html.dark .arena {
 .anim-cheer.spx-camel .cm-bag { animation: spr-sway 2.6s ease-in-out infinite; }
 .anim-cheer.spx-camel .sp-puppet { animation: spr-bob 2.6s ease-in-out infinite; }
 
-/* the two fighters must not bob in lockstep — offset the player's phase,
-   and stagger the lobby roster so the grid doesn't march in unison */
-.me-sprite .arch-sprite .sp-puppet { animation-delay: -0.9s; }
-.me-sprite .arch-sprite .rc-tail,
-.me-sprite .arch-sprite .sq-tail,
-.me-sprite .arch-sprite .cm-bag { animation-delay: -0.6s; }
+/* the two fighters must not bob in lockstep — offset the player's idle
+   phase (scoped to the idle loops so wind-up/strike keep their timing) */
+.me-sprite .anim-idle .sp-puppet,
+.me-sprite .anim-idle2 .sp-puppet { animation-delay: -0.9s; }
+.me-sprite .anim-idle .rc-tail,
+.me-sprite .anim-idle .sq-tail,
+.me-sprite .anim-idle .cm-bag { animation-delay: -0.6s; }
 
 @media (prefers-reduced-motion: reduce) {
   .arch-sprite * { animation: none !important; transition: none !important; }
