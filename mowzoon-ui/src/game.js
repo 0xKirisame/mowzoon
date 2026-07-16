@@ -10,7 +10,7 @@ export const DROPS = {
   calibrate: 25, // finishing (or retaking) the assessment
   badge: 15,    // each badge earned
   quest: 40,    // collecting a finished quest
-  arenaWin: 20, // winning a ghost battle in the arena (losses pay nothing)
+  arenaWin: 25, // winning a ghost battle in the arena (losses pay nothing)
 };
 
 // level thresholds

@@ -34,7 +34,8 @@ const EMPTY = {
   recurring: null,   // memoized detection { series, scannedAt }
   spikeHidden: [],   // forecast names the user marked "not mine"
 
-  // arena battles, see arena/engine.js
+  // arena battles, see arena/engine.js. Combat state is ephemeral (lives in
+  // the battle screen); only this meta persists.
   arena: {
     wins: 0,
     losses: 0,
@@ -42,6 +43,9 @@ const EMPTY = {
     bestStreak: 0,
     history: [],   // last 10 results { opp, oppArch, won, rounds, dateISO }
     loadout: { effects: [], ability: null }, // chosen effects + affinity ability
+    rankScore: 0,  // ladder standing (see arena/rank.js)
+    friends: [],   // followed rivals' handles ['sara-4821', ...]
+    friendCards: {}, // cache { [handle]: { name, archetype, level, rankScore, updatedAt } }
   },
 
   // game layer, see game.js
@@ -53,6 +57,7 @@ const EMPTY = {
     badges: {},      // { [badgeId]: ISO day earned }
     flags: {},       // one-shot event flags (e.g. opened the map)
   },
+
 };
 
 export const todayISO = () => {
@@ -66,7 +71,7 @@ function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (!raw || typeof raw !== 'object') return { ...EMPTY };
-    // deep-merge profile/game so new sub-fields land on older saved docs
+    // deep-merge profile/game/battle so new sub-fields land on older saved docs
     return {
       ...EMPTY,
       ...raw,

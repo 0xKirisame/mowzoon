@@ -87,6 +87,7 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
 
   const TITLES = {
     read: t('Your read', 'قراءتك'),
+    signals: t('Your read in numbers', 'قراءتك بالأرقام'),
     progress: i.t('progress.title'),
     scores: i.t('results.profile'),
     standing: profile?.model ? i.t('home.cohort', { n: i.fmtNum(profile.model.cohort_size) }) : t('Standing', 'موقعك'),
@@ -281,6 +282,67 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
                   )}
                 </div>
               )}
+
+              {panel === 'signals' && profile && (() => {
+                const eng = app.insights && app.insights.aid === id ? app.insights : null;
+                const sigs = eng?.signals || [];
+                if (!sigs.length) {
+                  return (
+                    <div className="pf-panel">
+                      <p className="prof-desc">{t(
+                        'Not enough history yet. Log a few weeks of spending and your numbers show up here.',
+                        'لا يوجد سجل كافٍ بعد. سجّل بضعة أسابيع من الإنفاق لتظهر أرقامك هنا.',
+                      )}</p>
+                    </div>
+                  );
+                }
+                const byName = Object.fromEntries(sigs.map((s) => [s.name, s]));
+                const order = ['savings_rate', 'runway', 'lifestyle_share', 'weekend_ratio', 'momentum', 'anomaly', 'landmark'];
+                const BAND = { calm: t('Calm', 'هادئ'), note: t('Worth a note', 'يستحق ملاحظة'), elevated: t('Elevated', 'مرتفع'), high: t('High', 'عالٍ') };
+                const months = (v) => (v < 1 ? t('less than a month', 'أقل من شهر') : `${i.fmtNum(Math.round(v * 10) / 10)} ${t('months', 'أشهر')}`);
+                const times = (v) => `${i.fmtNum(Math.round(v * 10) / 10)}×`;
+                const META = {
+                  savings_rate: { label: t('Savings rate', 'معدل الادخار'), val: (s) => i.fmtPct(Math.round(s.value * 100)), cap: t('The share of income you keep. Around 20% is a healthy target.', 'نسبة ما تحتفظ به من دخلك. نحو ٢٠٪ هدف صحي.') },
+                  runway: { label: t('Savings coverage', 'تغطية المدخرات'), val: (s) => months(s.value), cap: t('How long your savings would cover your spending. A healthy range is 3 to 6 months.', 'كم تغطي مدخراتك من إنفاقك. النطاق الصحي من ٣ إلى ٦ أشهر.') },
+                  lifestyle_share: { label: t('Lifestyle spending', 'إنفاق نمط الحياة'), val: (s) => i.fmtPct(Math.round(s.value * 100)), cap: t('The share of income going to lifestyle and fun.', 'نسبة الدخل التي تذهب للترفيه ونمط الحياة.') },
+                  weekend_ratio: { label: t('Weekend spending', 'إنفاق نهاية الأسبوع'), val: (s) => times(s.value), cap: t('Weekend spending against an even split. 1x means weekends match the rest of the week.', 'إنفاق نهاية الأسبوع مقابل توزيع متساوٍ. ١× يعني أنها كبقية الأسبوع.') },
+                  momentum: { label: t('This week’s pace', 'إيقاع هذا الأسبوع'), val: (s) => times(s.value), cap: t('This week’s spending against your typical week.', 'إنفاق هذا الأسبوع مقابل أسبوعك المعتاد.') },
+                  anomaly: { label: t('Unusual purchases', 'مشتريات غير معتادة'), val: (s) => (s.value > 0 ? i.fmtNum(s.value) : t('None', 'لا شيء')), cap: t('Purchases above your usual range in the last 7 days.', 'مشتريات أعلى من مداك المعتاد في آخر ٧ أيام.') },
+                };
+                return (
+                  <div className="pf-panel">
+                    <div className="sig-list">
+                      {order.map((name) => {
+                        const s = byName[name];
+                        if (!s) return null;
+                        if (name === 'landmark') {
+                          const nx = (s.evidence && s.evidence.nearest) || {};
+                          const evName = nx.event === 'New month' ? t('New month', 'شهر جديد') : i.spikeName(nx.event || '');
+                          return (
+                            <div className="sig-card" key={name}>
+                              <div className="sig-top"><span className="sig-label">{t('Coming up', 'قادم')}</span></div>
+                              <div className="sig-val">{evName}</div>
+                              <p className="sig-cap">{i.fmtDays(nx.days ?? s.value)}</p>
+                            </div>
+                          );
+                        }
+                        const m = META[name];
+                        if (!m) return null;
+                        return (
+                          <div className="sig-card" key={name}>
+                            <div className="sig-top">
+                              <span className="sig-label">{m.label}</span>
+                              <span className={`sig-band sig-band--${s.band}`}>{BAND[s.band] || s.band}</span>
+                            </div>
+                            <div className="sig-val">{m.val(s)}</div>
+                            <p className="sig-cap">{m.cap}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {panel === 'scores' && profile && (
                 <div className="pf-panel">

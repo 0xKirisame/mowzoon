@@ -45,6 +45,7 @@ _db.executescript(
       bot         INTEGER NOT NULL DEFAULT 0,
       wins        INTEGER NOT NULL DEFAULT 0,
       losses      INTEGER NOT NULL DEFAULT 0,
+      rank_score  INTEGER NOT NULL DEFAULT 0,
       updated_at  TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS battles (
@@ -62,14 +63,15 @@ _db.executescript(
 )
 
 # same six demo characters as the UI's offline roster (arena/bots.js), so
-# the arena reads the same whether or not the API is reachable
+# the arena reads the same whether or not the API is reachable. Seed rank
+# scores keep the global ladder alive on a fresh (or redeployed) database.
 SEED = [
-    ("noura", "Noura", 0, 82, 28, 45, 3, {"effects": ["compound"], "ability": "splurge"}),
-    ("salem", "Salem", 3, 40, 90, 55, 4, {"effects": ["cashback", "compound"], "ability": "rationing"}),
-    ("rakan", "Rakan", 2, 60, 45, 88, 5, {"effects": ["highyield", "compound"], "ability": "allin"}),
-    ("layla", "Layla", 1, 55, 70, 62, 3, {"effects": ["cashback"], "ability": "contingency"}),
-    ("dana", "Dana", 1, 68, 50, 75, 4, {"effects": ["highyield", "cashback"], "ability": "overplan"}),
-    ("faisal", "Faisal", 3, 50, 60, 50, 2, {"effects": ["cashback"], "ability": "reserve"}),
+    ("noura", "Noura", 0, 82, 28, 45, 3, 74, {"effects": ["compound"], "ability": "splurge"}),
+    ("salem", "Salem", 3, 40, 90, 55, 4, 121, {"effects": ["cashback", "compound"], "ability": "rationing"}),
+    ("rakan", "Rakan", 2, 60, 45, 88, 5, 158, {"effects": ["highyield", "compound"], "ability": "allin"}),
+    ("layla", "Layla", 1, 55, 70, 62, 3, 63, {"effects": ["cashback"], "ability": "contingency"}),
+    ("dana", "Dana", 1, 68, 50, 75, 4, 97, {"effects": ["highyield", "cashback"], "ability": "overplan"}),
+    ("faisal", "Faisal", 3, 50, 60, 50, 2, 28, {"effects": ["cashback"], "ability": "reserve"}),
 ]
 
 
@@ -78,11 +80,16 @@ def _now() -> str:
 
 
 with _lock:
+    # dev databases created before the ladder landed lack the column
+    cols = {r[1] for r in _db.execute("PRAGMA table_info(characters)").fetchall()}
+    if "rank_score" not in cols:
+        _db.execute("ALTER TABLE characters ADD COLUMN rank_score INTEGER NOT NULL DEFAULT 0")
+        _db.commit()
     if _db.execute("SELECT COUNT(*) FROM characters").fetchone()[0] == 0:
         _db.executemany(
             "INSERT INTO characters (handle, name, archetype, efficiency, resilience, eq,"
-            " level, loadout, bot, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)",
-            [(h, n, a, e, r, q, lv, json.dumps(lo), _now()) for h, n, a, e, r, q, lv, lo in SEED],
+            " level, rank_score, loadout, bot, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)",
+            [(h, n, a, e, r, q, lv, rs, json.dumps(lo), _now()) for h, n, a, e, r, q, lv, rs, lo in SEED],
         )
         _db.commit()
 
@@ -104,6 +111,7 @@ def _character(row: sqlite3.Row) -> dict:
         "bot": bool(row["bot"]),
         "wins": row["wins"],
         "losses": row["losses"],
+        "rankScore": row["rank_score"],
         "updatedAt": row["updated_at"],
     }
 
@@ -128,6 +136,8 @@ class Character(BaseModel):
     loadout: Loadout = Field(default_factory=Loadout)
     accent: Optional[str] = Field(default=None, max_length=9)
     avatarKind: Optional[str] = Field(default=None, max_length=12)
+    # client-computed (see arena/rank.js); the server stores and orders only
+    rankScore: int = Field(default=0, ge=0, le=1_000_000)
 
 
 class BattleResult(BaseModel):
@@ -146,13 +156,14 @@ def register(character: Character):
         _db.execute(
             """
             INSERT INTO characters (handle, name, archetype, efficiency, resilience, eq,
-                                    level, loadout, accent, avatar_kind, bot, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+                                    level, loadout, accent, avatar_kind, rank_score, bot, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
             ON CONFLICT(handle) DO UPDATE SET
               name=excluded.name, archetype=excluded.archetype,
               efficiency=excluded.efficiency, resilience=excluded.resilience,
               eq=excluded.eq, level=excluded.level, loadout=excluded.loadout,
               accent=excluded.accent, avatar_kind=excluded.avatar_kind,
+              rank_score=excluded.rank_score,
               updated_at=excluded.updated_at
             """,
             (
@@ -160,7 +171,7 @@ def register(character: Character):
                 character.metrics.efficiency, character.metrics.resilience,
                 character.metrics.eq, character.level,
                 json.dumps(character.loadout.model_dump()),
-                character.accent, character.avatarKind, _now(),
+                character.accent, character.avatarKind, character.rankScore, _now(),
             ),
         )
         _db.commit()
@@ -179,6 +190,30 @@ def roster(exclude: str = "", limit: int = 20):
             (exclude.lower(), max(1, min(limit, 50))),
         ).fetchall()
     return {"characters": [_character(r) for r in rows]}
+
+
+@router.get("/leaderboard")
+def leaderboard(top: int = 20):
+    """Global ladder, best rank first. Ties break on freshness."""
+    with _lock:
+        rows = _db.execute(
+            "SELECT * FROM characters ORDER BY rank_score DESC, updated_at DESC LIMIT ?",
+            (max(1, min(top, 100)),),
+        ).fetchall()
+    return {
+        "leaderboard": [
+            {
+                "rank": i + 1,
+                "handle": r["handle"],
+                "name": r["name"],
+                "archetype": r["archetype"],
+                "level": r["level"],
+                "rankScore": r["rank_score"],
+                "bot": bool(r["bot"]),
+            }
+            for i, r in enumerate(rows)
+        ]
+    }
 
 
 @router.get("/character/{handle}")

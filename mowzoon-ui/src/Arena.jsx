@@ -5,12 +5,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARCHETYPE_META } from './data';
-import { Glyph, screen, item, gel } from './ui';
+import { Glyph, NumberFlow, Seg, screen, item, gel } from './ui';
 import { DROPS } from './game';
 import { todayISO } from './store';
 import { useI18n } from './i18n';
 import {
   registerArenaCharacter, getArenaRoster, getArenaCharacter, postArenaBattle, getArenaInbox,
+  getArenaLeaderboard,
 } from './api';
 import {
   BEATS, ABILITIES, EFFECTS, PASSIVE_ABILITIES, slotsFor,
@@ -19,6 +20,9 @@ import {
 } from './arena/engine';
 import { BOTS } from './arena/bots';
 import { ArchSprite } from './arena/sprites';
+import { healthOf, applyMatchResult } from './arena/rank';
+import { shareLink, addFriend, friendsLeaderboard } from './arena/friends';
+import { qrMatrix, qrPath } from './arena/qr';
 
 const ABILITY_GLYPH = {
   splurge: 'bolt', retail: 'cart', contingency: 'shield', overplan: 'compass',
@@ -29,6 +33,24 @@ const EFFECT_GLYPH = { compound: 'trend', cashback: 'redo', highyield: 'flame' }
 // +1 me over them, -1 them over me, 0 even
 const matchup = (mine, theirs) =>
   BEATS[mine] === theirs ? 1 : BEATS[theirs] === mine ? -1 : 0;
+
+/* ----------------------------------- QR ----------------------------------- */
+
+const QUIET = 4; // QR quiet-zone modules
+
+function QrCard({ url }) {
+  const m = useMemo(() => qrMatrix(url), [url]);
+  if (!m) return null;
+  const side = m.size + QUIET * 2;
+  return (
+    <div className="ar-qr" dir="ltr">
+      <svg viewBox={`${-QUIET} ${-QUIET} ${side} ${side}`} shapeRendering="crispEdges" aria-label={url}>
+        <rect x={-QUIET} y={-QUIET} width={side} height={side} fill="#fff" />
+        <path d={qrPath(m)} fill="#111" />
+      </svg>
+    </div>
+  );
+}
 
 /* ---------------------------------- wheel --------------------------------- */
 
@@ -137,7 +159,7 @@ function InfoBox({ f, mine, active, i }) {
     <div className={`info-box ${mine ? 'me-box' : 'foe-box'} ${active ? 'on' : ''}`} style={{ '--ft': meta.tint }}>
       <div className="info-row">
         <b className="info-name">{f.name}</b>
-        <span className="info-lv">Lv {i.fmtNum(f.level)}</span>
+        <span className="info-lv">{i.t('arena.lv', { n: i.fmtNum(f.level) })}</span>
       </div>
       <HpBar f={f} />
       <div className="info-row info-sub">
@@ -169,7 +191,7 @@ function logLine(l, st, i) {
 
 let spinSeq = 0;
 
-function BattleScreen({ meChar, oppChar, mode, onEnd, onExit }) {
+function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
   const i = useI18n();
   const [st, setSt] = useState(() =>
     initBattle(meChar, oppChar, mode, mode === 'pass' && Math.random() < 0.5 ? 'B' : 'A'),
@@ -379,6 +401,12 @@ function BattleScreen({ meChar, oppChar, mode, onEnd, onExit }) {
               {mode === 'ghost' && st.winner === 'A' && (
                 <b className="result-drops">{i.t('toast.drops', { n: i.fmtNum(DROPS.arenaWin) })}</b>
               )}
+              {mode === 'ghost' && rankDelta != null && rankDelta !== 0 && (
+                <b className={`result-rank ${rankDelta > 0 ? 'good' : 'bad'}`}>
+                  <Glyph id="trophy" size={14} strokeWidth={2.2} />
+                  {i.t(rankDelta > 0 ? 'arena.rank.up' : 'arena.rank.down', { n: i.fmtNum(Math.abs(rankDelta)) })}
+                </b>
+              )}
               <div className="battle-card-btns">
                 <button className="btn-ability" onClick={onExit}>{i.t('arena.back')}</button>
               </div>
@@ -420,7 +448,7 @@ function LoadoutPanel({ me, loadout, level, setApp, i }) {
       <div className="loadout-sec">
         <span className="loadout-cap">
           {i.t('arena.effects')} · {i.fmtNum(Math.min(loadout.effects.length, slots.effectSlots))}/{i.fmtNum(slots.effectSlots)}
-          {slots.effectSlots < 2 && <em> · {i.t('arena.unlockAt', { lv: 'Lv 3' })}</em>}
+          {slots.effectSlots < 2 && <em> · {i.t('arena.unlockAt', { lv: i.t('arena.lv', { n: i.fmtNum(3) }) })}</em>}
         </span>
         <div className="loadout-row">
           {EFFECTS.map((id) => (
@@ -439,7 +467,7 @@ function LoadoutPanel({ me, loadout, level, setApp, i }) {
       <div className="loadout-sec">
         <span className="loadout-cap">
           {i.t('arena.ability')}
-          {!slots.abilityChoice && <em> · {i.t('arena.unlockAt', { lv: 'Lv 2' })}</em>}
+          {!slots.abilityChoice && <em> · {i.t('arena.unlockAt', { lv: i.t('arena.lv', { n: i.fmtNum(2) }) })}</em>}
         </span>
         <div className="loadout-row">
           {abilities.map((id, k) => {
@@ -529,7 +557,7 @@ function RivalCard({ c, mine, onChallenge, i }) {
         </span>
         <div>
           <div className="friend-name">{c.name || c.handle}</div>
-          <div className="friend-arch">{meta.name} · Lv {i.fmtNum(c.level)}</div>
+          <div className="friend-arch">{meta.name} · {i.t('arena.lv', { n: i.fmtNum(c.level) })}</div>
         </div>
         <span className={`rival-adv ${adv > 0 ? 'good' : adv < 0 ? 'bad' : ''}`}>
           {i.t(adv > 0 ? 'arena.advantage' : adv < 0 ? 'arena.disadvantage' : 'arena.neutral')}
@@ -543,12 +571,41 @@ function RivalCard({ c, mine, onChallenge, i }) {
   );
 }
 
+function LbRow({ r, i }) {
+  const meta = ARCHETYPE_META[r.archetype] ?? ARCHETYPE_META[0];
+  return (
+    <div className={`lb-row ${r.isMe ? 'me' : ''}`}>
+      <span className="lb-rank">{i.fmtNum(r.rank)}</span>
+      <span
+        className="lb-glyph"
+        style={{ background: `color-mix(in srgb, ${meta.tint} 14%, var(--surface))`, color: meta.tint }}
+      >
+        <Glyph id={meta.glyph} size={15} strokeWidth={2.1} />
+      </span>
+      <span className="lb-name">
+        {r.name || r.handle}
+        {r.isMe && <i>{i.t('arena.lb.you')}</i>}
+      </span>
+      <span className="lb-lv">{i.t('arena.lv', { n: i.fmtNum(r.level) })}</span>
+      <b className="lb-score">{i.fmtNum(Math.round(r.rankScore ?? 0))}</b>
+    </div>
+  );
+}
+
 export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate }) {
   const i = useI18n();
   const [battle, setBattle] = useState(null); // { opp, mode, key }
   const [passOpen, setPassOpen] = useState(false);
   const [roster, setRoster] = useState(null); // null = server unreachable → bots
   const [inbox, setInbox] = useState(null);
+  const [board, setBoard] = useState(null); // global ladder, null = offline
+  const [rankDelta, setRankDelta] = useState(null); // shown on the result card
+  const [lbTab, setLbTab] = useState('global');
+  const [addVal, setAddVal] = useState('');
+  const [addState, setAddState] = useState(null); // 'busy' | 'ok' | 'err'
+  const [copied, setCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const addTimer = useRef(null);
   const paidRef = useRef(null);
 
   const aid = profile ? (profile.model?.id ?? profile.archetype.id) : null;
@@ -563,8 +620,9 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
         level: lvl.n,
         loadout: app.arena.loadout,
         accent: app.profile.accent,
+        rankScore: app.arena.rankScore || 0,
       },
-    [profile, aid, myHandle, app.profile.name, app.profile.accent, lvl.n, app.arena.loadout], // eslint-disable-line react-hooks/exhaustive-deps
+    [profile, aid, myHandle, app.profile.name, app.profile.accent, lvl.n, app.arena.loadout, app.arena.rankScore], // eslint-disable-line react-hooks/exhaustive-deps
   );
   const meF = useMemo(() => (meChar ? makeFighter(meChar) : null), [meChar]);
 
@@ -606,6 +664,40 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     };
   }, [myHandle, battle]);
 
+  // global ladder, refetched after every battle (rank may have moved)
+  useEffect(() => {
+    if (battle) return undefined;
+    let alive = true;
+    getArenaLeaderboard(20).then((d) => alive && setBoard(d?.leaderboard ?? null));
+    return () => { alive = false; };
+  }, [battle]);
+
+  // the roster doubles as a friend-card refresh: newer snapshots of the
+  // handles I follow ride along for free
+  useEffect(() => {
+    if (!roster) return;
+    setApp((s) => {
+      const follows = s.arena.friends || [];
+      if (!follows.length) return s;
+      let changed = false;
+      const cards = { ...s.arena.friendCards };
+      for (const c of roster) {
+        if (!follows.includes(c.handle)) continue;
+        const prev = cards[c.handle];
+        if (prev && prev.level === c.level && prev.rankScore === (c.rankScore ?? 0) && prev.name === c.name) continue;
+        cards[c.handle] = {
+          name: c.name || c.handle,
+          archetype: c.archetype ?? 0,
+          level: c.level ?? 1,
+          rankScore: c.rankScore ?? 0,
+          updatedAt: Date.now(),
+        };
+        changed = true;
+      }
+      return changed ? { ...s, arena: { ...s.arena, friendCards: cards } } : s;
+    });
+  }, [roster]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!profile) {
     return (
       <motion.section className="arena" variants={screen} initial="initial" animate="animate" exit="exit">
@@ -625,6 +717,15 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     if (!battle || battle.mode !== 'ghost' || paidRef.current === battle.key) return;
     paidRef.current = battle.key;
     const won = winner === 'A';
+    // ghost battles are ranked: financial health multiplies the swing
+    const before = app.arena.rankScore || 0;
+    const after = applyMatchResult(before, {
+      won,
+      health: healthOf(profile.metrics),
+      myLevel: lvl.n,
+      oppLevel: battle.opp.level || 1,
+    });
+    setRankDelta(after - before);
     if (myHandle && battle.opp.handle && battle.opp.handle !== myHandle) {
       postArenaBattle({
         challenger: myHandle,
@@ -649,6 +750,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             { opp: battle.opp.name, oppArch: battle.opp.archetype, won, rounds, dateISO: todayISO() },
             ...(s.arena.history || []),
           ].slice(0, 10),
+          rankScore: after,
         },
         game: won ? { ...s.game, drops: s.game.drops + DROPS.arenaWin } : s.game,
       };
@@ -663,8 +765,9 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
         meChar={meChar}
         oppChar={battle.opp}
         mode={battle.mode}
+        rankDelta={rankDelta}
         onEnd={onEnd}
-        onExit={() => setBattle(null)}
+        onExit={() => { setBattle(null); setRankDelta(null); }}
       />
     );
   }
@@ -672,18 +775,57 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   const meta = ARCHETYPE_META[aid];
   const rec = app.arena;
   const rivals = roster ?? BOTS;
+  const weakVs = Number(Object.keys(BEATS).find((k) => BEATS[k] === aid));
 
-  // rematch against the challenger's current snapshot
-  const revenge = async (handle) => {
-    const c = (await getArenaCharacter(handle)) || rivals.find((x) => x.handle === handle);
+  // challenge any handle's current snapshot: revenge, or a followed friend.
+  // Falls back to the cached friend card (neutral metrics) when offline.
+  const challengeHandle = async (handle) => {
+    const c =
+      (await getArenaCharacter(handle)) ||
+      rivals.find((x) => x.handle === handle) ||
+      (rec.friendCards[handle] && {
+        handle,
+        name: rec.friendCards[handle].name,
+        archetype: rec.friendCards[handle].archetype,
+        metrics: { efficiency: 60, resilience: 60, eq: 60 },
+        level: rec.friendCards[handle].level,
+        loadout: { effects: [], ability: null },
+      });
     if (c) setBattle({ opp: c, mode: 'ghost', key: `${handle}-${Date.now()}` });
   };
+
+  // follow a pasted handle or share link
+  const doAdd = async () => {
+    let code = addVal.trim();
+    const m = code.match(/[?&]add=([A-Za-z0-9_.-]+)/);
+    if (m) code = m[1];
+    if (!code) return;
+    setAddState('busy');
+    const res = await addFriend(app, setApp, code.toLowerCase());
+    setAddState(res ? 'ok' : 'err');
+    if (res) setAddVal('');
+    clearTimeout(addTimer.current);
+    addTimer.current = setTimeout(() => setAddState(null), 2600);
+  };
+
+  // leaderboard rows: global from the server, friends from the local cache
+  const lbMe = { handle: myHandle, name: meChar.name, archetype: aid, level: lvl.n, rankScore: rec.rankScore || 0 };
+  const lbRows =
+    lbTab === 'friends'
+      ? friendsLeaderboard(app, lbMe)
+      : (board ?? []).map((r) => ({ ...r, isMe: myHandle && r.handle === myHandle }));
 
   return (
     <motion.section className="arena" variants={screen} initial="initial" animate="animate" exit="exit">
       <motion.header className="home-head" variants={item}>
-        <h1>{i.t('arena.title')}</h1>
-        <p className="home-sub">{i.t('arena.sub')}</p>
+        <div>
+          <h1>{i.t('arena.title')}</h1>
+          <p className="home-sub">{i.t('arena.sub')}</p>
+        </div>
+        <span className="streak glass-lite arena-rank-chip" title={i.t('arena.lb.cap')}>
+          <Glyph id="trophy" size={15} strokeWidth={2} />
+          <NumberFlow value={Math.round(app.arena.rankScore || 0)} duration={0.6} format={i.fmtNum} />
+        </span>
       </motion.header>
 
       <motion.div className="glass panel fighter-panel" variants={item} style={{ '--ft': meta.tint }}>
@@ -693,7 +835,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
           </span>
           <div>
             <div className="fighter-name">{meF.name}</div>
-            <div className="fighter-arch">{meta.name} · Lv {i.fmtNum(meF.level)}</div>
+            <div className="fighter-arch">{meta.name} · {i.t('arena.lv', { n: i.fmtNum(meF.level) })}</div>
             {(rec.wins > 0 || rec.losses > 0) && (
               <div className="fighter-record">{i.t('arena.record', { w: i.fmtNum(rec.wins), l: i.fmtNum(rec.losses) })}</div>
             )}
@@ -703,6 +845,16 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
           <div><b>{i.fmtNum(meF.maxHp)}</b><span>{i.t('arena.stat.hp')}</span></div>
           <div><b>{i.fmtNum(meF.atk)}</b><span>{i.t('arena.stat.atk')}</span></div>
           <div><b>{Math.round((meF.critDeg / 360) * 100)}%</b><span>{i.t('arena.stat.crit')}</span></div>
+        </div>
+        <div className="ar-traits">
+          <span className="ar-trait up">
+            <Glyph id={ARCHETYPE_META[BEATS[aid]].glyph} size={13} strokeWidth={2.2} />
+            {i.t('arena.strong', { name: i.arch(BEATS[aid]).name })}
+          </span>
+          <span className="ar-trait down">
+            <Glyph id={ARCHETYPE_META[weakVs].glyph} size={13} strokeWidth={2.2} />
+            {i.t('arena.weak', { name: i.arch(weakVs).name })}
+          </span>
         </div>
         <p className="fighter-note">{i.t('arena.statNote')}</p>
       </motion.div>
@@ -733,6 +885,143 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
         ))}
       </div>
 
+      {/* friends: share my handle (code / link / QR), follow theirs */}
+      <motion.div className="glass panel" variants={item}>
+        <div className="panel-h">
+          <p className="panel-title" style={{ margin: 0 }}>{i.t('arena.friends')}</p>
+        </div>
+
+        {myHandle ? (
+          <div className="ar-share">
+            <button
+              className="ar-code glass-lite"
+              dir="ltr"
+              onClick={() => {
+                navigator.clipboard?.writeText(myHandle);
+                setCopied('code');
+                setTimeout(() => setCopied(false), 2000);
+              }}
+            >
+              {copied === 'code' ? i.t('arena.copied') : myHandle}
+            </button>
+            <button
+              className="ar-share-btn glass-lite"
+              onClick={() => {
+                navigator.clipboard?.writeText(shareLink(myHandle));
+                setCopied('link');
+                setTimeout(() => setCopied(false), 2000);
+              }}
+            >
+              <Glyph id="link" size={15} strokeWidth={2.1} />
+              {copied === 'link' ? i.t('arena.copied') : i.t('arena.copy')}
+            </button>
+            <button className={`ar-share-btn glass-lite ${showQr ? 'on' : ''}`} onClick={() => setShowQr((o) => !o)}>
+              <Glyph id="qr" size={15} strokeWidth={2.1} />
+              {i.t('arena.qr')}
+            </button>
+          </div>
+        ) : (
+          <p className="ar-setup-cap">{i.t('arena.share.offline')}</p>
+        )}
+
+        <AnimatePresence>
+          {showQr && myHandle && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22 }}
+            >
+              <QrCard url={shareLink(myHandle)} />
+              <p className="ar-setup-cap ar-qr-cap">{i.t('arena.qr.cap')}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="ar-add-row">
+          <input
+            className="ar-input"
+            value={addVal}
+            onChange={(e) => setAddVal(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && doAdd()}
+            placeholder={i.t('arena.add.ph')}
+          />
+          <motion.button className="ar-add-btn" whileTap={{ scale: 0.95 }} onClick={doAdd} disabled={addState === 'busy'}>
+            <Glyph id="plus" size={15} strokeWidth={2.4} />
+            {i.t('arena.add')}
+          </motion.button>
+        </div>
+        <AnimatePresence>
+          {addState === 'err' && (
+            <motion.p className="ar-add-note err" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {i.t('arena.add.err')}
+            </motion.p>
+          )}
+          {addState === 'ok' && (
+            <motion.p className="ar-add-note ok" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {i.t('arena.add.done')}
+            </motion.p>
+          )}
+        </AnimatePresence>
+
+        {rec.friends.length === 0 ? (
+          <p className="ar-setup-cap ar-friends-empty">{i.t('arena.friends.empty')}</p>
+        ) : (
+          <div className="ar-friend-rows">
+            {rec.friends.map((handle) => {
+              const f = rec.friendCards[handle];
+              if (!f) return null;
+              const fMeta = ARCHETYPE_META[f.archetype] ?? ARCHETYPE_META[0];
+              return (
+                <div key={handle} className="ar-friend">
+                  <span
+                    className="lb-glyph"
+                    style={{ background: `color-mix(in srgb, ${fMeta.tint} 14%, var(--surface))`, color: fMeta.tint }}
+                  >
+                    <Glyph id={fMeta.glyph} size={15} strokeWidth={2.1} />
+                  </span>
+                  <span className="lb-name">
+                    {f.name || handle}
+                    <i className="ar-friend-code" dir="ltr">{handle}</i>
+                  </span>
+                  <span className="lb-lv">{i.t('arena.lv', { n: i.fmtNum(f.level) })}</span>
+                  <b className="lb-score">{i.fmtNum(Math.round(f.rankScore ?? 0))}</b>
+                  <motion.button className="ar-challenge" whileTap={{ scale: 0.94 }} onClick={() => challengeHandle(handle)}>
+                    <Glyph id="swords" size={13} strokeWidth={2.3} />
+                    {i.t('arena.challenge')}
+                  </motion.button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
+
+      {/* leaderboard */}
+      <motion.div className="glass panel" variants={item}>
+        <div className="panel-h">
+          <p className="panel-title" style={{ margin: 0 }}>{i.t('arena.lb')}</p>
+          <div className="ar-lb-seg">
+            <Seg
+              options={[
+                { id: 'global', label: i.t('arena.lb.global') },
+                { id: 'friends', label: i.t('arena.lb.friends') },
+              ]}
+              value={lbTab}
+              onChange={setLbTab}
+            />
+          </div>
+        </div>
+        {lbRows.length === 0 ? (
+          <p className="ar-setup-cap">{lbTab === 'global' && board === null ? i.t('arena.lb.offline') : i.t('arena.lb.empty')}</p>
+        ) : (
+          <div className="lb-rows">
+            {lbRows.map((r) => <LbRow key={`${lbTab}-${r.handle ?? r.rank}`} r={r} i={i} />)}
+          </div>
+        )}
+        <p className="ar-setup-cap ar-lb-cap">{i.t('arena.lb.cap')}</p>
+      </motion.div>
+
       {inbox && inbox.length > 0 && (
         <>
           <motion.div className="arena-rivals-head" variants={item}>
@@ -750,7 +1039,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
                     {i.t(iWon ? 'arena.inbox.won' : 'arena.inbox.lost', { name: otherName, n: i.fmtNum(b.rounds) })}
                   </span>
                   {challengedMe && (
-                    <button className="btn-ability inbox-revenge" onClick={() => revenge(otherHandle)}>
+                    <button className="btn-ability inbox-revenge" onClick={() => challengeHandle(otherHandle)}>
                       <Glyph id="swords" size={13} strokeWidth={2.2} />
                       {i.t('arena.revenge')}
                     </button>
