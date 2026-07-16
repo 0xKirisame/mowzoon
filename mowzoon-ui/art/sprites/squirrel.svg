@@ -1,45 +1,43 @@
-<svg width="480" height="480" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-  <!-- SQUIRREL — archetype 1 · The Anxious Planner (drop squirrel).
-       Exported from src/arena/sprites.jsx. Keep class names + viewBox;
-       sp-main/dark/soft recolor from the user accent in the app;
-       the tint here is the archetype color, preview-only.
-       The sweat drop (squirrel) is hidden in-app until the idle2 animation. -->
-  <style>
-    svg { --spt: #5e5ce6; --spt-dark: color-mix(in srgb, #5e5ce6 66%, #231628); --spt-soft: color-mix(in srgb, #5e5ce6 62%, #fff); }
-    .sp-main{fill:var(--spt)} .sp-dark{fill:var(--spt-dark)} .sp-soft{fill:var(--spt-soft)}
-    .sp-white{fill:#fff} .sp-ink{fill:#2a2a30} .sp-shadow{fill:#000;opacity:.08}
-    .sp-darkline{stroke:var(--spt-dark);fill:none;stroke-linecap:round}
-    .sq-rim{stroke:var(--spt-dark)} .pc-ring{stroke:var(--spt-dark);fill:none}
-    .sp-cash{fill:#43b96f} .sp-cash2{fill:#2f9d58} .sp-cashline{stroke:#2f9d58;fill:none}
-    .sp-coin{fill:#f2b62c} .sp-coinline{stroke:#f8d977;fill:none}
-    .sp-bag{fill:#8a5a34} .sp-bag2{fill:#66422a} .sp-bagline{stroke:#66422a;fill:none}
-    .sp-sweat{fill:#7cc9f2;opacity:1}
-  </style>
-  <ellipse cx="60" cy="110" rx="34" ry="5.5" class="sp-shadow"/>
-  <g class="sp-puppet">
-      <g class="sq-tail">
-        <path d="M72 92 Q106 88 108 54 Q109 24 80 15 Q99 34 93 60 Q88 80 66 88 Z" class="sp-dark" />
-      </g>
-      <rect x="47" y="98" width="11" height="8" rx="4" class="sp-dark" />
-      <rect x="62" y="98" width="11" height="8" rx="4" class="sp-dark" />
-      <path
-        d="M60 15 Q77 33 84 56 Q90 80 75 91 Q60 99 45 91 Q30 80 36 56 Q43 33 60 15 Z"
-        class="sp-main"
-      />
-      <g class="sq-face">
-        <circle cx="46" cy="52" r="12.5" class="sp-white sq-rim" stroke-width="4" />
-        <circle cx="74" cy="52" r="12.5" class="sp-white sq-rim" stroke-width="4" />
-        <rect x="57" y="50" width="6" height="3.5" rx="1.75" class="sp-dark" />
-        <circle cx="50" cy="55" r="2.6" class="sp-ink sq-pupil" />
-        <circle cx="78" cy="55" r="2.6" class="sp-ink sq-pupil" />
-      </g>
-      <rect x="56" y="70.5" width="8" height="2.6" rx="1.3" class="sp-dark" />
-      <g class="sq-hold">
-        <circle cx="60" cy="84" r="14.5" class="sp-coin" />
-        <circle cx="60" cy="84" r="9.5" class="sp-coinline" stroke-width="3" />
-        <rect x="38" y="73" width="15" height="8.5" rx="4.25" class="sp-soft" transform="rotate(33 45.5 77.25)" />
-        <rect x="67" y="73" width="15" height="8.5" rx="4.25" class="sp-soft" transform="rotate(-33 74.5 77.25)" />
-      </g>
-      <path d="M33 22 Q37.5 29 33 32.5 Q28.5 29 33 22 Z" class="sp-sweat sq-sweat" />
-    </g>
+<svg width="799" height="780" viewBox="0 0 799 780" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_39_75)">
+<path d="M457.516 0C584.946 0 697.124 65.3017 762.411 164.267C755.563 163.432 748.59 163 741.516 163C647.076 163 570.516 239.559 570.516 334C570.516 428.441 647.076 505 741.516 505C761.531 505 780.742 501.559 798.592 495.24C746.145 632.509 613.217 730 457.516 730C255.932 730 92.5162 566.584 92.5162 365C92.5162 163.416 255.932 0 457.516 0Z" fill="#662790"/>
+<rect x="77.5162" y="707" width="194" height="73" rx="32" fill="#7535A8"/>
+<rect x="251.516" y="707" width="194" height="73" rx="32" fill="#7535A8"/>
+<path d="M240.516 84.5029C246.253 77.4687 253.439 69.4356 262.516 69.4999C271.408 69.5629 276.696 75.2781 284.516 84.5029C312.857 117.933 491.516 314.003 521.016 520.003C530.516 646.503 418.016 779.503 262.516 779.503C88.0163 779.503 -11.2396 615.094 1.01636 520.003C30.0162 295 198.516 136 240.516 84.5029Z" fill="#A25DCF"/>
+<circle cx="131.016" cy="282" r="119" fill="#4E1E70"/>
+<circle cx="390.516" cy="282" r="119" fill="#4E1E70"/>
+<circle cx="131.016" cy="281.5" r="101.5" fill="white"/>
+<mask id="mask0_39_75" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="29" y="180" width="204" height="203">
+<circle cx="131.016" cy="281.5" r="101.5" fill="white"/>
+</mask>
+<g mask="url(#mask0_39_75)">
+<circle cx="131.016" cy="279.5" r="31.5" fill="black"/>
+</g>
+<circle cx="390.016" cy="281.5" r="101.5" fill="white"/>
+<mask id="mask1_39_75" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="288" y="180" width="204" height="203">
+<circle cx="390.016" cy="281.5" r="101.5" fill="white"/>
+</mask>
+<g mask="url(#mask1_39_75)">
+<circle cx="390.016" cy="279.5" r="31.5" fill="black"/>
+</g>
+<path d="M277.516 278C277.516 281.751 278.013 290.053 275.516 292.5C273.016 291.5 264.101 291.5 260.357 291.5C256.316 291.5 248.554 293 245.016 295C242.856 292.612 243.016 281.958 243.016 278.5C243.016 275.506 243.349 270.239 245.016 268C247.5 264.664 255.848 264.5 260.357 264.5C264.392 264.5 274.018 263.745 276.516 266.5C278.683 268.89 277.516 274.537 277.516 278Z" fill="#4E1E70"/>
+<rect x="211.516" y="425" width="97" height="25" rx="12.5" fill="#57196F"/>
+<circle cx="306.516" cy="633" r="126" fill="#FDCD12"/>
+<ellipse cx="306.516" cy="632.5" rx="89" ry="88.5" fill="#F7B403"/>
+<rect x="174.3" y="498" width="150" height="62.9497" rx="31.4749" transform="rotate(42.8168 174.3 498)" fill="url(#paint0_linear_39_75)"/>
+<rect x="445.032" y="522.848" width="150" height="62.9497" rx="31.4749" transform="rotate(120 445.032 522.848)" fill="url(#paint1_linear_39_75)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_39_75" x1="177.621" y1="526.279" x2="330.79" y2="536.364" gradientUnits="userSpaceOnUse">
+<stop offset="0.5" stop-color="#7736AB"/>
+<stop offset="0.5" stop-color="#A15ED1"/>
+</linearGradient>
+<linearGradient id="paint1_linear_39_75" x1="448.353" y1="551.126" x2="601.522" y2="561.211" gradientUnits="userSpaceOnUse">
+<stop offset="0.5" stop-color="#7736AB"/>
+<stop offset="0.5" stop-color="#A15ED1"/>
+</linearGradient>
+<clipPath id="clip0_39_75">
+<rect width="798.592" height="780" fill="white"/>
+</clipPath>
+</defs>
 </svg>

@@ -134,6 +134,7 @@ const STR = {
     'focus.sub': 'A suggestion based on your spending today.',
     'focus.opportunity': 'Good moment',
     'focus.vulnerability': 'Go gently',
+    'focus.freshstart': 'A new month starts in {n} days — a clean page to set the tone early.',
     'insight.more': 'More to look at',
 
     'home.late': 'Up late.',
@@ -565,6 +566,7 @@ const STR = {
     'focus.sub': 'اقتراح بناءً على إنفاقك اليوم.',
     'focus.opportunity': 'لحظة مناسبة',
     'focus.vulnerability': 'بتروٍّ',
+    'focus.freshstart': 'شهر جديد يبدأ بعد {n} أيام — صفحة نظيفة لترسم إيقاعك مبكرًا.',
     'insight.more': 'المزيد لتطّلع عليه',
 
     'home.late': 'ما زلت مستيقظًا.',
@@ -1041,7 +1043,9 @@ export function i18nFor(lang) {
     const v = typeof s.value === 'number' ? s.value : 0;
     const ev = s.evidence || {};
     const spike = ev.next_spike || ev.nearest || {};
-    const pctRaw = s.unit === 'fraction_of_income' ? Math.round(v * 100) : Math.round(v);
+    // a dissaving month makes savings_rate negative; the copy reads "only
+    // {pct}% stayed with you", so floor it at zero rather than show "-12%"
+    const pctRaw = Math.max(0, s.unit === 'fraction_of_income' ? Math.round(v * 100) : Math.round(v));
     const m = Math.round(v * 10) / 10;
     return t(`insight.${key}`, {
       pct: fmtNum(pctRaw),

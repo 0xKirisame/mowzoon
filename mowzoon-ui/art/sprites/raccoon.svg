@@ -1,48 +1,51 @@
-<svg width="480" height="480" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-  <!-- RACCOON — archetype 0 · The Impulse Spender (triangle raccoon).
-       Exported from src/arena/sprites.jsx. Keep class names + viewBox;
-       sp-main/dark/soft recolor from the user accent in the app;
-       the tint here is the archetype color, preview-only.
-       The sweat drop (squirrel) is hidden in-app until the idle2 animation. -->
-  <style>
-    svg { --spt: #ff375f; --spt-dark: color-mix(in srgb, #ff375f 66%, #231628); --spt-soft: color-mix(in srgb, #ff375f 62%, #fff); }
-    .sp-main{fill:var(--spt)} .sp-dark{fill:var(--spt-dark)} .sp-soft{fill:var(--spt-soft)}
-    .sp-white{fill:#fff} .sp-ink{fill:#2a2a30} .sp-shadow{fill:#000;opacity:.08}
-    .sp-darkline{stroke:var(--spt-dark);fill:none;stroke-linecap:round}
-    .sq-rim{stroke:var(--spt-dark)} .pc-ring{stroke:var(--spt-dark);fill:none}
-    .sp-cash{fill:#43b96f} .sp-cash2{fill:#2f9d58} .sp-cashline{stroke:#2f9d58;fill:none}
-    .sp-coin{fill:#f2b62c} .sp-coinline{stroke:#f8d977;fill:none}
-    .sp-bag{fill:#8a5a34} .sp-bag2{fill:#66422a} .sp-bagline{stroke:#66422a;fill:none}
-    .sp-sweat{fill:#7cc9f2;opacity:1}
-  </style>
-  <ellipse cx="60" cy="110" rx="34" ry="5.5" class="sp-shadow"/>
-  <g class="sp-puppet">
-      <g class="rc-tail">
-        <circle cx="86" cy="93" r="9" class="sp-dark" />
-        <circle cx="98" cy="90" r="7" class="sp-main" />
-        <circle cx="107" cy="87" r="5.5" class="sp-dark" />
-      </g>
-      <rect x="40" y="98" width="15" height="9" rx="4.5" class="sp-dark" />
-      <rect x="64" y="98" width="15" height="9" rx="4.5" class="sp-dark" />
-      <path
-        d="M53 19 Q60 9 67 19 L95 78 Q99 86 91 89.5 Q76 95 60 95 Q44 95 29 89.5 Q21 86 25 78 Z"
-        class="sp-main"
-      />
-      <g class="rc-face">
-        <rect x="25" y="41" width="70" height="25" rx="12.5" class="sp-dark" />
-        <circle cx="45" cy="53.5" r="10.5" class="sp-white" />
-        <circle cx="69" cy="53.5" r="10.5" class="sp-white" />
-        <circle cx="48" cy="54.5" r="2.6" class="sp-ink" />
-        <circle cx="66" cy="54.5" r="2.6" class="sp-ink" />
-      </g>
-      <path d="M54.5 71 Q60 76.5 65.5 71" class="sp-darkline" stroke-width="2.6" />
-      <g class="rc-arm">
-        <g transform="rotate(-18 58 83.5)">
-          <rect x="45" y="75.5" width="26" height="15" rx="3" class="sp-cash" />
-          <rect x="48.5" y="79" width="19" height="8" rx="2" class="sp-cashline" stroke-width="1.8" />
-          <circle cx="58" cy="83" r="3.2" class="sp-cash2" />
-        </g>
-        <rect x="60" y="73.5" width="15" height="9.5" rx="4.75" class="sp-dark" transform="rotate(-35 67.5 78.25)" />
-      </g>
-    </g>
+<svg width="1202" height="1037" viewBox="0 0 1202 1037" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_40_245)">
+<circle cx="1110" cy="902" r="92" fill="#F33833"/>
+<circle cx="997" cy="902" r="92" fill="#8B0D12"/>
+<circle cx="884" cy="902" r="92" fill="#D51415"/>
+<path d="M418.518 131.55C448.226 75.5843 528.423 75.6077 558.098 131.591L914.514 804.002C942.403 856.617 904.263 920 844.714 920H131.374C71.8034 920 33.6653 856.578 61.595 803.961L418.518 131.55Z" fill="#F33833"/>
+<rect x="255" y="951" width="176" height="86" rx="43" fill="url(#paint0_linear_40_245)"/>
+<rect x="545" y="951" width="176" height="86" rx="43" fill="url(#paint1_linear_40_245)"/>
+<rect x="150" y="289" width="677" height="235" rx="117.5" fill="#9F1217"/>
+<circle cx="355.5" cy="406.5" r="100.5" fill="white"/>
+<mask id="mask0_40_245" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="255" y="306" width="201" height="201">
+<circle cx="355.5" cy="406.5" r="100.5" fill="white"/>
+</mask>
+<g mask="url(#mask0_40_245)">
+<circle cx="355.5" cy="406.5" r="25.5" fill="black"/>
+</g>
+<circle cx="633.5" cy="406.5" r="100.5" fill="white"/>
+<mask id="mask1_40_245" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="533" y="306" width="201" height="201">
+<circle cx="633.5" cy="406.5" r="100.5" fill="white"/>
+</mask>
+<g mask="url(#mask1_40_245)">
+<circle cx="633.5" cy="406.5" r="25.5" fill="black"/>
+</g>
+<path d="M553 559C553 594.899 523.899 624 488 624C452.101 624 423 594.899 423 559H553Z" fill="#A00E11"/>
+<rect x="460" y="669" width="276.973" height="157.082" rx="19" transform="rotate(30 460 669)" fill="#449F4F"/>
+<rect x="467.01" y="694.911" width="239.126" height="120.585" transform="rotate(30 467.01 694.911)" fill="#67C571"/>
+<circle cx="467.5" cy="699.5" r="20.5" fill="#449F4F"/>
+<circle cx="412.5" cy="796.5" r="20.5" fill="#449F4F"/>
+<circle cx="612.5" cy="913.5" r="20.5" fill="#449F4F"/>
+<circle cx="540.5" cy="806.5" r="30.5" fill="#449F4F"/>
+<circle cx="671.5" cy="816.5" r="20.5" fill="#449F4F"/>
+<rect x="535.29" y="735.761" width="176" height="86" rx="43" transform="rotate(-30 535.29 735.761)" fill="url(#paint2_linear_40_245)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_40_245" x1="431" y1="994" x2="255" y2="994" gradientUnits="userSpaceOnUse">
+<stop offset="0.5" stop-color="#D51317"/>
+<stop offset="0.5" stop-color="#F33833"/>
+</linearGradient>
+<linearGradient id="paint1_linear_40_245" x1="721" y1="994" x2="545" y2="994" gradientUnits="userSpaceOnUse">
+<stop offset="0.5" stop-color="#D51317"/>
+<stop offset="0.5" stop-color="#F33833"/>
+</linearGradient>
+<linearGradient id="paint2_linear_40_245" x1="711.29" y1="778.761" x2="535.29" y2="778.761" gradientUnits="userSpaceOnUse">
+<stop offset="0.5" stop-color="#D51317"/>
+<stop offset="0.5" stop-color="#F33833"/>
+</linearGradient>
+<clipPath id="clip0_40_245">
+<rect width="1202" height="1037" fill="white"/>
+</clipPath>
+</defs>
 </svg>

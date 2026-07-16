@@ -80,10 +80,15 @@ def _now() -> str:
 
 
 with _lock:
-    # dev databases created before the ladder landed lack the column
+    # dev databases created before the ladder landed lack the column;
+    # backfill the demo bots' ranks so the ladder isn't a wall of zeros
     cols = {r[1] for r in _db.execute("PRAGMA table_info(characters)").fetchall()}
     if "rank_score" not in cols:
         _db.execute("ALTER TABLE characters ADD COLUMN rank_score INTEGER NOT NULL DEFAULT 0")
+        _db.executemany(
+            "UPDATE characters SET rank_score = ? WHERE handle = ? AND bot = 1",
+            [(rs, h) for h, _n, _a, _e, _r, _q, _lv, rs, _lo in SEED],
+        )
         _db.commit()
     if _db.execute("SELECT COUNT(*) FROM characters").fetchone()[0] == 0:
         _db.executemany(

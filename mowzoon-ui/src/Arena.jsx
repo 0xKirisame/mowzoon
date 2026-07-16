@@ -18,7 +18,7 @@ import {
   makeFighter, initBattle, arcsFor, rollOutcome,
   castAbility, resolveAttack, ghostDecide,
 } from './arena/engine';
-import { BOTS } from './arena/bots';
+import { BOTS, botName } from './arena/bots';
 import { ArchSprite } from './arena/sprites';
 import { healthOf, applyMatchResult } from './arena/rank';
 import { shareLink, addFriend, friendsLeaderboard } from './arena/friends';
@@ -556,7 +556,7 @@ function RivalCard({ c, mine, onChallenge, i }) {
           <ArchSprite archetype={c.archetype} view="front" tint={c.accent || meta.tint} size={54} />
         </span>
         <div>
-          <div className="friend-name">{c.name || c.handle}</div>
+          <div className="friend-name">{botName(c, i.lang)}</div>
           <div className="friend-arch">{meta.name} · {i.t('arena.lv', { n: i.fmtNum(c.level) })}</div>
         </div>
         <span className={`rival-adv ${adv > 0 ? 'good' : adv < 0 ? 'bad' : ''}`}>
@@ -583,7 +583,7 @@ function LbRow({ r, i }) {
         <Glyph id={meta.glyph} size={15} strokeWidth={2.1} />
       </span>
       <span className="lb-name">
-        {r.name || r.handle}
+        {botName(r, i.lang)}
         {r.isMe && <i>{i.t('arena.lb.you')}</i>}
       </span>
       <span className="lb-lv">{i.t('arena.lv', { n: i.fmtNum(r.level) })}</span>
@@ -664,12 +664,16 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     };
   }, [myHandle, battle]);
 
-  // global ladder, refetched after every battle (rank may have moved)
+  // global ladder, refetched after every battle (rank may have moved). The
+  // second, delayed fetch lands after the debounced register upsert, so my
+  // own row shows on the very first visit too.
   useEffect(() => {
     if (battle) return undefined;
     let alive = true;
+    const grab = () => getArenaLeaderboard(20).then((d) => alive && d?.leaderboard && setBoard(d.leaderboard));
     getArenaLeaderboard(20).then((d) => alive && setBoard(d?.leaderboard ?? null));
-    return () => { alive = false; };
+    const t = setTimeout(grab, 1600);
+    return () => { alive = false; clearTimeout(t); };
   }, [battle]);
 
   // the roster doubles as a friend-card refresh: newer snapshots of the
@@ -791,7 +795,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
         level: rec.friendCards[handle].level,
         loadout: { effects: [], ability: null },
       });
-    if (c) setBattle({ opp: c, mode: 'ghost', key: `${handle}-${Date.now()}` });
+    if (c) setBattle({ opp: { ...c, name: botName(c, i.lang) }, mode: 'ghost', key: `${handle}-${Date.now()}` });
   };
 
   // follow a pasted handle or share link
@@ -880,7 +884,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             c={c}
             mine={aid}
             i={i}
-            onChallenge={() => setBattle({ opp: c, mode: 'ghost', key: `${c.handle}-${Date.now()}` })}
+            onChallenge={() => setBattle({ opp: { ...c, name: botName(c, i.lang) }, mode: 'ghost', key: `${c.handle}-${Date.now()}` })}
           />
         ))}
       </div>
@@ -1031,7 +1035,8 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             {inbox.slice(0, 6).map((b) => {
               const challengedMe = b.defender === myHandle;
               const otherHandle = challengedMe ? b.challenger : b.defender;
-              const otherName = rivals.find((c) => c.handle === otherHandle)?.name || otherHandle;
+              const other = rivals.find((c) => c.handle === otherHandle);
+              const otherName = other ? botName(other, i.lang) : otherHandle;
               const iWon = b.winner === myHandle;
               return (
                 <div key={b.id} className={`inbox-row ${b.unseen ? 'unseen' : ''}`}>

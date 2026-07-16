@@ -1,34 +1,31 @@
-# Arena sprite drafts
+# Arena character masters
 
-One SVG per archetype character, exported from `src/arena/sprites.jsx`:
+The hand-drawn Figma originals, one per archetype. These are the design
+source of truth; the in-app puppets in `src/arena/sprites.jsx` embed the
+same shapes verbatim inside a scale wrapper and swap the fills for the
+recolorable `sp-*` classes.
 
-| file | character | archetype | tint shown |
-|---|---|---|---|
-| `raccoon.svg` | triangle raccoon | 0 · The Impulse Spender | `#ff375f` |
-| `squirrel.svg` | drop squirrel | 1 · The Anxious Planner | `#5e5ce6` |
-| `peacock.svg` | oval peacock | 2 · The Blind Investor | `#e8890b` |
-| `camel.svg` | rectangle camel | 3 · The Survivalist | `#0fa38f` |
+| file | character | archetype |
+|---|---|---|
+| `raccoon.svg` | triangle raccoon | 0 · The Impulse Spender |
+| `squirrel.svg` | drop squirrel | 1 · The Anxious Planner |
+| `peacock.svg` | oval peacock | 2 · The Blind Investor |
+| `camel.svg` | rectangle camel | 3 · The Survivalist |
 
-There's also a live preview at `/__puppets-preview.html` while the dev
-server runs (file lives in `public/` — delete it before a final deploy).
+## Round-tripping edits
 
-## Rules for edits (so they drop back into the app cleanly)
-
-- **Keep `viewBox="0 0 120 120"`.** The width/height (480) is just editor zoom.
-- The camel is the enemy pose **facing LEFT**; the front-facing three mirror
-  automatically for the player's back view.
-- **Keep the class names** — they drive recoloring AND the puppet animation:
-  - `sp-main` → the character's color (user accent / archetype tint)
-  - `sp-dark` / `sp-soft` → auto-derived darker & lighter tones of it
-  - `sp-white`, `sp-ink` → eye whites and pupils
-  - props keep fixed colors: `sp-cash*` (banknote), `sp-coin*` (coin),
-    `sp-bag*` (briefcase), `sp-sweat` (sweat drop — hidden until the
-    squirrel's bored idle plays)
-  - **part groups are animation rigs** — `rc-tail`, `rc-arm`, `rc-face`,
-    `sq-tail`, `sq-hold`, `sq-pupil`, `sq-sweat`, `pc-fan`, `pc-f1…pc-f5`,
-    `pc-head`, `cm-head`, `cm-bag`, and the root `sp-puppet`. Keep moving
-    parts inside their group or the idle/idle2/attack animations lose them.
-- Feet sit near `y=104`; the ground shadow is drawn by the app, don't add one.
-
-When you're happy, hand the files back (or paste the SVG) and the shapes get
-transplanted into `src/arena/sprites.jsx` (same markup, JSX attribute casing).
+- Keep each file's own canvas size — the wrapper in `sprites.jsx` scales it
+  into the 120×120 stage (feet land on y≈104; the app draws the ground
+  shadow).
+- The camel faces LEFT (the enemy pose); the other three face front and
+  mirror automatically for the player's back view.
+- After editing, re-transplant the changed shapes into `sprites.jsx`,
+  keeping the class mapping (`sp-main`/`sp-dark`/`sp-deep`/`sp-soft` for the
+  body tones, `sp-cash*`/`sp-coin*`/`sp-bag*` for props, `sp-white`/`sp-ink`
+  for eyes) and the animation rig groups (`rc-tail`, `rc-face`, `rc-arm`,
+  `sq-tail`, `sq-face`, `sq-hold`, `sq-pupil`, `sq-sweat`, `pc-fan`,
+  `pc-f1/f2/f4/f5`, `pc-head`, `cm-head`, `cm-bag`) — the idle/idle2/attack
+  keyframes in `index.css` target those groups.
+- Gradients don't recolor and their ids collide between the two fighters on
+  the field, so two-tone details are drawn as a dark base + overlay half in
+  the transplant.

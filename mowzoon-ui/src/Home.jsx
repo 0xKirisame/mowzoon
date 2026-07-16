@@ -150,12 +150,18 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
 
   // The engine's suggested focus (display-only): a themed card under the
   // weekly quest. Text is localized from the tied insight's signal when we
-  // have it, else the backend's English rationale.
+  // have it. A quest without an insight_key is the engine's "fresh start"
+  // opportunity (its rationale arrives as raw English), so that card is
+  // rendered from a local key instead — days-to-month-start recomputed here.
   const eng = app.insights && app.insights.aid === id ? app.insights : null;
   const focus = eng?.quest || null;
   const focusInsight = focus ? (eng.list || []).find((x) => x.insight_key === focus.insight_key) : null;
+  const nowD = new Date();
+  const daysToMonth = Math.ceil((new Date(nowD.getFullYear(), nowD.getMonth() + 1, 1) - nowD) / 86400000);
   const focusText = focus
-    ? (focusInsight ? i.insight(focusInsight.insight_key, focusInsight.signal) : focus.rationale)
+    ? (focusInsight
+        ? i.insight(focusInsight.insight_key, focusInsight.signal)
+        : i.t('focus.freshstart', { n: i.fmtNum(Math.max(1, daysToMonth)) }))
     : null;
 
   // cohort chip only fires when a percentile crosses a tier boundary

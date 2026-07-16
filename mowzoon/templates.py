@@ -164,7 +164,9 @@ def build_context(signal):
     months = round(value, 1) if isinstance(value, (int, float)) else 0
     ctx = {
         'value': value,
-        'pct': round(value * 100) if signal.get('unit') == 'fraction_of_income' else round(value),
+        # floored at 0: a dissaving month makes savings_rate negative and the
+        # copy reads "only {pct}% stayed with you"
+        'pct': max(0, round(value * 100) if signal.get('unit') == 'fraction_of_income' else round(value)),
         'months': months,
         'cover': _cover_phrase(months),
         'ratio': round(value, 1),

@@ -711,7 +711,9 @@ export default function App() {
     let alive = true;
     const timer = setTimeout(() => {
       const ledger = app.tx.map((t) => ({ type: t.type, amount: t.amount, date: t.date }));
-      getEngineInsights(profileId, app.income, ledger, profile.metrics, today).then((d) => {
+      // same income basis as the Ledger month view, so percentages agree
+      const engIncome = app.incomeByMonth?.[monthKey(today)] ?? app.income;
+      getEngineInsights(profileId, engIncome, ledger, profile.metrics, today).then((d) => {
         if (!alive || !d) return;
         setApp((s) => ({
           ...s,

@@ -1,43 +1,46 @@
-<svg width="480" height="480" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-  <!-- CAMEL — archetype 3 · The Survivalist (rectangle camel).
-       Exported from src/arena/sprites.jsx. Keep class names + viewBox;
-       sp-main/dark/soft recolor from the user accent in the app;
-       the tint here is the archetype color, preview-only.
-       The sweat drop (squirrel) is hidden in-app until the idle2 animation. -->
-  <style>
-    svg { --spt: #0fa38f; --spt-dark: color-mix(in srgb, #0fa38f 66%, #231628); --spt-soft: color-mix(in srgb, #0fa38f 62%, #fff); }
-    .sp-main{fill:var(--spt)} .sp-dark{fill:var(--spt-dark)} .sp-soft{fill:var(--spt-soft)}
-    .sp-white{fill:#fff} .sp-ink{fill:#2a2a30} .sp-shadow{fill:#000;opacity:.08}
-    .sp-darkline{stroke:var(--spt-dark);fill:none;stroke-linecap:round}
-    .sq-rim{stroke:var(--spt-dark)} .pc-ring{stroke:var(--spt-dark);fill:none}
-    .sp-cash{fill:#43b96f} .sp-cash2{fill:#2f9d58} .sp-cashline{stroke:#2f9d58;fill:none}
-    .sp-coin{fill:#f2b62c} .sp-coinline{stroke:#f8d977;fill:none}
-    .sp-bag{fill:#8a5a34} .sp-bag2{fill:#66422a} .sp-bagline{stroke:#66422a;fill:none}
-    .sp-sweat{fill:#7cc9f2;opacity:1}
-  </style>
-  <ellipse cx="60" cy="110" rx="34" ry="5.5" class="sp-shadow"/>
-  <g class="sp-puppet">
-      <rect x="42" y="80" width="11" height="26" rx="5.5" class="sp-main" />
-      <rect x="55" y="82" width="11" height="24" rx="5.5" class="sp-dark" />
-      <rect x="76" y="80" width="11" height="26" rx="5.5" class="sp-main" />
-      <rect x="89" y="82" width="11" height="24" rx="5.5" class="sp-dark" />
-      <circle cx="60" cy="50" r="12" class="sp-dark" />
-      <circle cx="82" cy="50" r="12" class="sp-dark" />
-      <rect x="36" y="52" width="58" height="34" rx="9" class="sp-main" />
-      <g class="cm-head">
-        <rect x="24" y="28" width="15" height="38" rx="7.5" class="sp-main" />
-        <rect x="4" y="20" width="32" height="19" rx="8" class="sp-main" />
-        <rect x="13" y="26" width="7" height="2.6" rx="1.3" class="sp-dark" />
-        <rect x="23" y="26" width="7" height="2.6" rx="1.3" class="sp-dark" />
-        <rect x="6" y="33" width="6.5" height="2.4" rx="1.2" class="sp-dark" />
-      </g>
-      <g class="cm-bag">
-        <ellipse cx="76" cy="66" rx="14" ry="20" class="sp-bagline" stroke-width="5" />
-        <rect x="70" y="44" width="16" height="10" rx="5" class="sp-bagline" stroke-width="4.5" />
-        <rect x="58" y="52" width="36" height="26" rx="5" class="sp-bag" />
-        <rect x="58" y="61" width="36" height="7" class="sp-bag2" />
-        <rect x="65" y="55" width="5" height="20" rx="2" class="sp-bag2" />
-        <rect x="85" y="55" width="5" height="20" rx="2" class="sp-bag2" />
-      </g>
-    </g>
+<svg width="1689" height="1204" viewBox="0 0 1689 1204" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_40_192)">
+<rect x="696" y="776" width="144" height="428" rx="72" fill="#2B8D40"/>
+<rect x="811" y="776" width="144" height="428" rx="72" fill="#49AA59"/>
+<rect x="1212" y="776" width="144" height="428" rx="72" fill="#2B8D40"/>
+<rect x="1327" y="776" width="144" height="428" rx="72" fill="#49AA59"/>
+<rect x="997" y="792" width="215" height="131" rx="65.5" fill="#724018"/>
+<ellipse cx="892" cy="254" rx="178" ry="179" fill="#2A8C3F"/>
+<ellipse cx="178" cy="179" rx="178" ry="179" transform="matrix(-1 0 0 1 1425 75)" fill="#2A8C3F"/>
+<rect x="931" y="234" width="175" height="107" rx="53.5" fill="#724018"/>
+<rect x="583" y="249" width="973" height="627" rx="65" fill="#49AA59"/>
+<path d="M1265 361V304C1265 295.163 1272.16 288 1281 288H1473C1481.84 288 1489 295.163 1489 304V361" stroke="#895627" stroke-width="42"/>
+<path d="M627.5 714H479.5C443.049 714 413.5 684.451 413.5 648V270" stroke="#49AA59" stroke-width="233" stroke-linecap="round"/>
+<path d="M507.5 492C507.5 492 507.714 549.542 520.5 564.5C533.286 579.458 547.288 586.975 560.5 585C573.712 583.025 576.55 582.569 585.5 571.5C594.45 560.431 596.5 551 600 535C603.5 519 605.5 458 605.5 458" stroke="#49AA59" stroke-width="42" stroke-linecap="round"/>
+<mask id="mask0_40_192" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="297" y="153" width="447" height="678">
+<g opacity="0.62">
+<path d="M627.5 714H479.5C443.049 714 413.5 684.451 413.5 648V270" stroke="#49AA59" stroke-width="233" stroke-linecap="round"/>
+<path d="M507.5 492C507.5 492 507.714 549.542 520.5 564.5C533.286 579.458 547.288 586.975 560.5 585C573.712 583.025 576.55 582.569 585.5 571.5C594.45 560.431 596.5 551 600 535C603.5 519 605.5 458 605.5 458" stroke="#49AA59" stroke-width="42" stroke-linecap="round"/>
+</g>
+</mask>
+<g mask="url(#mask0_40_192)">
+<rect x="291" y="199" width="248" height="146" fill="#2A8C3F"/>
+</g>
+<rect width="567" height="288" rx="78" fill="#49AA59"/>
+<mask id="mask1_40_192" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="567" height="288">
+<rect width="567" height="288" rx="78" fill="#49AA59"/>
+</mask>
+<g mask="url(#mask1_40_192)">
+<rect x="-12" y="196" width="162" height="26" rx="13" fill="#167229"/>
+<rect x="218" y="86" width="108" height="24" rx="12" fill="#167229"/>
+<rect x="375" y="86" width="108" height="24" rx="12" fill="#167229"/>
+</g>
+<path d="M993.5 249.5C1075.98 253.926 1105.01 471.142 1113.21 555.827C1115.12 575.541 1129.37 592.001 1148.92 595.143C1179.27 600.018 1222.38 605.109 1241.46 598.641C1272.46 588.128 1161.5 240.499 1109.5 225C1057.5 209.501 891 243.999 993.5 249.5Z" fill="#724018"/>
+<rect x="1080" y="350" width="568" height="391" rx="44" fill="#8C5829"/>
+<rect x="1154" y="350" width="494" height="391" rx="44" fill="#AB7245"/>
+<rect x="1247" y="407" width="45" height="272" rx="22.5" fill="#895627"/>
+<rect x="1511" y="407" width="45" height="272" rx="22.5" fill="#895627"/>
+<rect x="1057" y="477" width="632" height="131" rx="44" fill="#724018"/>
+<path d="M1063.5 875.501C1145.81 871.084 1177.5 661.607 1186.79 579.254C1188.98 559.807 1203.16 543.685 1222.48 540.569C1252.85 535.67 1296.32 530.489 1315.5 536.992C1346.5 547.505 1235.5 897.506 1183.5 913.005C1131.5 928.504 961 881.002 1063.5 875.501Z" fill="#724018"/>
+</g>
+<defs>
+<clipPath id="clip0_40_192">
+<rect width="1689" height="1204" fill="white"/>
+</clipPath>
+</defs>
 </svg>

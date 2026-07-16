@@ -2,6 +2,15 @@
 // API is unreachable, and the seed data mirrored by the backend. Shapes
 // match what /arena/roster returns.
 
+// Arabic display names for the seeded roster; real players keep whatever
+// name they typed. Keyed by handle so server rows localize too.
+const BOT_NAMES_AR = {
+  noura: 'نورة', salem: 'سالم', rakan: 'راكان', layla: 'ليلى', dana: 'دانة', faisal: 'فيصل',
+};
+
+export const botName = (c, lang) =>
+  (lang === 'ar' && c?.bot && BOT_NAMES_AR[c.handle]) || c?.name || c?.handle || '';
+
 export const BOTS = [
   {
     handle: 'noura', name: 'Noura', rankScore: 74, archetype: 0, bot: true,
