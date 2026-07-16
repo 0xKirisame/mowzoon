@@ -24,65 +24,151 @@ function subDaysUntil(sub) {
   return daysUntil(isoOf(dt));
 }
 
-// Timeline strip: upcoming items as dots sized by cost, today at the left
-// edge. Decorative (aria-hidden); the list below carries the details.
+function useMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+}
+
+// Timeline strip: HTML-based so orbs stay round and scale with glass.
 function TimelineViz({ items, i }) {
-  const W = 600;
-  const H = 72;
-  const PX = 18;
-  const BASE = 40;
-  const horizon = Math.max(60, Math.min(Math.max(...items.map((x) => x.days)) + 12, 130));
-  const maxAmt = Math.max(...items.map((x) => x.amount || 0), 1);
-  const x = (d) => PX + (Math.min(d, horizon) / horizon) * (W - PX * 2);
-  const r = (a) => (a ? 5 + Math.sqrt(a / maxAmt) * 5.5 : 5);
-  const ticks = [30, 60, 90, 120].filter((t) => t <= horizon - 8);
+  const [hovered, setHovered] = useState(null);
+  const isMobile = useMobile();
+
+  // Dynamic Horizon: Max 14 days on mobile, 30 days on PC.
+  // Automatically scales down to the latest event (with a minimum of 7 days for visual balance).
+  const MAX_HORIZON = isMobile ? 14 : 30;
+  const latestDays = items.length > 0 ? Math.max(...items.map(it => it.days)) : 0;
+  const HORIZON = Math.max(7, Math.min(latestDays, MAX_HORIZON));
+
+  // Group items that land on the same spot (clamped to HORIZON)
+  const groups = useMemo(() => {
+    const res = [];
+    items.forEach(it => {
+      const d = Math.min(it.days, HORIZON);
+      let g = res.find(x => x.days === d);
+      if (!g) {
+        g = { days: d, items: [], key: 'g' + d };
+        res.push(g);
+      }
+      g.items.push(it);
+    });
+    return res;
+  }, [items, HORIZON]);
+
+  // Generate day tick labels dynamically based on the current HORIZON
+  const ticks = useMemo(() => {
+    if (HORIZON <= 7) return Array.from({ length: HORIZON + 1 }, (_, idx) => idx);
+    if (HORIZON <= 14) return [0, 3, 7, 10, HORIZON];
+    const res = [];
+    for (let j = 0; j < HORIZON; j += 5) res.push(j);
+    res.push(HORIZON);
+    return res;
+  }, [HORIZON]);
+
   return (
-    <div className="tl-viz" dir="ltr" aria-hidden="true">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <line className="tlv-axis" x1={PX} y1={BASE} x2={W - PX} y2={BASE} />
-        <line className="tlv-today" x1={PX} y1={BASE - 14} x2={PX} y2={BASE + 8} />
-        <text className="tlv-lab tlv-now" x={PX} y={BASE + 24}>{i.fmtDays(0)}</text>
+    <div className="tlv" dir="ltr">
+      {/* Remount the rail when items change to ensure CSS pulse animations are perfectly synced */}
+      <div className="tlv-rail glass-lite" key={items.length}>
+        {/* Today marker */}
+        <div className="tlv-today-mark" />
+
+        {/* Tick labels along the rail */}
         {ticks.map((t) => (
-          <g key={t}>
-            <line className="tlv-tick" x1={x(t)} y1={BASE - 4} x2={x(t)} y2={BASE + 4} />
-            <text className="tlv-lab" x={x(t)} y={BASE + 24}>{i.fmtNum(t)}</text>
-          </g>
+          <span key={t} className={`tlv-tick-label ${t === 0 ? 'now' : ''}`} style={{ left: `${(t / HORIZON) * 100}%` }}>
+            {t === 0 ? i.fmtDays(0) : i.fmtNum(t)}
+          </span>
         ))}
-        {(() => {
-          // items past the horizon pin at the edge; spread and dim them
-          // so far-off dates don't stack into one blob
-          let pinned = 0;
-          return items.map((it) => {
-            const beyond = it.days > horizon;
-            const cx = beyond ? W - PX - 13 * pinned++ : x(it.days);
-            const rr = r(it.amount);
-            const ring = rr + 4;
-            const C = 2 * Math.PI * ring;
-            return (
-              <g key={it.key} opacity={beyond ? 0.4 : 1}>
-                {it.kind === 'plan' && (
-                  <>
-                    <circle className="tlv-ring-track" cx={cx} cy={BASE} r={ring} />
-                    <circle
-                      className="tlv-ring"
-                      cx={cx}
-                      cy={BASE}
-                      r={ring}
-                      style={{ stroke: it.tint }}
-                      strokeDasharray={`${(it.funding || 0) * C} ${C}`}
-                      transform={`rotate(-90 ${cx} ${BASE})`}
-                    />
-                  </>
-                )}
-                <circle className={`tlv-dot ${it.days <= 7 ? 'near' : ''}`} cx={cx} cy={BASE} r={rr} style={{ fill: it.tint }} />
-              </g>
-            );
-          });
-        })()}
-      </svg>
+
+        {/* Item orbs placed along the rail */}
+        {groups.map((g, idx) => {
+          const pct = (g.days / HORIZON) * 100;
+          const isHovered = hovered === g.key;
+          const beyond = g.days >= HORIZON;
+          const isNear = !beyond;
+          
+          return (
+            <div
+              key={g.key}
+              className={`tlv-orb glass-lite ${isHovered ? 'active' : ''} ${isNear ? 'near' : ''}`}
+              style={{
+                left: `${pct}%`,
+                '--orb-color': g.items[0].tint,
+                opacity: beyond ? 0.6 : 1,
+                zIndex: isHovered ? 50 : groups.length - idx,
+                animationDelay: `${idx * 0.3}s`,
+              }}
+              onMouseEnter={() => setHovered(g.key)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {/* Rings for plans or overlapping items */}
+              <svg className="tlv-orb-ring" viewBox="0 0 64 64">
+                {(() => {
+                  const it = g.items[0];
+                  const c = 2 * Math.PI * 16;
+                  const count = g.items.length;
+                  return (
+                    <g>
+                      {/* Main ring (always shown for plans, or for subs if there are multiple items) */}
+                      {(it.kind === 'plan' || count > 1) && (
+                        <>
+                          <circle cx="32" cy="32" r="16" fill="none" stroke="var(--fill-2)" strokeWidth="2.5" />
+                          <circle
+                            cx="32" cy="32" r="16"
+                            fill="none" stroke={it.tint} strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeDasharray={it.kind === 'plan' ? `${(it.funding || 0) * c} ${c}` : `${c} ${c}`}
+                            transform="rotate(-90 32 32)"
+                          />
+                        </>
+                      )}
+                    </g>
+                  );
+                })()}
+              </svg>
+
+              <span className="tlv-orb-dot" style={{ background: g.items[0].tint }} />
+
+              {/* Clean badge indicator for multiple overlapping items */}
+              {g.items.length > 1 && (
+                <div className="tlv-orb-badge glass-lite">
+                  {g.items.length}
+                </div>
+              )}
+
+              {/* Hover tooltip */}
+              {isHovered && (
+                <div className={`tlv-tip glass ${pct < 20 ? 'align-left' : pct > 80 ? 'align-right' : ''}`}>
+                  {g.items.map((it, idx) => (
+                    <div 
+                      key={it.key} 
+                      className="tlv-tip-row" 
+                      style={{ 
+                        borderBottom: idx < g.items.length - 1 ? '1px solid var(--separator)' : 'none', 
+                        paddingBottom: idx < g.items.length - 1 ? 6 : 0, 
+                        marginBottom: idx < g.items.length - 1 ? 6 : 0 
+                      }}
+                    >
+                      <span className="tlv-tip-dot" style={{ color: it.tint }}>●</span>
+                      <strong>{it.name}</strong>
+                      <span>{i.fmtDays(it.days)}</span>
+                      {it.amount != null && <span>{i.fmtMoney(it.amount)}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
 
 // Ahead: spike forecast, tracked subscriptions, and plans merged into
 // one dated timeline. Set-aside is derived from logged savings.
@@ -164,6 +250,76 @@ export default function Horizon({ profile, app, setApp }) {
         <p>{i.t('ahead.sub2')}</p>
       </motion.header>
 
+      {/* Add Plan / Add Subscription — top of page as action buttons */}
+      <motion.div className="ahead-actions" variants={item}>
+        <AnimatePresence mode="wait" initial={false}>
+          {adding === null ? (
+            <motion.div key="choose" className="ahead-btns" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
+              <button className="ahead-btn glass" onClick={() => { setF(blankForm); setAdding('plan'); }}>
+                <span className="ahead-btn-ic" style={{ background: 'color-mix(in srgb, #0fa38f 15%, var(--surface))', color: '#0fa38f' }}>
+                  <Glyph id="peak" size={22} strokeWidth={2} />
+                </span>
+                <span className="ahead-btn-label">
+                  <b>{i.t('ahead.addplan')}</b>
+                  <em>{i.t('ahead.addplan.cap')}</em>
+                </span>
+              </button>
+              <button className="ahead-btn glass" onClick={() => { setF(blankForm); setAdding('sub'); }}>
+                <span className="ahead-btn-ic" style={{ background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 15%, var(--surface))`, color: TYPE_TINTS.fixed }}>
+                  <Glyph id="calendar" size={22} strokeWidth={2} />
+                </span>
+                <span className="ahead-btn-label">
+                  <b>{i.t('ahead.addsub')}</b>
+                  <em>{i.t('ahead.addsub.cap')}</em>
+                </span>
+              </button>
+            </motion.div>
+
+          ) : adding === 'plan' ? (
+            <motion.div key="plan" className="glass panel add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
+              <p className="af-title">{i.t('ahead.addplan')}</p>
+              <label className="lbl">{i.t('ahead.plan.name')}</label>
+              <input className="af-input" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+              <div className="af-row">
+                <div className="af-col">
+                  <label className="lbl">{i.t('ahead.plan.target')}</label>
+                  <div className="af-amt"><span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span><input type="number" inputMode="numeric" min="0" placeholder="0" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
+                </div>
+                <div className="af-col">
+                  <label className="lbl">{i.t('ahead.plan.date')}</label>
+                  <input className="af-date" type="date" min={todayISO()} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
+                </div>
+              </div>
+              {planHint && <p className="af-hint">{i.t('ahead.plan.hint', { a: planHint })}</p>}
+              <div className="af-actions">
+                <button className="af-cancel" onClick={() => setAdding(null)}>{i.t('ahead.cancel')}</button>
+                <button className="af-save" disabled={!f.name.trim() || !Number(f.amount) || !f.date} onClick={savePlan}>{i.t('ahead.save')}</button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="sub" className="glass panel add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
+              <p className="af-title">{i.t('ahead.addsub')}</p>
+              <label className="lbl">{i.t('ahead.sub.name')}</label>
+              <input className="af-input" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+              <div className="af-row">
+                <div className="af-col">
+                  <label className="lbl">{i.t('ahead.sub.amount')}</label>
+                  <div className="af-amt"><span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span><input type="number" inputMode="numeric" min="0" placeholder="0" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
+                </div>
+                <div className="af-col">
+                  <label className="lbl">{i.t('ahead.sub.due')}</label>
+                  <input className="af-date" type="number" inputMode="numeric" min="1" max="31" placeholder="1–31" value={f.due} onChange={(e) => setF({ ...f, due: e.target.value })} />
+                </div>
+              </div>
+              <div className="af-actions">
+                <button className="af-cancel" onClick={() => setAdding(null)}>{i.t('ahead.cancel')}</button>
+                <button className="af-save" disabled={!f.name.trim() || !Number(f.amount)} onClick={saveSub}>{i.t('ahead.save')}</button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       <motion.div className="readiness" variants={item}>
         <p className="rd-eyebrow">{i.t('ahead.readiness')}</p>
         <p className="rd-line">
@@ -203,78 +359,6 @@ export default function Horizon({ profile, app, setApp }) {
       ) : (
         <motion.p className="panel-note ahead-empty" variants={item}>{i.t('ahead.nothing')}</motion.p>
       )}
-
-      {/* Adding something is a first-class room, not an afterthought: two
-          described choices; picking one swaps the panel into a labeled form. */}
-      <motion.div className="glass panel add-panel" variants={item}>
-        <AnimatePresence mode="wait" initial={false}>
-          {adding === null ? (
-            <motion.div key="choose" className="add-rows" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
-              <button className="add-row" onClick={() => { setF(blankForm); setAdding('plan'); }}>
-                <span className="add-row-ic" style={{ background: 'color-mix(in srgb, #0fa38f 13%, var(--surface))', color: '#0fa38f' }}>
-                  <Glyph id="peak" size={18} strokeWidth={2} />
-                </span>
-                <span className="add-row-meta">
-                  <b>{i.t('ahead.addplan')}</b>
-                  <em>{i.t('ahead.addplan.cap')}</em>
-                </span>
-                <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
-              </button>
-              <button className="add-row" onClick={() => { setF(blankForm); setAdding('sub'); }}>
-                <span className="add-row-ic" style={{ background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 13%, var(--surface))`, color: TYPE_TINTS.fixed }}>
-                  <Glyph id="calendar" size={18} strokeWidth={2} />
-                </span>
-                <span className="add-row-meta">
-                  <b>{i.t('ahead.addsub')}</b>
-                  <em>{i.t('ahead.addsub.cap')}</em>
-                </span>
-                <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
-              </button>
-            </motion.div>
-          ) : adding === 'plan' ? (
-            <motion.div key="plan" className="add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
-              <p className="af-title">{i.t('ahead.addplan')}</p>
-              <label className="lbl">{i.t('ahead.plan.name')}</label>
-              <input className="af-input" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-              <div className="af-row">
-                <div className="af-col">
-                  <label className="lbl">{i.t('ahead.plan.target')}</label>
-                  <div className="af-amt"><span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span><input type="number" inputMode="numeric" min="0" placeholder="0" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
-                </div>
-                <div className="af-col">
-                  <label className="lbl">{i.t('ahead.plan.date')}</label>
-                  <input className="af-date" type="date" min={todayISO()} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
-                </div>
-              </div>
-              {planHint && <p className="af-hint">{i.t('ahead.plan.hint', { a: planHint })}</p>}
-              <div className="af-actions">
-                <button className="af-cancel" onClick={() => setAdding(null)}>{i.t('ahead.cancel')}</button>
-                <button className="af-save" disabled={!f.name.trim() || !Number(f.amount) || !f.date} onClick={savePlan}>{i.t('ahead.save')}</button>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div key="sub" className="add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
-              <p className="af-title">{i.t('ahead.addsub')}</p>
-              <label className="lbl">{i.t('ahead.sub.name')}</label>
-              <input className="af-input" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-              <div className="af-row">
-                <div className="af-col">
-                  <label className="lbl">{i.t('ahead.sub.amount')}</label>
-                  <div className="af-amt"><span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span><input type="number" inputMode="numeric" min="0" placeholder="0" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
-                </div>
-                <div className="af-col">
-                  <label className="lbl">{i.t('ahead.sub.due')}</label>
-                  <input className="af-date" type="number" inputMode="numeric" min="1" max="31" placeholder="1–31" value={f.due} onChange={(e) => setF({ ...f, due: e.target.value })} />
-                </div>
-              </div>
-              <div className="af-actions">
-                <button className="af-cancel" onClick={() => setAdding(null)}>{i.t('ahead.cancel')}</button>
-                <button className="af-save" disabled={!f.name.trim() || !Number(f.amount)} onClick={saveSub}>{i.t('ahead.save')}</button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
     </motion.section>
   );
 }

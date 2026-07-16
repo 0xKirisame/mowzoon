@@ -820,7 +820,7 @@ export default function App() {
   };
 
   // finish or skip onboarding
-  const finishOnboarding = ({ name, accent, answers, metrics, income, seed, spikeHidden }) => {
+  const finishOnboarding = ({ name, accent, answers, metrics, income, seed, spikeHidden, plans, subs }) => {
     const day = todayISO();
     const mk = monthKey(day);
     const inc = income || app.income;
@@ -837,6 +837,8 @@ export default function App() {
         tx: [...seedTx, ...s.tx],
         nextId: s.nextId + seedTx.length,
         spikeHidden: spikeHidden ?? s.spikeHidden,
+        plans: plans && plans.length ? [...(s.plans || []), ...plans] : s.plans,
+        subs: subs && subs.length ? [...(s.subs || []), ...subs] : s.subs,
         onboarded: true,
         // pay the calibration drops promised on the reveal step
         game: metrics ? { ...s.game, drops: s.game.drops + DROPS.calibrate } : s.game,

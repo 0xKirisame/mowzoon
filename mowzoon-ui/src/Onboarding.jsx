@@ -3,13 +3,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ACCENTS, ARCHETYPE_META } from './data';
+import { ACCENTS, ARCHETYPE_META, TYPE_TINTS } from './data';
 import { DROPS } from './game';
 import { Glyph, LogoMark, LiquidOrb, screen, item, spring, gel } from './ui';
 import { useI18n, SURVEY_AR } from './i18n';
 import { SURVEY, scoreSurvey } from './survey';
 import { determineArchetype } from './scoring';
 import { classify } from './api';
+import { todayISO } from './store';
+
+const blankForm = { name: '', amount: '', date: '', due: '', cycle: 'monthly' };
 
 const SPIKES = [
   { name: 'Eid al-Fitr', glyph: 'spark' },
@@ -70,6 +73,10 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
   const [seed, setSeed] = useState(true);
   const [spikeOn, setSpikeOn] = useState(() => Object.fromEntries(SPIKES.map((s) => [s.name, true])));
   const [flights, setFlights] = useState([]);
+  const [adding, setAdding] = useState(null);
+  const [f, setF] = useState(blankForm);
+  const [plans, setPlans] = useState([]);
+  const [subs, setSubs] = useState([]);
   const flightId = useRef(0);
   const orbRef = useRef(null);
   const settledRef = useRef(false);
@@ -154,7 +161,23 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
       income: Math.max(0, Math.round(Number(income)) || 0),
       seed,
       spikeHidden: SPIKES.filter((s) => !spikeOn[s.name]).map((s) => s.name),
+      plans,
+      subs,
     });
+
+  const savePlan = () => {
+    const amt = Math.round(Number(f.amount));
+    if (!f.name.trim() || !amt || !f.date) return;
+    setPlans((p) => [...p, { id: 'p' + Date.now(), name: f.name.trim(), target: amt, date: f.date, icon: 'peak', setAside: 0 }]);
+    setAdding(null); setF(blankForm);
+  };
+
+  const saveSub = () => {
+    const amt = Math.round(Number(f.amount));
+    if (!f.name.trim() || !amt) return;
+    setSubs((s) => [...s, { id: 'm' + Date.now(), name: f.name.trim(), amount: amt, cycle: f.cycle, dueDay: Number(f.due) || 1, state: 'keep', source: 'manual', icon: 'calendar', tracked: true }]);
+    setAdding(null); setF(blankForm);
+  };
 
   const revealId = CLAMP_ID(model?.id) ?? (metrics ? determineArchetype(metrics).id : 0);
   const revealMeta = ARCHETYPE_META[revealId];
@@ -394,6 +417,91 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
                 <input id="ob-income" type="number" inputMode="numeric" min="0" value={income} onChange={(e) => setIncome(e.target.value)} aria-label={i.t('ob.setup.income')} />
               </div>
             </div>
+
+            <AnimatePresence mode="wait" initial={false}>
+              {adding === null ? (
+                <motion.div key="choose" className="ahead-btns" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
+                  <button className="ahead-btn glass" onClick={() => { setF(blankForm); setAdding('plan'); }}>
+                    <span className="ahead-btn-ic" style={{ background: 'color-mix(in srgb, #0fa38f 15%, var(--surface))', color: '#0fa38f' }}>
+                      <Glyph id="peak" size={22} strokeWidth={2} />
+                    </span>
+                    <span className="ahead-btn-label">
+                      <b>{i.t('ahead.addplan')}</b>
+                      <em>{i.t('ahead.addplan.cap')}</em>
+                    </span>
+                  </button>
+                  <button className="ahead-btn glass" onClick={() => { setF(blankForm); setAdding('sub'); }}>
+                    <span className="ahead-btn-ic" style={{ background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 15%, var(--surface))`, color: TYPE_TINTS.fixed }}>
+                      <Glyph id="calendar" size={22} strokeWidth={2} />
+                    </span>
+                    <span className="ahead-btn-label">
+                      <b>{i.t('ahead.addsub')}</b>
+                      <em>{i.t('ahead.addsub.cap')}</em>
+                    </span>
+                  </button>
+                </motion.div>
+              ) : adding === 'plan' ? (
+                <motion.div key="plan" className="glass panel add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
+                  <p className="af-title">{i.t('ahead.addplan')}</p>
+                  <label className="lbl">{i.t('ahead.plan.name')}</label>
+                  <input className="af-input" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+                  <div className="af-row">
+                    <div className="af-col">
+                      <label className="lbl">{i.t('ahead.plan.target')}</label>
+                      <div className="af-amt"><span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span><input type="number" inputMode="numeric" min="0" placeholder="0" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
+                    </div>
+                    <div className="af-col">
+                      <label className="lbl">{i.t('ahead.plan.date')}</label>
+                      <input className="af-date" type="date" min={todayISO()} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="af-actions">
+                    <button className="af-cancel" onClick={() => setAdding(null)}>{i.t('ahead.cancel')}</button>
+                    <button className="af-save" disabled={!f.name.trim() || !Number(f.amount) || !f.date} onClick={savePlan}>{i.t('ahead.save')}</button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key="sub" className="glass panel add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
+                  <p className="af-title">{i.t('ahead.addsub')}</p>
+                  <label className="lbl">{i.t('ahead.sub.name')}</label>
+                  <input className="af-input" autoFocus value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+                  <div className="af-row">
+                    <div className="af-col">
+                      <label className="lbl">{i.t('ahead.sub.amount')}</label>
+                      <div className="af-amt"><span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span><input type="number" inputMode="numeric" min="0" placeholder="0" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
+                    </div>
+                    <div className="af-col">
+                      <label className="lbl">{i.t('ahead.sub.due')}</label>
+                      <input className="af-date" type="number" inputMode="numeric" min="1" max="31" placeholder="1–31" value={f.due} onChange={(e) => setF({ ...f, due: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="af-actions">
+                    <button className="af-cancel" onClick={() => setAdding(null)}>{i.t('ahead.cancel')}</button>
+                    <button className="af-save" disabled={!f.name.trim() || !Number(f.amount)} onClick={saveSub}>{i.t('ahead.save')}</button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {(plans.length > 0 || subs.length > 0) && (
+              <div className="ob-added-items" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                {plans.map(p => (
+                  <div key={p.id} className="ob-added-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'var(--surface)', borderRadius: '12px' }}>
+                    <span style={{ color: '#0fa38f' }}><Glyph id="peak" size={16} strokeWidth={2.5}/></span>
+                    <span style={{ flexGrow: 1, fontSize: '0.95rem' }}>{p.name} ({i.lang === 'ar' ? 'ر.س' : 'SAR'} {p.target})</span>
+                    <button onClick={() => setPlans(plans.filter(x => x.id !== p.id))} style={{ color: 'var(--sub)', padding: '4px' }}><Glyph id="x" size={14} strokeWidth={3}/></button>
+                  </div>
+                ))}
+                {subs.map(s => (
+                  <div key={s.id} className="ob-added-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'var(--surface)', borderRadius: '12px' }}>
+                    <span style={{ color: TYPE_TINTS.fixed }}><Glyph id="calendar" size={16} strokeWidth={2.5}/></span>
+                    <span style={{ flexGrow: 1, fontSize: '0.95rem' }}>{s.name} ({i.lang === 'ar' ? 'ر.س' : 'SAR'} {s.amount})</span>
+                    <button onClick={() => setSubs(subs.filter(x => x.id !== s.id))} style={{ color: 'var(--sub)', padding: '4px' }}><Glyph id="x" size={14} strokeWidth={3}/></button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <button className={`ob-toggle ${seed ? 'on' : ''}`} onClick={() => setSeed((s) => !s)} aria-pressed={seed}>
               <div className="ob-toggle-body">
                 <div className="ob-toggle-title">{i.t('ob.setup.seed')}</div>
