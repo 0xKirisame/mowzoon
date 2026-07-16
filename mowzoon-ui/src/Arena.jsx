@@ -3,7 +3,7 @@
 // the probabilities). The engine lives in arena/engine.js — this file is UI.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { ARCHETYPE_META } from './data';
 import { Glyph, NumberFlow, Seg, screen, item, gel } from './ui';
 import { DROPS } from './game';
@@ -91,7 +91,7 @@ function Wheel({ arcs, spin, onDone, tint }) {
 
   return (
     // rotation math must not flip under RTL
-    <div className="wheel" dir="ltr" style={{ '--wt': tint }}>
+    <div className={`wheel${spin ? ' spinning' : ''}`} dir="ltr" style={{ '--wt': tint }}>
       <svg viewBox="0 0 200 200" aria-hidden="true">
         <g transform="rotate(-90 100 100)">
           <circle cx="100" cy="100" r="72" fill="none" stroke="var(--fill-2)" strokeWidth="24" />
@@ -208,7 +208,7 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
     return () => clearInterval(t);
   }, []);
   const animFor = (side) => {
-    if (st.winner) return st.winner === side ? 'idle' : null; // loser lies still
+    if (st.winner) return st.winner === side ? 'cheer' : null; // loser lies still
     if (spin?.side === side) return 'attack';
     return (tick + (side === 'A' ? 0 : 5)) % 11 >= 8 ? 'idle2' : 'idle';
   };
@@ -263,10 +263,13 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
     myTurn && !turnF.abilityUsed && !PASSIVE_ABILITIES.has(turnF.ability) && !st.mustAttack;
 
   // one-shot sprite reactions, replayed by remounting on each log entry:
-  // the attacker springs back from a lunge, the defender from a knockback
+  // the attacker springs back from a lunge, the defender from a knockback.
+  // On round one the fighters walk in from their own side instead.
   const last = st.log[st.log.length - 1];
+  const entering = st.log.length === 0 && !st.winner;
   const spriteInitial = (side) => {
     const dir = side === 'A' ? 1 : -1; // A lunges up-right, B down-left
+    if (entering) return { x: dir * -72, y: dir * 18, opacity: 0, scale: 0.85 };
     if (last?.kind === 'attack' && last.actor === side && last.outcome !== 'miss')
       return { x: dir * 26, y: dir * -14 };
     if (last?.kind === 'attack' && last.actor !== side && last.dmg > 0)
@@ -276,7 +279,43 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
   const spriteTarget = (side) =>
     st.winner && st.winner !== side
       ? { x: 0, y: 30, opacity: 0, rotate: side === 'A' ? -10 : 10 }
-      : { x: 0, y: 0, opacity: 1, rotate: 0 };
+      : { x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 };
+  // entrance gait matches temperament: the raccoon bounds in, the camel plods
+  const ENTER_SPRING = {
+    0: { type: 'spring', stiffness: 260, damping: 11 },
+    1: { type: 'spring', stiffness: 320, damping: 17 },
+    2: { type: 'spring', stiffness: 150, damping: 19 },
+    3: { type: 'spring', stiffness: 130, damping: 20 },
+  };
+  const spriteSpring = (side, arch) =>
+    entering
+      ? { ...(ENTER_SPRING[arch] || ENTER_SPRING[0]), delay: side === 'A' ? 0.28 : 0.08 }
+      : { type: 'spring', stiffness: 280, damping: 17 };
+
+  // floating outcome pop over whoever just got hit (or healed)
+  const pop = useMemo(() => {
+    if (!last) return null;
+    if (last.kind === 'attack') {
+      return {
+        key: st.log.length,
+        side: last.actor === 'A' ? 'B' : 'A',
+        kind: last.outcome, // 'miss' | 'hit' | 'crit'
+        text: last.outcome === 'miss' ? i.t('arena.miss') : `−${i.fmtNum(last.dmg)}`,
+      };
+    }
+    if (last.kind === 'heal' || (last.kind === 'ability' && last.heal))
+      return { key: st.log.length, side: last.actor, kind: 'heal', text: `+${i.fmtNum(last.heal)}` };
+    return null;
+  }, [st.log.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hitSide = last?.kind === 'attack' && last.dmg > 0 ? (last.actor === 'A' ? 'B' : 'A') : null;
+
+  // a crit rattles the whole field for a beat
+  const shakeCtl = useAnimationControls();
+  useEffect(() => {
+    if (last?.kind === 'attack' && last.outcome === 'crit') {
+      shakeCtl.start({ x: [0, -8, 7, -4, 2, 0], transition: { duration: 0.42, ease: 'easeOut' } });
+    }
+  }, [st.log.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const message = st.winner
     ? ''
     : myTurn
@@ -301,26 +340,42 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
       {/* the field: foe top-right facing you, your fighter bottom-left
           looking ahead — dir=ltr so the staging never mirrors under RTL */}
       <motion.div variants={item} className="glass field" dir="ltr">
-        <InfoBox f={oppF} mine={false} active={st.turn === 'B' && !st.winner} i={i} />
-        <motion.div
-          className="sprite foe-sprite"
-          key={`foe-${st.log.length}`}
-          initial={spriteInitial('B')}
-          animate={spriteTarget('B')}
-          transition={{ type: 'spring', stiffness: 280, damping: 17 }}
-        >
-          <ArchSprite archetype={oppF.archetype} view="front" tint={foeTint} size={132} anim={animFor('B')} />
+        <motion.div className="field-inner" animate={shakeCtl}>
+          <InfoBox f={oppF} mine={false} active={st.turn === 'B' && !st.winner} i={i} />
+          <motion.div
+            className={`sprite foe-sprite${hitSide === 'B' ? ' sprite-hit' : ''}`}
+            key={`foe-${st.log.length}`}
+            initial={spriteInitial('B')}
+            animate={spriteTarget('B')}
+            transition={spriteSpring('B', oppF.archetype)}
+          >
+            <ArchSprite archetype={oppF.archetype} view="front" tint={foeTint} size={132} anim={animFor('B')} />
+          </motion.div>
+          <motion.div
+            className={`sprite me-sprite${hitSide === 'A' ? ' sprite-hit' : ''}`}
+            key={`me-${st.log.length}`}
+            initial={spriteInitial('A')}
+            animate={spriteTarget('A')}
+            transition={spriteSpring('A', meF.archetype)}
+          >
+            <ArchSprite archetype={meF.archetype} view="back" tint={meTint} size={148} anim={animFor('A')} />
+          </motion.div>
+          <InfoBox f={meF} mine active={st.turn === 'A' && !st.winner} i={i} />
         </motion.div>
-        <motion.div
-          className="sprite me-sprite"
-          key={`me-${st.log.length}`}
-          initial={spriteInitial('A')}
-          animate={spriteTarget('A')}
-          transition={{ type: 'spring', stiffness: 280, damping: 17 }}
-        >
-          <ArchSprite archetype={meF.archetype} view="back" tint={meTint} size={148} anim={animFor('A')} />
-        </motion.div>
-        <InfoBox f={meF} mine active={st.turn === 'A' && !st.winner} i={i} />
+        <AnimatePresence>
+          {pop && (
+            <motion.span
+              key={pop.key}
+              className={`dmg-pop ${pop.side === 'B' ? 'pop-foe' : 'pop-me'} pop-${pop.kind}`}
+              initial={{ opacity: 0, y: 10, scale: pop.kind === 'crit' ? 0.4 : 0.7 }}
+              animate={{ opacity: 1, y: -24, scale: pop.kind === 'crit' ? 1.3 : 1 }}
+              exit={{ opacity: 0, y: -44, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 20 }}
+            >
+              {pop.text}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* console: wheel + message box + actions */}
@@ -389,9 +444,20 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
             transition={{ delay: 0.5 }}
           >
             <div className="glass battle-card">
-              <span className={`result-mark ${st.winner === 'A' ? 'good' : 'bad'}`}>
-                <Glyph id={st.winner === 'A' ? 'spark' : 'moon'} size={26} strokeWidth={1.9} />
-              </span>
+              <motion.span
+                className="result-sprite"
+                initial={{ scale: 0.5, y: 14, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 240, damping: 14, delay: 0.15 }}
+              >
+                <ArchSprite
+                  archetype={st.fighters[st.winner].archetype}
+                  view="front"
+                  tint={st.winner === 'A' ? meTint : foeTint}
+                  size={96}
+                  anim="cheer"
+                />
+              </motion.span>
               <h2>{i.t(st.winner === 'A' || mode === 'pass' ? 'arena.win' : 'arena.lose')}</h2>
               <p>
                 {mode === 'pass'
@@ -516,8 +582,8 @@ function PassSetup({ onStart, onClose, i }) {
               style={{ '--ft': m.tint }}
               onClick={() => setArch(Number(id))}
             >
-              <ArchSprite archetype={Number(id)} view="front" tint={m.tint} size={34} />
-              <span>{m.name}</span>
+              <ArchSprite archetype={Number(id)} view="front" tint={m.tint} size={34} anim={arch === Number(id) ? 'idle' : null} />
+              <span>{i.arch(Number(id)).name}</span>
             </button>
           ))}
         </div>
@@ -553,14 +619,23 @@ function RivalCard({ c, mine, onChallenge, i }) {
     <motion.div className="glass friend rival" variants={item} style={{ '--ft': meta.tint }}>
       <div className="friend-top">
         <span className="rival-sprite">
-          <ArchSprite archetype={c.archetype} view="front" tint={c.accent || meta.tint} size={54} />
+          <ArchSprite archetype={c.archetype} view="front" tint={c.accent || meta.tint} size={54} anim="idle" />
         </span>
         <div>
           <div className="friend-name">{botName(c, i.lang)}</div>
-          <div className="friend-arch">{meta.name} · {i.t('arena.lv', { n: i.fmtNum(c.level) })}</div>
+          <div className="friend-arch">{i.arch(c.archetype).name}</div>
+          <div className="rival-meta">
+            <span>{i.t('arena.lv', { n: i.fmtNum(c.level) })}</span>
+            {(c.rankScore ?? 0) > 0 && (
+              <span className="rival-rank">
+                <Glyph id="trophy" size={11} strokeWidth={2.4} />
+                {i.fmtNum(c.rankScore)}
+              </span>
+            )}
+          </div>
         </div>
         <span className={`rival-adv ${adv > 0 ? 'good' : adv < 0 ? 'bad' : ''}`}>
-          {i.t(adv > 0 ? 'arena.advantage' : adv < 0 ? 'arena.disadvantage' : 'arena.neutral')}
+          {i.t(adv > 0 ? 'arena.adv.up' : adv < 0 ? 'arena.adv.down' : 'arena.adv.even')}
         </span>
       </div>
       <motion.button className="btn-attack rival-btn" whileTap={{ scale: 0.97 }} transition={gel} onClick={onChallenge}>
@@ -576,11 +651,8 @@ function LbRow({ r, i }) {
   return (
     <div className={`lb-row ${r.isMe ? 'me' : ''}`}>
       <span className="lb-rank">{i.fmtNum(r.rank)}</span>
-      <span
-        className="lb-glyph"
-        style={{ background: `color-mix(in srgb, ${meta.tint} 14%, var(--surface))`, color: meta.tint }}
-      >
-        <Glyph id={meta.glyph} size={15} strokeWidth={2.1} />
+      <span className="lb-glyph" style={{ background: `color-mix(in srgb, ${meta.tint} 14%, var(--surface))` }}>
+        <ArchSprite archetype={r.archetype ?? 0} view="front" tint={meta.tint} size={26} />
       </span>
       <span className="lb-name">
         {botName(r, i.lang)}
@@ -600,6 +672,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   const [inbox, setInbox] = useState(null);
   const [board, setBoard] = useState(null); // global ladder, null = offline
   const [rankDelta, setRankDelta] = useState(null); // shown on the result card
+  const [lobbyTick, setLobbyTick] = useState(0); // drives the fighter panel's bored special
   const [lbTab, setLbTab] = useState('global');
   const [addVal, setAddVal] = useState('');
   const [addState, setAddState] = useState(null); // 'busy' | 'ok' | 'err'
@@ -702,13 +775,28 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     });
   }, [roster]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // heartbeat for the lobby fighter: mostly idle, occasionally the bored special
+  useEffect(() => {
+    if (battle) return undefined;
+    const t = setInterval(() => setLobbyTick((x) => x + 1), 1000);
+    return () => clearInterval(t);
+  }, [battle]);
+  const lobbyAnim = lobbyTick % 10 >= 8 ? 'idle2' : 'idle';
+
   if (!profile) {
     return (
       <motion.section className="arena" variants={screen} initial="initial" animate="animate" exit="exit">
         <motion.header className="home-head" variants={item}>
           <h1>{i.t('arena.title')}</h1>
         </motion.header>
-        <motion.div className="glass home-empty" variants={item}>
+        <motion.div className="glass home-empty arena-empty" variants={item}>
+          <div className="arena-empty-cast" aria-hidden="true">
+            {[0, 1, 2, 3].map((a) => (
+              <span key={a} className="arena-empty-slot">
+                <ArchSprite archetype={a} view="front" tint={ARCHETYPE_META[a].tint} size={72} anim="idle" />
+              </span>
+            ))}
+          </div>
           <p>{i.t('arena.needProfile')}</p>
           <button className="btn-attack" onClick={onCalibrate}>{i.t('arena.calibrate')}</button>
         </motion.div>
@@ -835,11 +923,11 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
       <motion.div className="glass panel fighter-panel" variants={item} style={{ '--ft': meta.tint }}>
         <div className="fighter-top">
           <span className="fighter-sprite">
-            <ArchSprite archetype={aid} view="front" tint={app.profile.accent || meta.tint} size={84} anim="idle" />
+            <ArchSprite archetype={aid} view="front" tint={app.profile.accent || meta.tint} size={84} anim={lobbyAnim} />
           </span>
           <div>
             <div className="fighter-name">{meF.name}</div>
-            <div className="fighter-arch">{meta.name} · {i.t('arena.lv', { n: i.fmtNum(meF.level) })}</div>
+            <div className="fighter-arch">{i.arch(aid).name} · {i.t('arena.lv', { n: i.fmtNum(meF.level) })}</div>
             {(rec.wins > 0 || rec.losses > 0) && (
               <div className="fighter-record">{i.t('arena.record', { w: i.fmtNum(rec.wins), l: i.fmtNum(rec.losses) })}</div>
             )}
@@ -978,11 +1066,8 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
               const fMeta = ARCHETYPE_META[f.archetype] ?? ARCHETYPE_META[0];
               return (
                 <div key={handle} className="ar-friend">
-                  <span
-                    className="lb-glyph"
-                    style={{ background: `color-mix(in srgb, ${fMeta.tint} 14%, var(--surface))`, color: fMeta.tint }}
-                  >
-                    <Glyph id={fMeta.glyph} size={15} strokeWidth={2.1} />
+                  <span className="lb-glyph" style={{ background: `color-mix(in srgb, ${fMeta.tint} 14%, var(--surface))` }}>
+                    <ArchSprite archetype={f.archetype ?? 0} view="front" tint={fMeta.tint} size={26} />
                   </span>
                   <span className="lb-name">
                     {f.name || handle}
@@ -1040,6 +1125,19 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
               const iWon = b.winner === myHandle;
               return (
                 <div key={b.id} className={`inbox-row ${b.unseen ? 'unseen' : ''}`}>
+                  {other && (
+                    <span
+                      className="inbox-sprite"
+                      style={{ background: `color-mix(in srgb, ${ARCHETYPE_META[other.archetype].tint} 12%, var(--surface))` }}
+                    >
+                      <ArchSprite
+                        archetype={other.archetype}
+                        view="front"
+                        tint={other.accent || ARCHETYPE_META[other.archetype].tint}
+                        size={26}
+                      />
+                    </span>
+                  )}
                   <span className="inbox-txt">
                     {i.t(iWon ? 'arena.inbox.won' : 'arena.inbox.lost', { name: otherName, n: i.fmtNum(b.rounds) })}
                   </span>

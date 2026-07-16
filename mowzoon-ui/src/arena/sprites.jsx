@@ -26,9 +26,9 @@ function Raccoon() {
     <g className="sp-puppet">
       <g transform="translate(0.2 0.7) scale(0.0996)">
         <g className="rc-tail">
-          <circle cx="1110" cy="902" r="92" className="sp-main" />
-          <circle cx="997" cy="902" r="92" className="sp-deep" />
-          <circle cx="884" cy="902" r="92" className="sp-dark" />
+          <circle cx="1110" cy="902" r="92" className="sp-main rc-t3" />
+          <circle cx="997" cy="902" r="92" className="sp-deep rc-t2" />
+          <circle cx="884" cy="902" r="92" className="sp-dark rc-t1" />
         </g>
         <path
           d="M418.518 131.55C448.226 75.5843 528.423 75.6077 558.098 131.591L914.514 804.002C942.403 856.617 904.263 920 844.714 920H131.374C71.8034 920 33.6653 856.578 61.595 803.961L418.518 131.55Z"
@@ -210,8 +210,10 @@ function Camel() {
           </clipPath>
           <g clipPath="url(#cmHeadClip)">
             <rect x="-12" y="196" width="162" height="26" rx="13" className="sp-deep" />
-            <rect x="218" y="86" width="108" height="24" rx="12" className="sp-deep" />
-            <rect x="375" y="86" width="108" height="24" rx="12" className="sp-deep" />
+            <g className="cm-eyes">
+              <rect x="218" y="86" width="108" height="24" rx="12" className="sp-deep" />
+              <rect x="375" y="86" width="108" height="24" rx="12" className="sp-deep" />
+            </g>
           </g>
         </g>
         <g className="cm-bag">

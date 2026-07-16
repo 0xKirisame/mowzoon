@@ -483,7 +483,15 @@ export default function App() {
   const [app, setApp] = useAppState();
 
   const hasData = !!(app.survey || app.tx.length);
-  const [view, setView] = useState('home'); // 'home' | 'ahead' | 'spending'
+  // 'home' | 'ahead' | 'spending' | 'arena' — ?view= deep-links a tab
+  const [view, setView] = useState(() => {
+    try {
+      const v = new URLSearchParams(window.location.search).get('view');
+      return ['home', 'ahead', 'spending', 'arena'].includes(v) ? v : 'home';
+    } catch {
+      return 'home';
+    }
+  });
   // a retake reuses the onboarding survey UI
   const [retaking, setRetaking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);

@@ -414,6 +414,9 @@ const STR = {
 
     // Arena — friends, sharing, and the ladder
     'arena.lv': 'Lv {n}',
+    'arena.adv.up': 'Favored',
+    'arena.adv.down': 'Risky',
+    'arena.adv.even': 'Even',
     'arena.strong': 'Strong vs {name}',
     'arena.weak': 'Weak vs {name}',
     'arena.friends': 'Friends',
@@ -846,6 +849,9 @@ const STR = {
 
     // الساحة — الأصدقاء والمشاركة ولوحة الصدارة
     'arena.lv': 'مستوى {n}',
+    'arena.adv.up': 'أفضلية',
+    'arena.adv.down': 'مجازفة',
+    'arena.adv.even': 'متكافئ',
     'arena.strong': 'قوي ضد {name}',
     'arena.weak': 'ضعيف ضد {name}',
     'arena.friends': 'الأصدقاء',

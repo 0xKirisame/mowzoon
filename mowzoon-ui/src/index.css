@@ -2858,15 +2858,37 @@ html.dark .arena {
 }
 .load-chip.locked { opacity: 0.45; }
 
+/* empty state: the four characters wait for you to pick a side */
+.arena-empty { display: grid; justify-items: center; gap: 16px; padding: 34px 24px; text-align: center; }
+.arena-empty p { max-width: 40ch; line-height: 1.55; color: var(--ink-2); }
+.arena-empty-cast { display: flex; gap: 6px; align-items: end; }
+.arena-empty-slot:nth-child(2n) .sp-puppet { animation-delay: -0.8s; }
+.arena-empty-slot:nth-child(3n) .sp-puppet { animation-delay: -1.6s; }
+
 /* lobby roster */
 .arena-rivals-head { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
 .arena-roster { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+/* framer owns the card's transform, so the hover lift lives on children */
+.rival { transition: box-shadow 0.25s ease; }
+.rival:hover { box-shadow: var(--shadow-md, 0 12px 30px rgba(0, 0, 0, 0.12)); }
+.rival .rival-sprite { transition: transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.rival:hover .rival-sprite { transform: translateY(-3px) scale(1.04); }
+.rival .friend-top { align-items: flex-start; }
 .rival .friend-top > div { flex: 1; min-width: 0; }
 .rival .friend-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rival .friend-arch { color: var(--ft, var(--tint)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rival-adv { flex: none; max-width: 34%; font-size: 10px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-4); text-align: end; line-height: 1.35; }
-.rival-adv.good { color: var(--arc-hit); }
-.rival-adv.bad { color: var(--neg, #e0402a); }
+.rival-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; font-size: 12px; font-weight: 650; color: var(--ink-3); }
+.rival-rank { display: inline-flex; align-items: center; gap: 3px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.rival-adv {
+  flex: none;
+  font-size: 10.5px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 4px 9px; border-radius: 999px;
+  background: var(--fill-3);
+  white-space: nowrap;
+}
+.rival-adv.good { color: var(--arc-hit); background: color-mix(in srgb, var(--arc-hit) 11%, transparent); }
+.rival-adv.bad { color: var(--neg, #e0402a); background: color-mix(in srgb, var(--neg, #e0402a) 9%, transparent); }
 
 /* buttons */
 .btn-attack,
@@ -2947,14 +2969,22 @@ html.dark .arena {
 .arch-sprite .sp-bagline { stroke: #895627; fill: none; }
 .arch-sprite .sp-sweat { fill: #7cc9f2; opacity: 0; }
 
-/* puppet rigging: every animated part rotates/scales about its own hinge */
+/* puppet rigging: every animated part rotates/scales about its own hinge.
+   The settle transition lets a part glide back to neutral when its
+   animation class drops (state changes stop snapping). */
 .arch-sprite .sp-puppet,
-.arch-sprite .rc-tail, .arch-sprite .rc-arm,
+.arch-sprite .rc-tail, .arch-sprite .rc-arm, .arch-sprite .rc-t1, .arch-sprite .rc-t2, .arch-sprite .rc-t3,
 .arch-sprite .sq-tail, .arch-sprite .sq-hold, .arch-sprite .sq-pupil, .arch-sprite .sq-sweat,
 .arch-sprite .pc-head,
-.arch-sprite .cm-head, .arch-sprite .cm-bag { transform-box: fill-box; }
+.arch-sprite .cm-head, .arch-sprite .cm-bag, .arch-sprite .cm-eyes { transform-box: fill-box; }
+.arch-sprite .sp-puppet,
+.arch-sprite .rc-tail, .arch-sprite .rc-arm,
+.arch-sprite .sq-tail, .arch-sprite .sq-hold,
+.arch-sprite .pc-f, .arch-sprite .pc-head,
+.arch-sprite .cm-head, .arch-sprite .cm-bag { transition: transform 0.45s cubic-bezier(0.34, 1.45, 0.64, 1); }
 .arch-sprite .sp-puppet { transform-origin: 50% 100%; }
 .arch-sprite .rc-tail { transform-origin: 10% 70%; }
+.arch-sprite .rc-t1, .arch-sprite .rc-t2, .arch-sprite .rc-t3 { transform-origin: 50% 50%; }
 .arch-sprite .rc-arm { transform-origin: 85% 25%; }
 .arch-sprite .sq-tail { transform-origin: 15% 95%; }
 .arch-sprite .sq-hold { transform-origin: 50% 50%; }
@@ -2968,6 +2998,7 @@ html.dark .arena {
 .arch-sprite .pc-head { transform-origin: 50% 95%; }
 .arch-sprite .cm-head { transform-origin: 95% 95%; }
 .arch-sprite .cm-bag { transform-origin: 50% 15%; }
+.arch-sprite .cm-eyes { transform-origin: 50% 50%; }
 
 @keyframes spr-bob { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.015, 0.972); } }
 @keyframes spr-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
@@ -2980,34 +3011,68 @@ html.dark .arena {
   85% { transform: translateY(0); }
 }
 
-/* raccoon: eager and bouncy, fans himself with the banknote when bored */
-.anim-idle.spx-raccoon .sp-puppet { animation: spr-bob 2.2s ease-in-out infinite; }
-.anim-idle.spx-raccoon .rc-tail { animation: spr-wag 2.2s ease-in-out infinite; }
+/* ---- raccoon: lively and bouncy — all squash-and-stretch, tail always
+   going, waves the banknote around. Impulse in animal form. */
+@keyframes rc-bounce {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  32% { transform: translateY(0) scale(1.05, 0.93); }
+  55% { transform: translateY(-3.5px) scale(0.97, 1.05); }
+  72% { transform: translateY(0) scale(1.02, 0.985); }
+}
+@keyframes rc-ballpop { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.13); } }
+.anim-idle.spx-raccoon .sp-puppet { animation: rc-bounce 1.5s cubic-bezier(0.37, 0, 0.4, 1) infinite; }
+.anim-idle.spx-raccoon .rc-tail { animation: spr-wag 1.5s ease-in-out infinite; }
+.anim-idle.spx-raccoon .rc-t1 { animation: rc-ballpop 1.5s ease-in-out infinite; }
+.anim-idle.spx-raccoon .rc-t2 { animation: rc-ballpop 1.5s ease-in-out 0.14s infinite; }
+.anim-idle.spx-raccoon .rc-t3 { animation: rc-ballpop 1.5s ease-in-out 0.28s infinite; }
 @keyframes rc-fan {
   0%, 100% { transform: rotate(0); }
   20%, 60% { transform: rotate(-24deg); }
   40%, 80% { transform: rotate(6deg); }
 }
-.anim-idle2.spx-raccoon .sp-puppet { animation: spr-bob 1.1s ease-in-out infinite; }
-.anim-idle2.spx-raccoon .rc-arm { animation: rc-fan 1.6s ease-in-out infinite; }
-.anim-idle2.spx-raccoon .rc-tail { animation: spr-wag 0.8s ease-in-out infinite; }
+.anim-idle2.spx-raccoon .sp-puppet { animation: rc-bounce 0.9s cubic-bezier(0.37, 0, 0.4, 1) infinite; }
+.anim-idle2.spx-raccoon .rc-arm { animation: rc-fan 1.4s ease-in-out infinite; }
+.anim-idle2.spx-raccoon .rc-tail { animation: spr-wag 0.7s ease-in-out infinite; }
 @keyframes rc-swing {
   0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-55deg); }
-  55% { transform: rotate(25deg); }
+  22% { transform: rotate(-62deg); }
+  52% { transform: rotate(28deg); }
 }
 .anim-attack.spx-raccoon .sp-puppet { animation: spr-hop 0.9s ease-in-out infinite; }
 .anim-attack.spx-raccoon .rc-arm { animation: rc-swing 0.9s ease-in-out infinite; }
+@keyframes rc-cheer {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  18% { transform: translateY(-11px) scale(0.96, 1.06); }
+  34% { transform: translateY(0) scale(1.07, 0.9); }
+  48% { transform: translateY(-6px) scale(0.98, 1.03); }
+  60% { transform: translateY(0) scale(1.03, 0.98); }
+}
+.anim-cheer.spx-raccoon .sp-puppet { animation: rc-cheer 0.95s cubic-bezier(0.37, 0, 0.4, 1) infinite; }
+.anim-cheer.spx-raccoon .rc-arm { animation: rc-fan 0.8s ease-in-out infinite; }
+.anim-cheer.spx-raccoon .rc-tail { animation: spr-wag 0.5s ease-in-out infinite; }
+.anim-cheer.spx-raccoon .rc-t1 { animation: rc-ballpop 0.6s ease-in-out infinite; }
+.anim-cheer.spx-raccoon .rc-t2 { animation: rc-ballpop 0.6s ease-in-out 0.08s infinite; }
+.anim-cheer.spx-raccoon .rc-t3 { animation: rc-ballpop 0.6s ease-in-out 0.16s infinite; }
 
-/* squirrel: nervous — shifty eyes, and when bored the sweat drop falls */
-.anim-idle.spx-squirrel .sp-puppet { animation: spr-bob 1.9s ease-in-out infinite; }
-.anim-idle.spx-squirrel .sq-tail { animation: spr-sway 3s ease-in-out infinite; }
+/* ---- squirrel: anxious — quick shallow breaths, a tail that flicks in
+   nervous bursts, forever clutching the coin. Sweats even when winning. */
+@keyframes sq-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.01, 0.982); } }
 /* translate distances here are in the squirrel's Figma space (~7.5 units/px) */
 @keyframes sq-glance {
   0%, 55%, 100% { transform: translateX(0); }
   62%, 82% { transform: translateX(-30px); }
 }
+@keyframes sq-flick {
+  0%, 58%, 78%, 100% { transform: rotate(0); }
+  62% { transform: rotate(4.5deg); }
+  67% { transform: rotate(-2.2deg); }
+  72% { transform: rotate(3deg); }
+}
+@keyframes sq-clutch-soft { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.985); } }
+.anim-idle.spx-squirrel .sp-puppet { animation: sq-breathe 1.15s ease-in-out infinite; }
+.anim-idle.spx-squirrel .sq-tail { animation: sq-flick 3.2s ease-in-out infinite; }
 .anim-idle.spx-squirrel .sq-pupil { animation: sq-glance 4.6s ease-in-out infinite; }
+.anim-idle.spx-squirrel .sq-hold { animation: sq-clutch-soft 2.6s ease-in-out infinite; }
 @keyframes sq-shiver { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-1.6deg); } 75% { transform: rotate(1.6deg); } }
 @keyframes sq-sweatfall {
   0% { opacity: 0; transform: translateY(0); }
@@ -3024,23 +3089,33 @@ html.dark .arena {
 }
 .anim-attack.spx-squirrel .sp-puppet { animation: spr-hop 0.8s ease-in-out infinite; }
 .anim-attack.spx-squirrel .sq-hold { animation: sq-thrust 0.8s ease-in-out infinite; }
+@keyframes sq-cheer-hold {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  30%, 70% { transform: translateY(-58px) rotate(-4deg); }
+  50% { transform: translateY(-66px) rotate(2deg); }
+}
+.anim-cheer.spx-squirrel .sp-puppet { animation: spr-hop 1.1s ease-in-out infinite; }
+.anim-cheer.spx-squirrel .sq-hold { animation: sq-cheer-hold 1.1s ease-in-out infinite; }
+.anim-cheer.spx-squirrel .sq-tail { animation: sq-flick 1.6s ease-in-out infinite; }
+.anim-cheer.spx-squirrel .sq-sweat { animation: sq-sweatfall 2.2s ease-in infinite; }
 
-/* peacock: serene — the fan breathes; a full flourish when bored */
+/* ---- peacock: serene — everything slow and gliding; the fan breathes,
+   the head sways like it has nowhere to be. Flourishes when bored. */
 @keyframes pc-breatheL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-3deg); } }
 @keyframes pc-breatheR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(3deg); } }
-@keyframes pc-breatheM { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
-.anim-idle.spx-peacock .sp-puppet { animation: spr-bob 3s ease-in-out infinite; }
-.anim-idle.spx-peacock .pc-f1, .anim-idle.spx-peacock .pc-f2 { animation: pc-breatheL 3.2s ease-in-out infinite; }
-.anim-idle.spx-peacock .pc-f4, .anim-idle.spx-peacock .pc-f5 { animation: pc-breatheR 3.2s ease-in-out infinite; }
-.anim-idle.spx-peacock .pc-f3 { animation: pc-breatheM 3.2s ease-in-out infinite; }
-.anim-idle.spx-peacock .pc-f2, .anim-idle.spx-peacock .pc-f4 { animation-delay: 0.35s; }
+@keyframes pc-sway { 0%, 100% { transform: rotate(-1.4deg); } 50% { transform: rotate(1.4deg); } }
+.anim-idle.spx-peacock .sp-puppet { animation: spr-bob 4s ease-in-out infinite; }
+.anim-idle.spx-peacock .pc-head { animation: pc-sway 4.8s ease-in-out infinite; }
+.anim-idle.spx-peacock .pc-f1, .anim-idle.spx-peacock .pc-f2 { animation: pc-breatheL 4s ease-in-out infinite; }
+.anim-idle.spx-peacock .pc-f4, .anim-idle.spx-peacock .pc-f5 { animation: pc-breatheR 4s ease-in-out infinite; }
+.anim-idle.spx-peacock .pc-f2, .anim-idle.spx-peacock .pc-f4 { animation-delay: 0.45s; }
 @keyframes pc-flareL { 0%, 100% { transform: rotate(0); } 40%, 70% { transform: rotate(-9deg); } }
 @keyframes pc-flareR { 0%, 100% { transform: rotate(0); } 40%, 70% { transform: rotate(9deg); } }
-.anim-idle2.spx-peacock .pc-f1, .anim-idle2.spx-peacock .pc-f2 { animation: pc-flareL 2.2s ease-in-out infinite; }
-.anim-idle2.spx-peacock .pc-f4, .anim-idle2.spx-peacock .pc-f5 { animation: pc-flareR 2.2s ease-in-out infinite; }
-.anim-idle2.spx-peacock .pc-f3 { animation: pc-breatheM 2.2s ease-in-out infinite; }
-.anim-idle2.spx-peacock .pc-f2, .anim-idle2.spx-peacock .pc-f4 { animation-delay: 0.18s; }
-.anim-idle2.spx-peacock .sp-puppet { animation: spr-bob 2.2s ease-in-out infinite; }
+.anim-idle2.spx-peacock .pc-f1, .anim-idle2.spx-peacock .pc-f2 { animation: pc-flareL 2.6s ease-in-out infinite; }
+.anim-idle2.spx-peacock .pc-f4, .anim-idle2.spx-peacock .pc-f5 { animation: pc-flareR 2.6s ease-in-out infinite; }
+.anim-idle2.spx-peacock .pc-f2, .anim-idle2.spx-peacock .pc-f4 { animation-delay: 0.2s; }
+.anim-idle2.spx-peacock .sp-puppet { animation: spr-bob 2.6s ease-in-out infinite; }
+.anim-idle2.spx-peacock .pc-head { animation: pc-sway 2.6s ease-in-out infinite; }
 /* translate distances in the peacock's Figma space (~12.3 units/px) */
 @keyframes pc-peck {
   0%, 100% { transform: rotate(0); }
@@ -3049,11 +3124,24 @@ html.dark .arena {
 .anim-attack.spx-peacock .pc-head { animation: pc-peck 0.8s ease-in-out infinite; }
 .anim-attack.spx-peacock .pc-f1, .anim-attack.spx-peacock .pc-f2 { animation: pc-flareL 0.8s ease-in-out infinite; }
 .anim-attack.spx-peacock .pc-f4, .anim-attack.spx-peacock .pc-f5 { animation: pc-flareR 0.8s ease-in-out infinite; }
+@keyframes pc-cheerL { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(-13deg); } }
+@keyframes pc-cheerR { 0%, 100% { transform: rotate(10deg); } 50% { transform: rotate(13deg); } }
+@keyframes pc-proud { 0%, 100% { transform: rotate(0) translateY(0); } 50% { transform: rotate(-2deg) translateY(-10px); } }
+.anim-cheer.spx-peacock .sp-puppet { animation: spr-bob 2.2s ease-in-out infinite; }
+.anim-cheer.spx-peacock .pc-f1, .anim-cheer.spx-peacock .pc-f2 { animation: pc-cheerL 2.2s ease-in-out infinite; }
+.anim-cheer.spx-peacock .pc-f4, .anim-cheer.spx-peacock .pc-f5 { animation: pc-cheerR 2.2s ease-in-out infinite; }
+.anim-cheer.spx-peacock .pc-head { animation: pc-proud 2.2s ease-in-out infinite; }
 
-/* camel: deadpan — slow chew, a long sigh when bored, headbutt to attack */
+/* ---- camel: deadpan — slow chew, the occasional unimpressed blink, a
+   long sigh when bored. Victory earns you one (1) nod. */
 /* translate distances in the camel's Figma space (~14.2 units/px) */
 @keyframes cm-chew { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1.8deg) translateY(8px); } }
+@keyframes cm-blink {
+  0%, 91%, 97%, 100% { transform: scaleY(1); }
+  93.5%, 95% { transform: scaleY(0.12); }
+}
 .anim-idle.spx-camel .cm-head { animation: cm-chew 2.8s ease-in-out infinite; }
+.anim-idle.spx-camel .cm-eyes { animation: cm-blink 5.6s linear infinite; }
 .anim-idle.spx-camel .cm-bag { animation: spr-sway 3.6s ease-in-out infinite; }
 @keyframes cm-sigh {
   0%, 100% { transform: scale(1, 1); }
@@ -3068,6 +3156,7 @@ html.dark .arena {
 }
 .anim-idle2.spx-camel .sp-puppet { animation: cm-sigh 2.4s ease-in-out infinite; }
 .anim-idle2.spx-camel .cm-head { animation: cm-shake 2.4s ease-in-out infinite; }
+.anim-idle2.spx-camel .cm-eyes { animation: cm-blink 2.4s linear infinite; }
 @keyframes cm-butt {
   0%, 100% { transform: rotate(0); }
   30% { transform: rotate(9deg); }
@@ -3078,16 +3167,81 @@ html.dark .arena {
 .anim-attack.spx-camel .cm-head { animation: cm-butt 0.9s ease-in-out infinite; }
 .anim-attack.spx-camel .cm-bag { animation: cm-bagbounce 0.9s ease-in-out infinite; }
 .anim-attack.spx-camel .sp-puppet { animation: spr-bob 0.9s ease-in-out infinite; }
+@keyframes cm-nod {
+  0%, 55%, 100% { transform: rotate(0); }
+  20%, 35% { transform: rotate(3.5deg); }
+}
+.anim-cheer.spx-camel .cm-head { animation: cm-nod 2.6s ease-in-out infinite; }
+.anim-cheer.spx-camel .cm-eyes { animation: cm-blink 2.6s linear infinite; }
+.anim-cheer.spx-camel .cm-bag { animation: spr-sway 2.6s ease-in-out infinite; }
+.anim-cheer.spx-camel .sp-puppet { animation: spr-bob 2.6s ease-in-out infinite; }
+
+/* the two fighters must not bob in lockstep — offset the player's phase,
+   and stagger the lobby roster so the grid doesn't march in unison */
+.me-sprite .arch-sprite .sp-puppet { animation-delay: -0.9s; }
+.me-sprite .arch-sprite .rc-tail,
+.me-sprite .arch-sprite .sq-tail,
+.me-sprite .arch-sprite .cm-bag { animation-delay: -0.6s; }
+.arena-roster .rival:nth-child(2n) .sp-puppet { animation-delay: -0.7s; }
+.arena-roster .rival:nth-child(3n) .sp-puppet { animation-delay: -1.3s; }
+.arena-roster .rival:nth-child(2n) .cm-eyes,
+.arena-roster .rival:nth-child(2n) .sq-pupil { animation-delay: -2.6s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .arch-sprite * { animation: none !important; }
+  .arch-sprite * { animation: none !important; transition: none !important; }
+  .info-box.on, .wheel-hub, .sprite-hit .arch-sprite { animation: none !important; }
 }
 
-/* the field: foe top-right, you bottom-left, info boxes on the free corners */
+/* the field: foe top-right, you bottom-left, info boxes on the free corners.
+   A soft key light from the top and a grounding shade at the base give the
+   stage some depth without stealing focus from the fighters. */
 .field { position: relative; min-height: 300px; border-radius: var(--r-xl); overflow: hidden; }
+.field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 50% -8%, color-mix(in srgb, #fff 55%, transparent) 0%, transparent 55%),
+    linear-gradient(to top, color-mix(in srgb, var(--ink) 7%, transparent), transparent 34%);
+  opacity: 0.5;
+}
+html.dark .field::before {
+  background:
+    radial-gradient(120% 60% at 50% -8%, color-mix(in srgb, #fff 9%, transparent) 0%, transparent 55%),
+    linear-gradient(to top, color-mix(in srgb, #000 36%, transparent), transparent 34%);
+  opacity: 0.7;
+}
+.field-inner { position: absolute; inset: 0; }
 .sprite { position: absolute; }
 .foe-sprite { top: 14px; right: 7%; }
 .me-sprite { bottom: 6px; left: 6%; }
+
+/* one-shot white flash on whoever just took damage (replays on remount) */
+@keyframes dmg-flash {
+  0%, 100% { filter: none; }
+  18%, 46% { filter: brightness(1.9) saturate(0.55); }
+  32% { filter: brightness(1.1); }
+}
+.sprite-hit .arch-sprite { animation: dmg-flash 0.5s ease-out; }
+
+/* floating outcome numbers */
+.dmg-pop {
+  position: absolute;
+  z-index: 3;
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  text-shadow: 0 1px 0 var(--surface), 0 2px 10px color-mix(in srgb, var(--ink) 25%, transparent);
+  pointer-events: none;
+}
+.pop-foe { top: 20%; right: 24%; }
+.pop-me { bottom: 34%; left: 26%; }
+.pop-miss { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+.pop-crit { font-size: 27px; color: var(--wt, var(--tint)); }
+.pop-heal { color: var(--arc-hit); }
 .info-box {
   position: absolute;
   width: min(230px, 48%);
@@ -3100,7 +3254,14 @@ html.dark .arena {
   border: 1.5px solid transparent;
   transition: border-color 0.25s;
 }
-.info-box.on { border-color: color-mix(in srgb, var(--ft, var(--tint)) 45%, transparent); }
+@keyframes info-live {
+  0%, 100% { box-shadow: var(--shadow-sm), 0 0 0 0 color-mix(in srgb, var(--ft, var(--tint)) 26%, transparent); }
+  55% { box-shadow: var(--shadow-sm), 0 0 0 5px transparent; }
+}
+.info-box.on {
+  border-color: color-mix(in srgb, var(--ft, var(--tint)) 45%, transparent);
+  animation: info-live 2s ease-out infinite;
+}
 .foe-box { top: 16px; left: 16px; }
 .me-box { bottom: 16px; right: 16px; }
 .info-row { display: flex; align-items: baseline; gap: 8px; }
@@ -3157,6 +3318,11 @@ html.dark .arena {
   transform: translate(-50%, -50%);
   background: var(--ink);
 }
+@keyframes hub-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--wt, var(--tint)) 45%, transparent); }
+  60% { box-shadow: 0 0 0 9px transparent; }
+}
+.wheel.spinning .wheel-hub { animation: hub-pulse 0.8s ease-out infinite; }
 .wheel-legend { display: flex; gap: 14px; }
 .wl { font-size: 12px; font-weight: 650; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 .wl::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
@@ -3190,9 +3356,7 @@ html.dark .arena {
 }
 .battle-card h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .battle-card p { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
-.result-mark { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 18px; }
-.result-mark.good { color: var(--arc-hit); background: color-mix(in srgb, var(--arc-hit) 14%, var(--surface)); }
-.result-mark.bad { color: var(--ink-3); background: var(--fill-2); }
+.result-sprite { display: grid; place-items: center; margin-bottom: -6px; }
 .result-drops { font-size: 15px; font-weight: 700; color: var(--tint); }
 .result-rank {
   display: inline-flex; align-items: center; gap: 6px;
@@ -3222,6 +3386,12 @@ html.dark .arena {
 .arena-offline { font-size: 12.5px; color: var(--ink-3); }
 .arena-inbox { display: grid; gap: 4px; padding: 14px 18px; }
 .inbox-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.inbox-sprite {
+  flex: none;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 11px;
+}
 .inbox-row + .inbox-row { border-top: 1px solid var(--separator); }
 .inbox-txt { flex: 1; font-size: 13.5px; color: var(--ink-2); }
 .inbox-row.unseen .inbox-txt { color: var(--ink); font-weight: 600; }
