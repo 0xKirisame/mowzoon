@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QUICK_ADDS, TYPE_TINTS } from './data';
 import { DROPS } from './game';
+import { isPlus } from './plus';
+import { PlusLock, PlusChip } from './PlusSheet';
 import { Glyph, NumberFlow, screen, item, spring, gel } from './ui';
 import { todayISO, monthKey } from './store';
 import { useI18n } from './i18n';
@@ -68,7 +70,102 @@ function detectRecurring(tx) {
   return out.sort((a, b) => b.count - a.count);
 }
 
-export default function Ledger({ app, setApp, monthTx, profile, onLoadSample }) {
+// Insights+ : the deeper analytics that ship with Mowzoon+. Everything is
+// computed locally from the ledger; the free plan sees it frosted under a
+// lock. Module-level so re-renders don't remount the panel.
+function InsightsPlus({ app, i, onPlus }) {
+  const currentKey = monthKey(todayISO());
+  const keys = [...Array(6)].map((_, k) => addMonth(currentKey, k - 5));
+  const months = keys.map((key) => {
+    const sums = catSums(app.tx.filter((t) => monthKey(t.date) === key));
+    return { key, sums, total: sums.fixed + sums.discretionary + sums.savings + sums.spike };
+  });
+  const maxTotal = Math.max(...months.map((m) => m.total), 1);
+  const monthShort = (key) => {
+    const [y, m] = key.split('-').map(Number);
+    return new Intl.DateTimeFormat(i.locale, { month: 'short' }).format(new Date(y, m - 1, 1));
+  };
+
+  const cur = months[5].sums;
+  const prior = months.slice(2, 5); // the three months before this one
+  const avgOf = (c) => {
+    const vals = prior.map((m) => m.sums[c]).filter((v) => v > 0);
+    return vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : 0;
+  };
+
+  // next month, projected: the recent average of real spending. When the
+  // ledger is younger than a month it falls back to this month's pace.
+  const spentOf = (s) => s.fixed + s.discretionary + s.spike;
+  const withData = prior.filter((m) => spentOf(m.sums) > 0);
+  const proj = withData.length
+    ? Math.round(withData.reduce((a, m) => a + spentOf(m.sums), 0) / withData.length)
+    : spentOf(cur);
+  const subsMonthly = (app.subs || [])
+    .filter((s) => s.tracked && s.state !== 'cancelled')
+    .reduce((a, s) => a + (s.cycle === 'weekly' ? s.amount * 4 : s.amount), 0);
+
+  const body = (
+    <>
+      <span className="lbl">{i.t('insplus.trend')}</span>
+      <div className="ip-bars" dir="ltr" aria-hidden="true">
+        {months.map((m) => (
+          <div className="ip-col" key={m.key}>
+            <div className="ip-stack">
+              {CATS.map((c) => m.sums[c] > 0 && (
+                <i key={c} style={{ height: `${Math.max(3, (m.sums[c] / maxTotal) * 100)}%`, background: TYPE_TINTS[c] }} />
+              ))}
+            </div>
+            <span className="ip-mon">{monthShort(m.key)}</span>
+          </div>
+        ))}
+      </div>
+
+      <span className="lbl">{i.t('insplus.momentum')}</span>
+      <div className="ip-rows">
+        {CATS.map((c) => {
+          const avg = avgOf(c);
+          const v = cur[c];
+          if (!avg && !v) return null;
+          const d = avg > 0 ? Math.round(((v - avg) / avg) * 100) : null;
+          const good = c === 'savings' ? (d ?? 0) >= 0 : (d ?? 0) <= 0;
+          return (
+            <div className="ip-row" key={c}>
+              <span className="cat-dot" style={{ background: TYPE_TINTS[c] }} />
+              <span className="ip-row-name">{i.t(`type.${c}`)}</span>
+              <span className="ip-row-avg">{i.t('insplus.avg', { a: i.fmtMoney(Math.round(avg || v)) })}</span>
+              {d != null && d !== 0 ? (
+                <b className={`ip-row-delta ${good ? 'pos' : 'neg'}`}>{d > 0 ? '↑' : '↓'} {i.fmtPct(Math.abs(d))}</b>
+              ) : (
+                <b className="ip-row-delta">–</b>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="ip-forecast">
+        <span className="ip-fc-meta">
+          <b>{i.t('insplus.forecast')}</b>
+          <em>{i.t('insplus.forecast.cap')}</em>
+        </span>
+        <b className="ip-fc-amt">{i.fmtMoney(proj)}</b>
+      </div>
+      {subsMonthly > 0 && <p className="ip-fc-subs">{i.t('insplus.forecast.subs', { a: i.fmtMoney(subsMonthly) })}</p>}
+    </>
+  );
+
+  return (
+    <motion.div className="glass panel ip-panel" variants={item}>
+      <div className="panel-h">
+        <p className="panel-title ip-title" style={{ margin: 0 }}>{i.t('insplus.title')}<i>+</i></p>
+        {!isPlus(app) && <PlusChip onClick={onPlus} />}
+      </div>
+      {isPlus(app) ? body : <PlusLock label={i.t('plus.lock.insights')} onPlus={onPlus}>{body}</PlusLock>}
+    </motion.div>
+  );
+}
+
+export default function Ledger({ app, setApp, monthTx, profile, onLoadSample, onPlus }) {
   const i = useI18n();
   const [desc, setDesc] = useState('');
   const [amount, setAmount] = useState('');
@@ -243,6 +340,9 @@ export default function Ledger({ app, setApp, monthTx, profile, onLoadSample }) 
         </div>
         {insight && <p className="spend-insight"><Glyph id="bell" size={15} />{insight}</p>}
       </motion.div>
+
+      {/* deeper analytics, part of Mowzoon+ */}
+      <InsightsPlus app={app} i={i} onPlus={onPlus} />
 
       {/* Log */}
       <motion.div className="glass panel" variants={item}>

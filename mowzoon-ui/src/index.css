@@ -3962,3 +3962,246 @@ html.dark .ar-add-btn { color: #111; }
   color: var(--ink-3); font-size: 17px; line-height: 1;
 }
 .ob-added-x:hover { color: var(--ink); background: var(--fill-2); }
+
+/* ------------------------------- Mowzoon+ -------------------------------- */
+/* The subscription layer: wordmark, lock chips, the subscribe sheet, and
+   the fake Apple Pay checkout (Plus.jsx). Gates live where the feature is. */
+
+.plus-word { font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+.plus-word i { font-style: normal; color: var(--tint); margin-inline-start: 1px; }
+
+.plus-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 999px; flex: none;
+  font-size: 11.5px; font-weight: 650; color: var(--ink-2);
+  background: var(--fill-2); border: 1px solid var(--separator);
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.plus-chip .plus-word { font-size: 11.5px; }
+button.plus-chip:hover { color: var(--ink); background: var(--fill-1); }
+
+/* blur-and-lock: content stays visible underneath, one button floats over */
+.plus-lock { position: relative; }
+.plus-lock-under {
+  filter: blur(7px) saturate(0.85);
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+.plus-lock-cta {
+  position: absolute; inset: 0; margin: auto;
+  width: min(240px, 86%); height: fit-content;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 18px 16px; border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-sm);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  transition: transform var(--dur-fast) ease;
+}
+.plus-lock-cta:hover { transform: scale(1.02); }
+.plus-lock-cta .plus-word { font-size: 15px; }
+.plus-lock-cta em { font-style: normal; font-size: 12px; color: var(--ink-2); text-align: center; line-height: 1.4; }
+.plus-lock-ic {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  color: var(--tint); background: color-mix(in srgb, var(--tint) 13%, var(--surface));
+}
+
+/* ------ the subscribe / manage sheet ------ */
+
+.plus-hero { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0 20px; text-align: center; }
+.plus-hero-mark {
+  width: 58px; height: 58px; border-radius: 19px; display: grid; place-items: center;
+  color: #fff; margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--tint), color-mix(in srgb, var(--tint) 45%, #7d4cf0));
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--tint) 34%, transparent);
+}
+.plus-title { font-size: 27px; font-weight: 750; letter-spacing: -0.025em; }
+.plus-tag { font-size: 14px; color: var(--ink-2); }
+.plus-since { font-size: 12px; color: var(--ink-3); }
+
+.plus-rows { display: grid; gap: 4px; border-radius: var(--r-md); overflow: hidden; background: var(--fill-3); border: 1px solid var(--separator); padding: 6px; }
+.plus-row { display: flex; align-items: center; gap: 12px; padding: 9px 10px; }
+.plus-row-ic {
+  width: 32px; height: 32px; border-radius: 10px; flex: none; display: grid; place-items: center;
+  color: var(--tint); background: color-mix(in srgb, var(--tint) 12%, var(--surface));
+}
+.plus-row-ic.on { color: var(--pos); background: color-mix(in srgb, var(--pos) 12%, var(--surface)); }
+.plus-row-meta { display: grid; gap: 1px; min-width: 0; }
+.plus-row-meta b { font-size: 13.5px; font-weight: 650; }
+.plus-row-meta em { font-style: normal; font-size: 12px; color: var(--ink-2); line-height: 1.4; }
+
+.plus-price { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 18px 0 12px; }
+.plus-price b { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.plus-price em { font-style: normal; font-size: 12px; color: var(--ink-3); }
+
+/* the Apple Pay button, per the real spec: black, pill-ish, logo runs white */
+.pay-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 13px 18px; border-radius: 14px;
+  background: #000; color: #fff;
+  font-size: 15.5px; font-weight: 550; letter-spacing: -0.01em;
+  transition: transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+.pay-btn:hover { opacity: 0.88; }
+html.dark .pay-btn { background: #fff; color: #000; }
+.plus-foot { padding: 14px 6px 4px; font-size: 11.5px; color: var(--ink-3); text-align: center; line-height: 1.5; }
+
+.plus-renews { padding: 16px 4px 10px; font-size: 12.5px; color: var(--ink-2); text-align: center; }
+.plus-cancel {
+  width: 100%; padding: 12px; border-radius: var(--r-md);
+  font-size: 14.5px; font-weight: 600; color: var(--neg);
+  background: var(--fill-3); border: 1px solid var(--separator);
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.plus-cancel:hover { background: color-mix(in srgb, var(--neg) 8%, var(--surface)); }
+.plus-cancel.armed { color: #fff; background: var(--neg); border-color: transparent; }
+
+/* ------ the fake Apple Pay sheet ------ */
+
+.pay-scrim {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(8, 10, 16, 0.55);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+}
+.pay-flag {
+  position: absolute; top: 16%; right: 0; z-index: 6;
+  display: flex; align-items: center; gap: 9px;
+}
+.pay-flag-txt { color: #fff; font-size: 13.5px; font-weight: 600; text-align: right; line-height: 1.25; max-width: 96px; text-shadow: 0 1px 8px rgba(0,0,0,0.4); }
+.pay-flag-bar { width: 4.5px; height: 64px; border-radius: 4px 0 0 4px; background: #fff; box-shadow: 0 0 14px rgba(255,255,255,0.55); transform-origin: center; }
+
+.pay-sheet {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 7;
+  border-radius: 22px; padding: 4px 16px 14px;
+  background: #f4f4f6; color: #1d1d1f;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.35);
+}
+html.dark .pay-sheet { background: #1c1c1e; color: #f2f2f4; }
+.pay-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 2px 12px; }
+.pay-x {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  color: #6e6e73; background: rgba(120, 120, 128, 0.14);
+}
+html.dark .pay-x { color: #b7b7bd; background: rgba(120, 120, 128, 0.28); }
+
+.pay-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px 12px; border-radius: 13px; margin-bottom: 8px;
+  background: #fff; box-shadow: 0 1px 3px rgba(20, 24, 40, 0.06);
+}
+html.dark .pay-row { background: #2c2c2e; box-shadow: none; }
+.pay-card-art {
+  width: 42px; height: 29px; border-radius: 6px; flex: none;
+  display: grid; place-items: center; color: #fff;
+  background: linear-gradient(130deg, #6d4ff0 0%, #4a2fbf 55%, #2b1a78 100%);
+}
+.pay-card-meta { flex: 1; min-width: 0; display: grid; gap: 0; }
+.pay-card-meta b { font-size: 13.5px; font-weight: 600; }
+.pay-card-meta em { font-style: normal; font-size: 11.5px; color: #86868b; line-height: 1.35; }
+html.dark .pay-card-meta em { color: #98989f; }
+.pay-card-num { font-size: 13px; color: #6e6e73; letter-spacing: 0.04em; flex: none; }
+html.dark .pay-card-num { color: #b7b7bd; }
+.pay-chev { color: #c5c5cb; flex: none; }
+.pay-item-ic {
+  width: 32px; height: 32px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; color: #fff;
+  background: linear-gradient(135deg, var(--tint), color-mix(in srgb, var(--tint) 45%, #7d4cf0));
+}
+
+.pay-due {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 10px 12px 12px;
+}
+.pay-due-cap { font-size: 12.5px; color: #86868b; }
+html.dark .pay-due-cap { color: #98989f; }
+.pay-due-amt { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+
+.pay-confirm {
+  width: 100%; display: grid; place-items: center; padding: 8px 0 4px;
+  color: #0a84ff; min-height: 64px;
+}
+.pay-confirm:disabled { cursor: default; }
+.pay-confirm-in { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 550; }
+.pay-confirm-in.pay-done { color: var(--pos); }
+.pay-spin {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2.2px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-top-color: currentColor;
+  animation: pay-rot 0.8s linear infinite;
+}
+@keyframes pay-rot { to { transform: rotate(360deg); } }
+
+/* ------ gates around the app ------ */
+
+/* arena: the daily plays chip and the locked FIGHT */
+.arena-plays-chip.out { color: var(--neg); }
+.fight-btn.gated { opacity: 0.72; filter: saturate(0.35); }
+.stage-actions .plus-chip { align-self: center; }
+
+/* home: stacked quest rows + the locked pair */
+.quest-panel .quest-row + .quest-row {
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--separator);
+}
+.quest-locked { width: 100%; text-align: start; }
+.quest-locked .quest-ic { background: var(--fill-2); color: var(--ink-3); }
+.quest-locked .quest-text { color: var(--ink-2); }
+.quest-locked .quest-track { opacity: 0.45; }
+.quest-locked .quest-sub { color: var(--ink-3); }
+.quest-locked:hover .quest-ic { color: var(--ink-2); }
+
+/* ahead: cap counter + locked add rows */
+.add-row-locked .add-row-ic { background: var(--fill-2); color: var(--ink-3); }
+.add-row-locked .add-row-meta b { color: var(--ink-2); }
+.ahead-cap-note { padding: 8px 4px 0; font-size: 11.5px; color: var(--ink-3); text-align: center; }
+
+/* rail: the frosted mini map */
+.rail-map.plus-frost .rail-map-plot svg { filter: blur(6px) saturate(0.8); opacity: 0.6; }
+.rail-map.plus-frost .rail-map-plot { position: relative; }
+.rail-map-lock { position: absolute; inset: 0; display: grid; place-items: center; }
+.rail-map-lock .plus-chip { background: color-mix(in srgb, var(--surface) 90%, transparent); box-shadow: var(--shadow-sm); }
+
+/* profile sheet: the Mowzoon+ row + the mini plus on gated rows */
+.pf-row-ic-plus {
+  color: #fff;
+  background: linear-gradient(135deg, var(--tint), color-mix(in srgb, var(--tint) 45%, #7d4cf0));
+}
+.pf-row-meta { font-size: 13px; color: var(--ink-3); flex: none; }
+.pf-row-plus {
+  flex: none; width: 18px; height: 18px; border-radius: 6px;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700; line-height: 1;
+  color: var(--tint); background: color-mix(in srgb, var(--tint) 13%, var(--surface));
+}
+
+/* spending: the Insights+ panel */
+.ip-title i { font-style: normal; color: var(--tint); font-weight: 750; }
+.ip-bars { display: flex; align-items: flex-end; gap: 10px; height: 128px; padding: 6px 2px 0; margin-bottom: 6px; }
+.ip-col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; }
+.ip-stack { flex: 1; display: flex; flex-direction: column-reverse; gap: 2px; justify-content: flex-start; }
+.ip-stack i { display: block; border-radius: 4px; min-height: 3px; }
+.ip-mon { font-size: 10.5px; color: var(--ink-3); text-align: center; padding-top: 5px; }
+.ip-rows { display: grid; gap: 2px; margin-bottom: 6px; }
+.ip-row { display: flex; align-items: center; gap: 9px; padding: 7px 2px; }
+.ip-row-name { font-size: 13.5px; font-weight: 550; flex: 1; }
+.ip-row-avg { font-size: 12px; color: var(--ink-3); }
+.ip-row-delta { font-size: 12.5px; font-weight: 650; min-width: 52px; text-align: end; color: var(--ink-3); }
+.ip-row-delta.pos { color: var(--pos); }
+.ip-row-delta.neg { color: var(--neg); }
+.ip-forecast {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border-radius: var(--r-md);
+  background: var(--fill-3); border: 1px solid var(--separator);
+}
+.ip-fc-meta { display: grid; gap: 1px; }
+.ip-fc-meta b { font-size: 13.5px; font-weight: 650; }
+.ip-fc-meta em { font-style: normal; font-size: 11.5px; color: var(--ink-3); }
+.ip-fc-amt { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.ip-fc-subs { padding: 8px 4px 0; font-size: 11.5px; color: var(--ink-3); }
+.ip-panel .plus-lock-under { padding-top: 2px; }
+
+@media (max-width: 480px) {
+  .pay-flag-txt { max-width: 82px; font-size: 12.5px; }
+  .ip-bars { gap: 7px; height: 110px; }
+}

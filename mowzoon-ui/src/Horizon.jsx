@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TYPE_TINTS } from './data';
 import { Glyph, screen, item, spring } from './ui';
+import { isPlus, aheadCount, aheadFull, LIMITS } from './plus';
+import { PlusChip } from './PlusSheet';
 import { getInsights } from './api';
 import { todayISO } from './store';
 import { useI18n } from './i18n';
@@ -86,13 +88,17 @@ function TimelineViz({ items, i }) {
 
 // Ahead: spike forecast, tracked subscriptions, and plans merged into
 // one dated timeline. Set-aside is derived from logged savings.
-export default function Horizon({ profile, app, setApp }) {
+export default function Horizon({ profile, app, setApp, onPlus }) {
   const i = useI18n();
   const id = profile ? (profile.model?.id ?? profile.archetype.id) : null;
   const [data, setData] = useState(() => (app.nudge?.spikes ? { spikes: app.nudge.spikes } : null));
   const [adding, setAdding] = useState(null); // 'plan' | 'sub' | null
   const blankForm = { name: '', amount: '', date: '', due: '', cycle: 'monthly' };
   const [f, setF] = useState(blankForm);
+
+  // Mowzoon+ gate: the free plan tracks LIMITS.aheadItems in total
+  const tracked = aheadCount(app);
+  const full = aheadFull(app);
 
   useEffect(() => {
     if (id == null) return undefined;
@@ -145,12 +151,20 @@ export default function Horizon({ profile, app, setApp }) {
   const planHint = f.amount && f.date ? i.fmtMoney(weeklyFor(Math.round(Number(f.amount)), f.date)) : null;
 
   const savePlan = () => {
+    if (aheadFull(app)) {
+      onPlus();
+      return;
+    }
     const target = Math.round(Number(f.amount));
     if (!f.name.trim() || !target || !f.date) return;
     setApp((s) => ({ ...s, plans: [...(s.plans || []), { id: 'p' + s.nextId, name: f.name.trim(), target, date: f.date, icon: 'peak', setAside: { weekly: weeklyFor(target, f.date), startedISO: todayISO() } }], nextId: s.nextId + 1 }));
     setAdding(null); setF(blankForm);
   };
   const saveSub = () => {
+    if (aheadFull(app)) {
+      onPlus();
+      return;
+    }
     const amt = Math.round(Number(f.amount));
     if (!f.name.trim() || !amt) return;
     setApp((s) => ({ ...s, subs: [...(s.subs || []), { id: 'm' + s.nextId, name: f.name.trim(), amount: amt, cycle: f.cycle, dueDay: Number(f.due) || 1, state: 'keep', source: 'manual', icon: 'calendar', tracked: true }], nextId: s.nextId + 1 }));
@@ -210,26 +224,31 @@ export default function Horizon({ profile, app, setApp }) {
         <AnimatePresence mode="wait" initial={false}>
           {adding === null ? (
             <motion.div key="choose" className="add-rows" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
-              <button className="add-row" onClick={() => { setF(blankForm); setAdding('plan'); }}>
-                <span className="add-row-ic" style={{ background: 'color-mix(in srgb, #0fa38f 13%, var(--surface))', color: '#0fa38f' }}>
-                  <Glyph id="peak" size={18} strokeWidth={2} />
+              <button className={`add-row${full ? ' add-row-locked' : ''}`} onClick={() => { if (full) { onPlus(); return; } setF(blankForm); setAdding('plan'); }}>
+                <span className="add-row-ic" style={full ? undefined : { background: 'color-mix(in srgb, #0fa38f 13%, var(--surface))', color: '#0fa38f' }}>
+                  <Glyph id={full ? 'lock' : 'peak'} size={18} strokeWidth={2} />
                 </span>
                 <span className="add-row-meta">
                   <b>{i.t('ahead.addplan')}</b>
-                  <em>{i.t('ahead.addplan.cap')}</em>
+                  <em>{i.t(full ? 'plus.ahead.full' : 'ahead.addplan.cap')}</em>
                 </span>
-                <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                {full ? <PlusChip /> : <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>}
               </button>
-              <button className="add-row" onClick={() => { setF(blankForm); setAdding('sub'); }}>
-                <span className="add-row-ic" style={{ background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 13%, var(--surface))`, color: TYPE_TINTS.fixed }}>
-                  <Glyph id="calendar" size={18} strokeWidth={2} />
+              <button className={`add-row${full ? ' add-row-locked' : ''}`} onClick={() => { if (full) { onPlus(); return; } setF(blankForm); setAdding('sub'); }}>
+                <span className="add-row-ic" style={full ? undefined : { background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 13%, var(--surface))`, color: TYPE_TINTS.fixed }}>
+                  <Glyph id={full ? 'lock' : 'calendar'} size={18} strokeWidth={2} />
                 </span>
                 <span className="add-row-meta">
                   <b>{i.t('ahead.addsub')}</b>
-                  <em>{i.t('ahead.addsub.cap')}</em>
+                  <em>{i.t(full ? 'plus.ahead.full' : 'ahead.addsub.cap')}</em>
                 </span>
-                <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                {full ? <PlusChip /> : <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>}
               </button>
+              {!isPlus(app) && (
+                <p className="ahead-cap-note">
+                  {i.t('plus.ahead.count', { n: i.fmtNum(Math.min(tracked, LIMITS.aheadItems)), t: i.fmtNum(LIMITS.aheadItems) })}
+                </p>
+              )}
             </motion.div>
           ) : adding === 'plan' ? (
             <motion.div key="plan" className="add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
