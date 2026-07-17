@@ -3,7 +3,7 @@ Mowzoon - Arena service
 
 Characters and battle results for the Arena's ghost battles. Handle-based
 identity, no auth (hackathon scope; last write wins on a handle). SQLite on
-disk — on Render's free tier the disk is ephemeral, so the table reseeds
+disk - on Render's free tier the disk is ephemeral, so the table reseeds
 with the demo roster after every redeploy, which is fine for a demo.
 
 Battles are resolved client-side by the shared engine; this service only
@@ -168,7 +168,7 @@ def register(character: Character):
               efficiency=excluded.efficiency, resilience=excluded.resilience,
               eq=excluded.eq, level=excluded.level, loadout=excluded.loadout,
               accent=excluded.accent, avatar_kind=excluded.avatar_kind,
-              rank_score=excluded.rank_score,
+              rank_score=excluded.rank_score, bot=0,
               updated_at=excluded.updated_at
             """,
             (

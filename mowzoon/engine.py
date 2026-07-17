@@ -34,13 +34,13 @@ class PredictiveEngine:
             try:
                 spike_date_this_year = datetime(current_date.year, spike['month'], spike['day'])
             except ValueError:
-                # Handle leap year edge cases
-                spike_date_this_year = datetime(current_date.year, spike['month'], spike['day'] - 1)
-                
+                # Handle leap year edge cases (Feb 29 in a non-leap year)
+                spike_date_this_year = datetime(current_date.year, spike['month'], 28)
+
             try:
                 spike_date_next_year = datetime(current_date.year + 1, spike['month'], spike['day'])
             except ValueError:
-                spike_date_next_year = datetime(current_date.year + 1, spike['month'], spike['day'] - 1)
+                spike_date_next_year = datetime(current_date.year + 1, spike['month'], 28)
             
             if current_date <= spike_date_this_year <= end_date:
                 upcoming_spikes.append((spike['name'], (spike_date_this_year - current_date).days))

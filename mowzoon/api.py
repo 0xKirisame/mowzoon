@@ -10,11 +10,11 @@ Run:  python api.py            (or)  python -m uvicorn api:app --port 8000
 
 import os
 import pickle
-from datetime import datetime
+from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -157,10 +157,11 @@ def upcoming_spikes(lookahead_days=365):
     for spike in config.SEASONAL_SPIKES:
         for year in (now.year, now.year + 1):
             try:
-                date = datetime(year, spike["month"], spike["day"])
+                spike_date = datetime(year, spike["month"], spike["day"])
             except ValueError:
-                date = datetime(year, spike["month"], spike["day"] - 1)
-            days = (date - now).days
+                # Feb 29 in a non-leap year is the only reachable case
+                spike_date = datetime(year, spike["month"], 28)
+            days = (spike_date - now).days
             if 0 <= days <= lookahead_days:
                 spikes.append({"name": spike["name"], "days": days})
                 break
@@ -222,7 +223,7 @@ def classify(metrics: Metrics):
 
 
 @app.get("/population")
-def population(sample: int = 1200):
+def population(sample: int = Query(1200, ge=0)):
     """Metric triples + archetype for real Berka accounts (down-sampled for
     plotting) plus per-archetype cohort means over all accounts."""
     df = FEATURES
@@ -256,9 +257,10 @@ def category_cohort():
 
 class LedgerRow(BaseModel):
     """One app-ledger transaction. Unknown types and non-positive amounts are
-    quarantined by the signal layer, not rejected here (count in meta.skipped_rows)."""
+    quarantined by the signal layer, not rejected here (count in meta.skipped_rows).
+    NaN/inf are rejected up front: they'd survive quarantine and blow up rounding."""
     type: str
-    amount: float
+    amount: float = Field(allow_inf_nan=False)
     date: str
 
 
@@ -268,7 +270,7 @@ class InsightsRequest(BaseModel):
     income: float = Field(ge=0, description="MONTHLY net income, same currency as the ledger")
     ledger: list[LedgerRow] = []
     metrics: Metrics | None = None   # survey scores; legacy-nudge fallback only
-    today: str | None = None         # ISO date; lets the UI and tests pin the clock
+    today: date | None = None        # lets the UI and tests pin the clock; 422s garbage
 
 
 @app.post("/insights")
@@ -285,7 +287,12 @@ def insights_post(req: InsightsRequest):
 
 
 @app.get("/insights")
-def insights(archetype: int, efficiency: float, resilience: float, eq: float):
+def insights(
+    archetype: int,
+    efficiency: float = Query(ge=0, le=100),
+    resilience: float = Query(ge=0, le=100),
+    eq: float = Query(ge=0, le=100),
+):
     if archetype not in config.ARCHETYPES:
         raise HTTPException(status_code=422, detail="Unknown archetype id")
     spikes = upcoming_spikes()
@@ -305,4 +312,4 @@ def insights(archetype: int, efficiency: float, resilience: float, eq: float):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
