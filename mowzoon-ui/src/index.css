@@ -3010,6 +3010,17 @@ html.dark .af-save { background: #fff; color: #111; }
 .ob-back:hover { color: var(--ink); background: var(--fill-2); }
 html[dir='rtl'] .ob-back svg { transform: scaleX(-1); }
 
+/* the language flip mirrors the back button on the opposite corner */
+.ob-lang {
+  position: fixed; inset-block-start: 22px; inset-inline-end: 24px;
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 40px; padding: 0 16px; border-radius: 999px;
+  font-size: 13px; font-weight: 650; color: var(--ink-2);
+  background: var(--fill-3); z-index: 3;
+  transition: color var(--dur-fast) ease, background var(--dur-fast) ease;
+}
+.ob-lang:hover { color: var(--ink); background: var(--fill-2); }
+
 .ob-word { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink-2); letter-spacing: .01em; }
 .ob-word .lg-dot { color: var(--tint); display: inline-grid; place-items: center; }
 .ob-word b { color: var(--ink); font-weight: 700; }

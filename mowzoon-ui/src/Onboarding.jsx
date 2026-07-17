@@ -66,7 +66,7 @@ function MixBar({ probs }) {
 }
 
 // retake mode re-enters at the calibration step and hands straight back to the app
-export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) {
+export default function Onboarding({ onDone, onSkip, setTint, setLang, mode = 'first' }) {
   const i = useI18n();
   const retake = mode === 'retake';
   const [step, setStep] = useState(retake ? 'cal' : 'cover'); // cover | name | cal | reveal | spikes | setup | bridge | start
@@ -236,6 +236,14 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* language flip holds the end corner through the whole flow */}
+      {setLang && (
+        <button className="ob-lang" onClick={() => setLang(i.lang === 'ar' ? 'en' : 'ar')}>
+          <Glyph id="globe" size={14} strokeWidth={2.1} />
+          {i.lang === 'ar' ? 'English' : 'العربية'}
+        </button>
+      )}
       {flights.map((f) => (
         <motion.span
           key={f.id}

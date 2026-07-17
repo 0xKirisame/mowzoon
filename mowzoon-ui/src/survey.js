@@ -50,7 +50,7 @@ export const SURVEY = [
     category: 'Strategy',
     text: 'Which sentence sounds most like your money right now?',
     options: [
-      { label: 'Big bets, thin cushion - but think of the upside.', e: 5, r: -11, q: -4 },
+      { label: 'Big bets, thin savings - but think of the upside.', e: 5, r: -11, q: -4 },
       { label: 'Every riyal has a job: categories, limits, reviews.', e: 11, r: 4, q: 3 },
       { label: 'Fixed costs eat almost everything; I survive the month.', e: -4, r: -7, q: 1 },
       { label: 'I save hard, but never let myself enjoy any of it.', e: -6, r: 9, q: -3 },

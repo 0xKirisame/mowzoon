@@ -948,9 +948,9 @@ export default function App() {
           <div className="app macos ob-app" style={{ '--tint': obTint, '--ga': ga, '--gb': `${gb}px`, '--gs': 1.85 }}>
             <Aurora />
             {retaking ? (
-              <Onboarding mode="retake" onDone={finishRetake} onSkip={() => setRetaking(false)} setTint={setObTint} />
+              <Onboarding mode="retake" onDone={finishRetake} onSkip={() => setRetaking(false)} setTint={setObTint} setLang={(v) => setApp((s) => ({ ...s, lang: v }))} />
             ) : (
-              <Onboarding onDone={finishOnboarding} onSkip={skipOnboarding} setTint={setObTint} />
+              <Onboarding onDone={finishOnboarding} onSkip={skipOnboarding} setTint={setObTint} setLang={(v) => setApp((s) => ({ ...s, lang: v }))} />
             )}
           </div>
         </MotionConfig>
