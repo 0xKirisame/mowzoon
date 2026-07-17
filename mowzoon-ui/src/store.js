@@ -57,6 +57,7 @@ const EMPTY = {
     lastDaily: null, // ISO day of the last daily-open award
     quest: null,     // { key, aid, startedISO, done }
     questsDone: 0,
+    lastQuestCollect: null, // ISO day of the last quest payout; reissues start after it
     badges: {},      // { [badgeId]: ISO day earned }
     flags: {},       // one-shot event flags (e.g. opened the map)
   },
@@ -69,6 +70,12 @@ export const todayISO = () => {
 };
 
 export const monthKey = (iso) => iso.slice(0, 7);
+
+export const dayAfter = (iso) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const n = new Date(y, m - 1, d + 1);
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+};
 
 function load() {
   try {

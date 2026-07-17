@@ -5,7 +5,7 @@ import { ARCHETYPE_META, DEFAULT_TINT, METRIC_LABELS } from './data';
 import { Seg, Glyph, LogoMark, LiquidMark, LiquidOrb, LiquidSlider, Meter, spring } from './ui';
 import { classify, getPopulation, getEngineInsights } from './api';
 import { DROPS, levelOf, issueQuest, questProgress, newlyEarned } from './game';
-import { useAppState, thisMonthTx, todayISO, monthKey, sampleMonth, streakOf } from './store';
+import { useAppState, thisMonthTx, todayISO, dayAfter, monthKey, sampleMonth, streakOf } from './store';
 import { I18nProvider, i18nFor, useI18n, nudgeAr } from './i18n';
 import { initLiquid, setLiquidLevel } from './liquid';
 import Onboarding from './Onboarding';
@@ -805,24 +805,29 @@ export default function App() {
     };
   }, [profileId, today, ledgerSig]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // issue a quest; reissue when the archetype changes or the week runs out
+  // issue a quest; reissue when the archetype changes or the week runs out.
+  // An id mismatch only counts once the classifier has answered: on load the
+  // on-device read stands in while the model responds, and reissuing on that
+  // flap started a fresh quest that today's already-paid logs completed
+  // instantly, so collected drops were claimable again on every refresh.
   useEffect(() => {
     if (profileId == null) return;
     const q = gm.quest;
     const expired = q && !q.done && (Date.parse(today) - Date.parse(q.startedISO)) / 86400000 >= 7;
-    if (!q || q.aid !== profileId || expired) {
-      setApp((s) => ({ ...s, game: { ...s.game, quest: issueQuest(profileId, today) } }));
+    const changed = q && q.aid !== profileId && profile?.asked;
+    if (!q || changed || expired) {
+      setApp((s) => {
+        // a quest issued the day of a payout starts tomorrow, so the logs
+        // that already paid can never count twice
+        const start = s.game.lastQuestCollect === today ? dayAfter(today) : today;
+        return { ...s, game: { ...s.game, quest: issueQuest(profileId, start) } };
+      });
     }
-  }, [profileId, gm.quest, today]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [profileId, gm.quest, today, profile?.asked]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const collectQuest = () => {
     const q = gm.quest;
     if (!q) return;
-    // next quest starts tomorrow, otherwise today's logs would complete
-    // the reissued quest instantly and drops become farmable
-    const nxt = new Date();
-    nxt.setDate(nxt.getDate() + 1);
-    const tomorrow = `${nxt.getFullYear()}-${String(nxt.getMonth() + 1).padStart(2, '0')}-${String(nxt.getDate()).padStart(2, '0')}`;
     setApp((s) => {
       // a double tap must not pay twice
       if (s.game.quest !== q) return s;
@@ -832,7 +837,11 @@ export default function App() {
           ...s.game,
           drops: s.game.drops + DROPS.quest,
           questsDone: (s.game.questsDone || 0) + 1,
-          quest: issueQuest(profileId ?? q.aid, tomorrow),
+          // the payout day is remembered so any reissue (here or in the
+          // effect above) starts after it, otherwise today's logs would
+          // complete the next quest instantly and drops become farmable
+          lastQuestCollect: today,
+          quest: issueQuest(profileId ?? q.aid, dayAfter(today)),
         },
       };
     });

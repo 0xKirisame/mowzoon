@@ -1150,7 +1150,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
           <div className="stat-row">
             <span>{i.t('arena.stat.crit')}</span>
             <i className="stat-meter"><b style={{ width: `${Math.min(100, Math.round((meF.critDeg / 360) * 100) * 2)}%` }} /></i>
-            <b className="stat-val">{Math.round((meF.critDeg / 360) * 100)}%</b>
+            <b className="stat-val">{i.fmtPct(Math.round((meF.critDeg / 360) * 100))}</b>
           </div>
 
           <div className="stage-items-cap">

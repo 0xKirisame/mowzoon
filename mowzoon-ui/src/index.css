@@ -3005,7 +3005,9 @@ html.dark .arena {
   border: 1px solid var(--separator);
   position: relative; z-index: 1;
 }
-.stat-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 8px; }
+/* the label column must fit the longest localized label (CRITICAL /
+   الحاسمة) or the meter renders over the text's tail */
+.stat-row { display: grid; grid-template-columns: 62px 1fr auto; align-items: center; gap: 8px; }
 .stat-row > span { font-size: 10.5px; font-weight: 750; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
 .stat-meter { height: 6px; border-radius: 4px; background: var(--fill-1); overflow: hidden; }
 .stat-meter b { display: block; height: 100%; border-radius: 4px; background: var(--ft, var(--tint)); }

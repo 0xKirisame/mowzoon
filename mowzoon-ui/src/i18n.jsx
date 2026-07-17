@@ -991,7 +991,7 @@ const STR = {
     'arena.record': '{w} فوز · {l} خسارة',
     'arena.stat.hp': 'الصحة',
     'arena.stat.atk': 'الهجوم',
-    'arena.stat.crit': 'الضربة الحاسمة',
+    'arena.stat.crit': 'الحاسمة',
     'arena.statNote': 'مستمدة من مؤشراتك الحقيقية: المرونة صحتك، والكفاءة هجومك، والذكاء المالي يوسّع قوس ضرباتك الحاسمة.',
     'arena.loadout': 'العتاد',
     'arena.effects': 'التأثيرات',
