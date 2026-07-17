@@ -2617,7 +2617,38 @@ html[dir='rtl'] .sheet-back svg { transform: scaleX(-1); }
   flex: none; font-size: 13px; font-weight: 700; color: #fff;
   background: var(--tint); padding: 10px 16px; border-radius: 999px;
   box-shadow: 0 6px 16px color-mix(in srgb, var(--tint) 40%, transparent);
+  transition: background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
+
+/* a finished quest celebrates: the icon flips to a check, the full track
+   shimmers, and Collect plays a green "Collected!" beat before the fresh
+   quest slides in (the row swap lives in Home.jsx) */
+.quest-row.done .quest-ic {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--qt, var(--tint)) 38%, transparent);
+}
+.quest-row.done .quest-track { position: relative; }
+.quest-row.done .quest-track::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 32%, rgba(255, 255, 255, 0.7) 50%, transparent 68%);
+  background-size: 240% 100%;
+  animation: quest-shine 1.9s ease-in-out infinite;
+}
+@keyframes quest-shine {
+  0% { background-position: 135% 0; }
+  55%, 100% { background-position: -105% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quest-row.done .quest-track::after { animation: none; opacity: 0; }
+}
+.quest-sub.good { color: var(--pos); }
+.quest-sub.fresh { color: var(--tint); }
+.quest-collect.claimed {
+  background: var(--pos);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--pos) 40%, transparent);
+  cursor: default;
+}
+.qc-in { display: inline-flex; align-items: center; gap: 6px; }
 
 /* "your read in numbers": the signal detail cards in the profile sheet */
 .sig-list { display: grid; gap: 10px; }

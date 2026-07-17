@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARCHETYPE_META, TYPE_TINTS } from './data';
-import { Glyph, LiquidMark, LiquidOrb, NumberFlow, screen, item, gel } from './ui';
+import { Glyph, LiquidMark, LiquidOrb, NumberFlow, screen, item, gel, spring, springBounce } from './ui';
 import { DROPS } from './game';
 import { getInsights } from './api';
 import { todayISO, streakOf } from './store';
@@ -158,6 +158,23 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
       })
     : '';
   const questDone = questProg && questProg.value >= questProg.target;
+  // reissues start tomorrow (the farm guard), so the fresh bar sitting at
+  // 0% today is expected - say so instead of looking stuck
+  const questFresh = quest && quest.startedISO > today;
+
+  // Collecting plays a short celebration beat, then the fresh quest slides
+  // in; without it the panel snapped to 0% and read as a silent reset.
+  const [claiming, setClaiming] = useState(false);
+  const claimTimer = useRef(null);
+  useEffect(() => () => clearTimeout(claimTimer.current), []);
+  const claim = () => {
+    if (claiming) return;
+    setClaiming(true);
+    claimTimer.current = setTimeout(() => {
+      onCollect();
+      setClaiming(false);
+    }, 1050);
+  };
 
   // The engine's suggested focus (display-only): a themed card under the
   // weekly quest. Text is localized from the tied insight's signal when we
@@ -316,35 +333,91 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                 <p className="panel-title" style={{ margin: 0 }}>{i.t('quest.title')}</p>
                 <span className="quest-bounty">{i.t('toast.drops', { n: i.fmtNum(DROPS.quest) })}</span>
               </div>
-              <div className="quest-row">
-                <span className="quest-ic" style={{ background: `color-mix(in srgb, ${ARCHETYPE_META[id].tint} 14%, var(--surface))`, color: ARCHETYPE_META[id].tint }}>
-                  <Glyph id={QUEST_GLYPHS[quest.key] || 'spark'} size={19} strokeWidth={2} />
-                </span>
-                <div className="quest-body">
-                  <p className="quest-text">{questText}</p>
-                  <div className="quest-track">
-                    <motion.i
-                      initial={false}
-                      animate={{ width: `${Math.round(questProg.pct * 100)}%` }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 26 }}
-                      style={{ background: ARCHETYPE_META[id].tint }}
-                    />
-                  </div>
-                  <p className="quest-sub">{questDone ? i.t('quest.done') : questLabel}</p>
-                </div>
-                {questDone && (
-                  <motion.button
-                    className="quest-collect"
-                    onClick={onCollect}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileTap={{ scale: 0.94 }}
-                    transition={gel}
+              {/* keyed by quest identity: collecting animates the finished
+                  quest away and the fresh one in, instead of snapping to 0% */}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={quest.key + quest.startedISO}
+                  className={`quest-row${questDone ? ' done' : ''}`}
+                  style={{ '--qt': ARCHETYPE_META[id].tint }}
+                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -12, scale: 0.98, transition: { duration: 0.18 } }}
+                  transition={spring}
+                >
+                  <span
+                    className="quest-ic"
+                    style={questDone
+                      ? { background: ARCHETYPE_META[id].tint, color: '#fff' }
+                      : { background: `color-mix(in srgb, ${ARCHETYPE_META[id].tint} 14%, var(--surface))`, color: ARCHETYPE_META[id].tint }}
                   >
-                    {i.t('quest.collect', { n: i.fmtNum(DROPS.quest) })}
-                  </motion.button>
-                )}
-              </div>
+                    {questDone ? (
+                      <motion.svg
+                        width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"
+                        initial={{ scale: 0, rotate: -24 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={springBounce}
+                        aria-hidden="true"
+                      >
+                        <path d="M5 12.8l4.2 4.2L19 7.4" />
+                      </motion.svg>
+                    ) : (
+                      <Glyph id={QUEST_GLYPHS[quest.key] || 'spark'} size={19} strokeWidth={2} />
+                    )}
+                  </span>
+                  <div className="quest-body">
+                    <p className="quest-text">{questText}</p>
+                    <div className="quest-track">
+                      <motion.i
+                        initial={false}
+                        animate={{ width: `${Math.round(questProg.pct * 100)}%` }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 26 }}
+                        style={{ background: ARCHETYPE_META[id].tint }}
+                      />
+                    </div>
+                    <p className={`quest-sub${questDone ? ' good' : questFresh ? ' fresh' : ''}`}>
+                      {questDone ? i.t('quest.done') : questFresh ? i.t('quest.tomorrow') : questLabel}
+                    </p>
+                  </div>
+                  {questDone && (
+                    <motion.button
+                      className={`quest-collect${claiming ? ' claimed' : ''}`}
+                      onClick={claim}
+                      disabled={claiming}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileTap={{ scale: 0.94 }}
+                      transition={gel}
+                    >
+                      <AnimatePresence mode="wait" initial={false}>
+                        {claiming ? (
+                          <motion.span
+                            key="got"
+                            className="qc-in"
+                            initial={{ scale: 0.6, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={springBounce}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.8l4.2 4.2L19 7.4" /></svg>
+                            {i.t('quest.collected')}
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="cta"
+                            className="qc-in"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                          >
+                            {i.t('quest.collect', { n: i.fmtNum(DROPS.quest) })}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </motion.div>
           )}
 
