@@ -223,7 +223,7 @@ const STR = {
     // Onboarding
     'ob.cover.meaning': 'balanced',
     'ob.cover.title': 'I read how you really handle money.',
-    'ob.cover.sub': 'Not a budgeting app. A coach that re-reads you as you go, grounded in 4,500 bank accounts.',
+    'ob.cover.sub': 'Not a budgeting app. A coach that re-reads you as you go.',
     'ob.cover.start': 'Get started',
     'ob.cover.skip': 'Skip setup',
     'ob.name.title': 'First, what should I call you?',
@@ -890,7 +890,7 @@ const STR = {
     // Onboarding
     'ob.cover.meaning': 'متوازن',
     'ob.cover.title': 'أقرأ كيف تدير أموالك فعلاً.',
-    'ob.cover.sub': 'ليس تطبيق ميزانية، بل مدرّبٌ يعيد قراءتك أولاً بأول، مستندًا إلى ٤٬٥٠٠ حساب مصرفي.',
+    'ob.cover.sub': 'ليس تطبيق ميزانية، بل مدرّبٌ يعيد قراءتك أولاً بأول.',
     'ob.cover.start': 'لنبدأ',
     'ob.cover.skip': 'تخطَّ الإعداد',
     'ob.name.title': 'أولاً، بماذا أناديك؟',
