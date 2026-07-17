@@ -5,6 +5,7 @@ import { ARCHETYPE_META, DEFAULT_TINT, METRIC_LABELS } from './data';
 import { Seg, Glyph, LogoMark, LiquidMark, LiquidOrb, LiquidSlider, Meter, spring } from './ui';
 import { classify, getPopulation, getEngineInsights } from './api';
 import { DROPS, levelOf, issueQuest, questProgress, newlyEarned } from './game';
+import { isPlus, EXTRA_QUESTS } from './plus';
 import { useAppState, thisMonthTx, todayISO, dayAfter, monthKey, sampleMonth, streakOf } from './store';
 import { I18nProvider, i18nFor, useI18n, nudgeAr } from './i18n';
 import { initLiquid, setLiquidLevel } from './liquid';
@@ -16,6 +17,7 @@ import Ledger from './Ledger';
 import Horizon from './Horizon';
 import Arena from './Arena';
 import ProfileSheet from './ProfileSheet';
+import PlusSheet, { PlusChip } from './PlusSheet';
 import { consumeAddParamFromUrl } from './arena/friends';
 import { useOverlayScrollbar } from './Scrollbar';
 import previewImg from './assets/glass-preview.jpg';
@@ -277,11 +279,17 @@ function SrcRow({ v, view, setView, glyph, label }) {
 
 function Sidebar({ view, setView, i, app, profile, profileOpen, settingsBtnRef, onSettings, onProfile, onBank }) {
   const { pname } = avatarOf(app, profile);
+  const plus = isPlus(app);
   return (
     <aside className="sidebar lg-spec" data-liquid>
       <button className="sidebar-brand" onClick={() => setView('home')}>
         <LogoMark size={21} strokeWidth={2} />
-        <span>{i.lang === 'ar' ? 'موزون' : 'Mowzoon'}</span>
+        {/* members see the brand wear its +, with a slow sheen across it */}
+        {plus ? (
+          <span className="brand-shine">{i.lang === 'ar' ? 'موزون' : 'Mowzoon'}<i>+</i></span>
+        ) : (
+          <span>{i.lang === 'ar' ? 'موزون' : 'Mowzoon'}</span>
+        )}
       </button>
       <nav className="source-list">
         <SrcRow v="home" view={view} setView={setView} glyph="home" label={i.t('nav.home')} />
@@ -336,8 +344,10 @@ function TabBar({ view, setView, i, app, profile, profileOpen, onProfile }) {
   );
 }
 
-// mini population map; renders every second dot to keep the always-mounted SVG light
-function RailMap({ profile, onOpen }) {
+// mini population map; renders every second dot to keep the always-mounted
+// SVG light. The map is a Mowzoon+ view: free plans see it frosted, and the
+// tap heads to the subscribe sheet instead of the full map.
+function RailMap({ profile, onOpen, locked, onPlus }) {
   const i = useI18n();
   const [pop, setPop] = useState(null);
   useEffect(() => {
@@ -355,7 +365,7 @@ function RailMap({ profile, onOpen }) {
   const x = (v) => PAD + (v / 100) * (W - PAD * 2);
   const y = (v) => H - PAD - (v / 100) * (H - PAD * 2);
   return (
-    <button className="rail-map" onClick={onOpen}>
+    <button className={`rail-map${locked ? ' plus-frost' : ''}`} onClick={locked ? onPlus : onOpen}>
       <span className="rail-map-plot" dir="ltr" aria-hidden="true">
         <svg viewBox={`0 0 ${W} ${H}`}>
           {pop.points.filter((_, idx) => idx % 2 === 0).map((p, idx) => (
@@ -364,13 +374,14 @@ function RailMap({ profile, onOpen }) {
           <circle cx={x(you.e)} cy={y(you.r)} r="8" fill={tint} fillOpacity="0.22" />
           <circle cx={x(you.e)} cy={y(you.r)} r="4.5" fill={tint} stroke="var(--surface)" strokeWidth="2" />
         </svg>
+        {locked && <span className="rail-map-lock"><PlusChip /></span>}
       </span>
       <span className="rail-map-cap">{i.t('results.pop.title', { n: i.fmtNum(pop.total) })}</span>
     </button>
   );
 }
 
-function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, onQuest, onOpenRead }) {
+function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, onQuest, onOpenRead, onPlus }) {
   const i = useI18n();
   const title = i.lang === 'ar' ? 'قراءتك' : 'Your read';
   const live = i.lang === 'ar' ? 'مباشر' : 'live';
@@ -512,7 +523,7 @@ function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, on
         </span>
       </button>
 
-      <RailMap profile={profile} onOpen={onOpenMap} />
+      <RailMap profile={profile} onOpen={onOpenMap} locked={!isPlus(app)} onPlus={onPlus} />
     </aside>
   );
 }
@@ -534,6 +545,9 @@ export default function App() {
   const [retaking, setRetaking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [plusOpen, setPlusOpen] = useState(false);
+  const openPlus = () => setPlusOpen(true);
+  const plus = isPlus(app);
   // which panel the profile sheet opens on
   const [profilePanel, setProfilePanel] = useState('root');
   const openProfile = (panel = 'root') => {
@@ -848,6 +862,44 @@ export default function App() {
     toast('spark', `${i.t('toast.quest')} · ${i.t('toast.drops', { n: i.fmtNum(DROPS.quest) })}`);
   };
 
+  // Mowzoon+ runs the two companion quests alongside the weekly one; free
+  // plans just see them locked. Issue/reissue mirrors the primary's rules.
+  useEffect(() => {
+    if (!plus || profileId == null) return;
+    const want = EXTRA_QUESTS[profileId] ?? [];
+    const stale = (q, aid) =>
+      !q || q.aid !== aid || (Date.parse(today) - Date.parse(q.startedISO)) / 86400000 >= 7;
+    const cur = gm.extraQuests || [];
+    if (cur.length === want.length && !want.some((aid, k) => stale(cur[k], aid))) return;
+    setApp((s) => {
+      const curr = s.game.extraQuests || [];
+      const next = want.map((aid, k) => (stale(curr[k], aid) ? issueQuest(aid, today) : curr[k]));
+      return { ...s, game: { ...s.game, extraQuests: next } };
+    });
+  }, [plus, profileId, gm.extraQuests, today]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const collectExtraQuest = (k) => {
+    const q = (gm.extraQuests || [])[k];
+    if (!q) return;
+    setApp((s) => {
+      // a double tap must not pay twice; reissues start tomorrow so
+      // today's logs can't complete the fresh quest instantly
+      if ((s.game.extraQuests || [])[k] !== q) return s;
+      const next = [...s.game.extraQuests];
+      next[k] = issueQuest(q.aid, dayAfter(today));
+      return {
+        ...s,
+        game: {
+          ...s.game,
+          drops: s.game.drops + DROPS.quest,
+          questsDone: (s.game.questsDone || 0) + 1,
+          extraQuests: next,
+        },
+      };
+    });
+    toast('spark', `${i.t('toast.quest')} · ${i.t('toast.drops', { n: i.fmtNum(DROPS.quest) })}`);
+  };
+
   // glass material values derived from the Clear/Tinted dial
   const ga = 0.04 + glassT * 0.6;
   // blur stays subtle - the material's body now comes from refraction +
@@ -1031,6 +1083,13 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        {/* Mowzoon+ subscribe / manage sheet, reachable from every gate */}
+        <AnimatePresence>
+          {plusOpen && (
+            <PlusSheet app={app} setApp={setApp} toast={toast} onClose={() => setPlusOpen(false)} />
+          )}
+        </AnimatePresence>
+
         <AnimatePresence>
           {profileOpen && (
             <ProfileSheet
@@ -1041,6 +1100,10 @@ export default function App() {
               initialPanel={profilePanel}
               onClose={() => setProfileOpen(false)}
               onRetake={begin}
+              onPlus={() => {
+                setProfileOpen(false);
+                setPlusOpen(true);
+              }}
               onBank={() => {
                 setProfileOpen(false);
                 setSurface('bank');
@@ -1087,10 +1150,12 @@ export default function App() {
                 level={lvl}
                 questProg={questProgress(app, gm.quest)}
                 onCollect={collectQuest}
+                onCollectExtra={collectExtraQuest}
                 onLedger={() => setView('spending')}
                 onJourney={begin}
                 onAhead={() => setView('ahead')}
                 onProfile={openProfile}
+                onPlus={openPlus}
               />
             ) : view === 'spending' ? (
               <Ledger
@@ -1100,6 +1165,7 @@ export default function App() {
                 monthTx={monthTx}
                 profile={profile}
                 onLoadSample={loadSample}
+                onPlus={openPlus}
               />
             ) : view === 'arena' ? (
               <Arena
@@ -1110,9 +1176,10 @@ export default function App() {
                 lvl={lvl}
                 toast={toast}
                 onCalibrate={begin}
+                onPlus={openPlus}
               />
             ) : (
-              <Horizon key="ahead" profile={profile} app={app} setApp={setApp} />
+              <Horizon key="ahead" profile={profile} app={app} setApp={setApp} onPlus={openPlus} />
             )}
           </AnimatePresence>
           </div>
@@ -1127,6 +1194,7 @@ export default function App() {
           onOpenProgress={() => openProfile('progress')}
           onOpenRead={() => openProfile('signals')}
           onQuest={() => setView('home')}
+          onPlus={openPlus}
         />
       </div>
     </MotionConfig>

@@ -23,11 +23,32 @@ import { ArchSprite } from './arena/sprites';
 import { healthOf, applyMatchResult } from './arena/rank';
 import { shareLink, addFriend, friendsLeaderboard } from './arena/friends';
 import { qrMatrix, qrPath } from './arena/qr';
+import { isPlus, arenaPlaysLeft, spendArenaPlay, LIMITS } from './plus';
+import { PlusChip } from './PlusSheet';
 
 const ABILITY_GLYPH = {
   splurge: 'bolt', retail: 'cart', contingency: 'shield', overplan: 'compass',
   allin: 'trend', diversify: 'layers', reserve: 'peak', rationing: 'cup',
 };
+
+// one daily play: filled while it's still yours, hollow and gray once spent
+function BoltPip({ spent }) {
+  return (
+    <svg
+      className={`bolt-pip${spent ? ' spent' : ''}`}
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill={spent ? 'none' : 'currentColor'}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M13 2 6 13.5h5L9.5 22 18 10.5h-5L13 2Z" />
+    </svg>
+  );
+}
 const EFFECT_GLYPH = { compound: 'trend', cashback: 'redo', highyield: 'flame' };
 
 // +1 me over them, -1 them over me, 0 even
@@ -812,7 +833,7 @@ function LbRow({ r, i, onChallenge }) {
   );
 }
 
-export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate }) {
+export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate, onPlus }) {
   const i = useI18n();
   const [battle, setBattle] = useState(null); // { opp, mode, key }
   const [passOpen, setPassOpen] = useState(false);
@@ -1039,9 +1060,19 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   const rivals = roster ?? BOTS;
   const weakVs = Number(Object.keys(BEATS).find((k) => BEATS[k] === aid));
 
+  // Mowzoon+ gate: the free plan gets LIMITS.arenaPlays battles a day.
+  // Every start (fight, challenge, pass-&-play) spends one; hitting zero
+  // routes the tap to the subscribe sheet instead.
+  const playsLeft = arenaPlaysLeft(app);
+  const gated = playsLeft <= 0;
+
   // challenge any handle's current snapshot: revenge, or a followed friend.
   // Falls back to the cached friend card (neutral metrics) when offline.
   const challengeHandle = async (handle) => {
+    if (gated) {
+      onPlus();
+      return;
+    }
     const c =
       (await getArenaCharacter(handle)) ||
       rivals.find((x) => x.handle === handle) ||
@@ -1053,12 +1084,19 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
         level: rec.friendCards[handle].level,
         loadout: { effects: [], ability: null },
       });
-    if (c) setBattle({ opp: { ...c, name: botName(c, i.lang) }, mode: 'ghost', key: `${handle}-${Date.now()}` });
+    if (c) {
+      setApp(spendArenaPlay);
+      setBattle({ opp: { ...c, name: botName(c, i.lang) }, mode: 'ghost', key: `${handle}-${Date.now()}` });
+    }
   };
 
   // FIGHT: the opponent is picked instantly (level-neighbours first), the
   // search / found / loading beats are pure theatre
   const startMatchmaking = () => {
+    if (gated) {
+      onPlus();
+      return;
+    }
     const pool = rivals.filter((c) => c.handle !== myHandle);
     if (!pool.length || match) return;
     const near = pool.filter((c) => Math.abs((c.level || 1) - lvl.n) <= 1);
@@ -1071,6 +1109,9 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
       setTimeout(() => setMatch({ phase: 'load', opp }), 3800),
       setTimeout(() => {
         setMatch(null);
+        // the play is spent when the battle actually starts, so cancelling
+        // the search never charges one
+        setApp(spendArenaPlay);
         setBattle({ opp: { ...opp, name: botName(opp, i.lang) }, mode: 'ghost', key: `${opp.handle}-${Date.now()}` });
       }, 5450),
     ];
@@ -1109,6 +1150,20 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
           <p className="home-sub">{i.t('arena.sub')}</p>
         </div>
         <div className="arena-head-btns">
+          {!isPlus(app) && (
+            <button
+              className={`streak glass-lite arena-plays-chip${gated ? ' out' : ''}`}
+              title={i.t('plus.arena.cta')}
+              aria-label={gated
+                ? i.t('plus.arena.out')
+                : i.t('plus.arena.left', { n: i.fmtNum(playsLeft), t: i.fmtNum(LIMITS.arenaPlays) })}
+              onClick={onPlus}
+            >
+              {[...Array(LIMITS.arenaPlays)].map((_, k) => (
+                <BoltPip key={k} spent={k >= playsLeft} />
+              ))}
+            </button>
+          )}
           <button
             className="streak glass-lite arena-help-chip"
             title={i.t('arena.how.title')}
@@ -1191,7 +1246,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
 
         <div className="stage-actions">
           <motion.button
-            className="fight-btn lg-spec"
+            className={`fight-btn lg-spec${gated ? ' gated' : ''}`}
             data-liquid
             data-liquid-strength="0.7"
             data-liquid-blur="5"
@@ -1201,9 +1256,10 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             onClick={startMatchmaking}
             disabled={!!match}
           >
-            <Glyph id="swords" size={19} strokeWidth={2.2} />
+            <Glyph id={gated ? 'lock' : 'swords'} size={19} strokeWidth={2.2} />
             {i.t('arena.fight')}
           </motion.button>
+          {gated && <PlusChip onClick={onPlus} />}
           <button className="stage-btn glass-lite" onClick={() => setSheet('loadout')}>
             <Glyph id="sliders" size={16} strokeWidth={2.1} />
             {i.t('arena.loadout')}
@@ -1212,7 +1268,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             <Glyph id="people" size={16} strokeWidth={2.1} />
             {i.t('arena.friends')}
           </button>
-          <button className="stage-btn glass-lite" onClick={() => setPassOpen(true)}>
+          <button className="stage-btn glass-lite" onClick={() => (gated ? onPlus() : setPassOpen(true))}>
             <Glyph id="redo" size={16} strokeWidth={2.1} />
             {i.t('arena.pass')}
           </button>
@@ -1458,6 +1514,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             onClose={() => setPassOpen(false)}
             onStart={(p2) => {
               setPassOpen(false);
+              setApp(spendArenaPlay);
               setBattle({ opp: p2, mode: 'pass', key: `pass-${Date.now()}` });
             }}
           />

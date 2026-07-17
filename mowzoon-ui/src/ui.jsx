@@ -261,6 +261,13 @@ const ICON_PATHS = {
       <path d="M10.1 10.6v5.6M13.9 10.6v5.6" />
     </>
   ),
+  lock: (
+    <>
+      <rect x="5" y="10.6" width="14" height="9.4" rx="2.6" />
+      <path d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.6 0v2.8" />
+      <path d="M12 14.4v2" />
+    </>
+  ),
 };
 
 export function Glyph({ id, size = 26, strokeWidth = 1.9 }) {

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ACCENTS, ARCHETYPE_META, METRIC_LABELS } from './data';
 import { BADGES, DROPS, levelOf } from './game';
+import { isPlus } from './plus';
+import { PlusChip, PlusLock, PlusMark, PlusWord } from './PlusSheet';
 import { streakOf } from './store';
 import { Glyph, LiquidMark, LiquidOrb, Meter, spring, springSoft } from './ui';
 import { useI18n } from './i18n';
@@ -53,7 +55,7 @@ function AvatarInner({ p, meta, size }) {
   return <LiquidMark size={Math.round(size * 0.5)} />;
 }
 
-export default function ProfileSheet({ app, setApp, profile, source, onClose, onRetake, onSettings, onBank, initialPanel }) {
+export default function ProfileSheet({ app, setApp, profile, source, onClose, onRetake, onSettings, onBank, onPlus, initialPanel }) {
   const i = useI18n();
   // root | read | scores | standing | population | customize
   const [panel, setPanel] = useState(initialPanel || 'root');
@@ -96,12 +98,13 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
     customize: t('Personalize', 'تخصيص'),
   };
 
-  const Row = ({ to, glyph, label, tint }) => (
+  const Row = ({ to, glyph, label, tint, chip }) => (
     <button className="pf-row" onClick={() => setPanel(to)}>
       <span className="pf-row-ic" style={{ background: `color-mix(in srgb, ${tint} 15%, var(--surface))`, color: tint }}>
         <Glyph id={glyph} size={17} strokeWidth={2} />
       </span>
       <span className="pf-row-label">{label}</span>
+      {chip}
       <span className="pf-row-chev"><Chevron /></span>
     </button>
   );
@@ -154,6 +157,12 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
                       <span className="pf-avatar-cam"><CameraMark /></span>
                     </button>
                     <p className="pf-name">{p.name || t('Add your name', 'أضف اسمك')}</p>
+                    {isPlus(app) && (
+                      <span className="pf-plus-badge">
+                        <PlusMark size={13} strokeWidth={2.2} />
+                        <PlusWord />
+                      </span>
+                    )}
                   </div>
 
                   {profile && (
@@ -169,11 +178,29 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
                       </button>
                       <Row to="scores" glyph="trend" label={t('Your scores', 'درجاتك')} tint="#5e5ce6" />
                       {profile.model && <Row to="standing" glyph="people" label={t('Standing', 'موقعك')} tint="#0fa38f" />}
-                      {profile.model && <Row to="population" glyph="compass" label={i.t('room.pop.title')} tint="#e8890b" />}
+                      {profile.model && (
+                        <Row
+                          to="population"
+                          glyph="compass"
+                          label={i.t('room.pop.title')}
+                          tint="#e8890b"
+                          chip={!isPlus(app) ? <span className="pf-row-plus" aria-hidden="true">+</span> : null}
+                        />
+                      )}
                     </div>
                   )}
 
                   <div className="pf-group">
+                    {onPlus && (
+                      <button className="pf-row" onClick={onPlus}>
+                        <span className="pf-row-ic pf-row-ic-plus">
+                          <PlusMark size={18} strokeWidth={2} />
+                        </span>
+                        <span className="pf-row-label"><PlusWord /></span>
+                        <span className="pf-row-meta">{i.t(isPlus(app) ? 'plus.row.active' : 'plus.row.free')}</span>
+                        <span className="pf-row-chev"><Chevron /></span>
+                      </button>
+                    )}
                     {onBank && (
                       <button className="pf-row" onClick={onBank}>
                         <span className="pf-row-ic" style={{ background: 'color-mix(in srgb, var(--ink) 9%, var(--surface))', color: 'var(--ink)' }}>
@@ -397,7 +424,15 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
               )}
 
               {panel === 'population' && profile && (
-                <div className="pf-panel pf-pop"><Population profile={profile} embedded /></div>
+                <div className="pf-panel pf-pop">
+                  {isPlus(app) ? (
+                    <Population profile={profile} embedded />
+                  ) : (
+                    <PlusLock label={i.t('plus.lock.map')} onPlus={onPlus}>
+                      <Population profile={profile} embedded />
+                    </PlusLock>
+                  )}
+                </div>
               )}
 
               {panel === 'progress' && (

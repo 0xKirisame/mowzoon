@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARCHETYPE_META, TYPE_TINTS } from './data';
 import { Glyph, LiquidMark, LiquidOrb, NumberFlow, screen, item, gel } from './ui';
-import { DROPS } from './game';
+import { DROPS, QUESTS, questProgress } from './game';
+import { isPlus, EXTRA_QUESTS } from './plus';
+import { PlusChip } from './PlusSheet';
 import { getInsights } from './api';
 import { todayISO, streakOf } from './store';
 import { useI18n } from './i18n';
@@ -26,7 +28,72 @@ const subDueToday = (s, now) => {
   return Number(s.dueDay) === now.getDate();
 };
 
-export default function Home({ profile, app, setApp, monthTx, level, questProg, onCollect, onLedger, onJourney, onAhead, onProfile }) {
+const QUEST_GLYPHS = { mindful: 'calendar', treat: 'cup', buffer: 'shield', setaside: 'peak' };
+const questTextOf = (i, key, kind, target) =>
+  i.t(`quest.${key}`, { t: kind === 'money' ? i.fmtMoney(target) : i.fmtNum(target) });
+
+// One quest with its live progress track. Module-level so re-renders
+// don't remount it and restart the track's width animation.
+function QuestRow({ i, q, prog, tint, onCollect }) {
+  const done = prog && prog.value >= prog.target;
+  const label = prog
+    ? i.t(`quest.progress.${prog.kind === 'days' ? 'days' : prog.kind === 'money' ? 'money' : 'count'}`, {
+        v: prog.kind === 'money' ? i.fmtMoney(prog.value) : i.fmtNum(prog.value),
+        t: prog.kind === 'money' ? i.fmtMoney(prog.target) : i.fmtNum(prog.target),
+      })
+    : '';
+  return (
+    <div className="quest-row">
+      <span className="quest-ic" style={{ background: `color-mix(in srgb, ${tint} 14%, var(--surface))`, color: tint }}>
+        <Glyph id={QUEST_GLYPHS[q.key] || 'spark'} size={19} strokeWidth={2} />
+      </span>
+      <div className="quest-body">
+        <p className="quest-text">{questTextOf(i, q.key, prog?.kind, prog?.target ?? 0)}</p>
+        <div className="quest-track">
+          <motion.i
+            initial={false}
+            animate={{ width: `${Math.round((prog?.pct ?? 0) * 100)}%` }}
+            transition={{ type: 'spring', stiffness: 200, damping: 26 }}
+            style={{ background: tint }}
+          />
+        </div>
+        <p className="quest-sub">{done ? i.t('quest.done') : label}</p>
+      </div>
+      {done && (
+        <motion.button
+          className="quest-collect"
+          onClick={onCollect}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileTap={{ scale: 0.94 }}
+          transition={gel}
+        >
+          {i.t('quest.collect', { n: i.fmtNum(DROPS.quest) })}
+        </motion.button>
+      )}
+    </div>
+  );
+}
+
+// A quest the free plan can see but not run - the whole row heads to the
+// Mowzoon+ sheet.
+function LockedQuestRow({ i, spec, onPlus }) {
+  return (
+    <button className="quest-row quest-locked" onClick={onPlus}>
+      <span className="quest-ic">
+        <Glyph id="lock" size={17} strokeWidth={2} />
+      </span>
+      <div className="quest-body">
+        <p className="quest-text">{questTextOf(i, spec.key, spec.kind, spec.target)}</p>
+        <div className="quest-track"><i style={{ width: 0 }} /></div>
+        <p className="quest-sub">{i.t('plus.quest.locked')}</p>
+      </div>
+      <PlusChip />
+    </button>
+  );
+}
+
+export default function Home({ profile, app, setApp, monthTx, level, questProg, onCollect, onCollectExtra, onLedger, onJourney, onAhead, onProfile, onPlus }) {
   const i = useI18n();
   const id = profile ? (profile.model?.id ?? profile.archetype.id) : null;
   const today = todayISO();
@@ -145,19 +212,10 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
   });
 
   const quest = app.game?.quest;
-  const QUEST_GLYPHS = { mindful: 'calendar', treat: 'cup', buffer: 'shield', setaside: 'peak' };
-  const questText = quest
-    ? i.t(`quest.${quest.key}`, {
-        t: questProg?.kind === 'money' ? i.fmtMoney(questProg.target) : i.fmtNum(questProg?.target ?? 0),
-      })
-    : '';
-  const questLabel = questProg
-    ? i.t(`quest.progress.${questProg.kind === 'days' ? 'days' : questProg.kind === 'money' ? 'money' : 'count'}`, {
-        v: questProg.kind === 'money' ? i.fmtMoney(questProg.value) : i.fmtNum(questProg.value),
-        t: questProg.kind === 'money' ? i.fmtMoney(questProg.target) : i.fmtNum(questProg.target),
-      })
-    : '';
-  const questDone = questProg && questProg.value >= questProg.target;
+  // Mowzoon+ runs all three quests; the free plan sees the other two locked
+  const plusOn = isPlus(app);
+  const extraQuests = plusOn ? app.game?.extraQuests || [] : [];
+  const lockedSpecs = !plusOn && id != null ? (EXTRA_QUESTS[id] ?? []).map((k) => QUESTS[k]) : [];
 
   // The engine's suggested focus (display-only): a themed card under the
   // weekly quest. Text is localized from the tied insight's signal when we
@@ -309,42 +367,32 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
             )}
           </AnimatePresence>
 
-          {/* weekly quest, measured from the ledger */}
+          {/* weekly quests, measured from the ledger. One on the free plan
+              (the other two show locked); all three on Mowzoon+. */}
           {quest && questProg && (
             <motion.div className="glass panel quest-panel" variants={item}>
               <div className="panel-h">
-                <p className="panel-title" style={{ margin: 0 }}>{i.t('quest.title')}</p>
+                <p className="panel-title" style={{ margin: 0 }}>
+                  {i.t(extraQuests.length || lockedSpecs.length ? 'quest.titles' : 'quest.title')}
+                </p>
                 <span className="quest-bounty">{i.t('toast.drops', { n: i.fmtNum(DROPS.quest) })}</span>
               </div>
-              <div className="quest-row">
-                <span className="quest-ic" style={{ background: `color-mix(in srgb, ${ARCHETYPE_META[id].tint} 14%, var(--surface))`, color: ARCHETYPE_META[id].tint }}>
-                  <Glyph id={QUEST_GLYPHS[quest.key] || 'spark'} size={19} strokeWidth={2} />
-                </span>
-                <div className="quest-body">
-                  <p className="quest-text">{questText}</p>
-                  <div className="quest-track">
-                    <motion.i
-                      initial={false}
-                      animate={{ width: `${Math.round(questProg.pct * 100)}%` }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 26 }}
-                      style={{ background: ARCHETYPE_META[id].tint }}
-                    />
-                  </div>
-                  <p className="quest-sub">{questDone ? i.t('quest.done') : questLabel}</p>
-                </div>
-                {questDone && (
-                  <motion.button
-                    className="quest-collect"
-                    onClick={onCollect}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileTap={{ scale: 0.94 }}
-                    transition={gel}
-                  >
-                    {i.t('quest.collect', { n: i.fmtNum(DROPS.quest) })}
-                  </motion.button>
-                )}
-              </div>
+              <QuestRow i={i} q={quest} prog={questProg} tint={ARCHETYPE_META[id].tint} onCollect={onCollect} />
+              {extraQuests.map((q, k) =>
+                q ? (
+                  <QuestRow
+                    key={`x${k}-${q.key}`}
+                    i={i}
+                    q={q}
+                    prog={questProgress(app, q)}
+                    tint={ARCHETYPE_META[q.aid]?.tint ?? ARCHETYPE_META[id].tint}
+                    onCollect={() => onCollectExtra(k)}
+                  />
+                ) : null,
+              )}
+              {lockedSpecs.map((spec) => (
+                <LockedQuestRow key={spec.key} i={i} spec={spec} onPlus={onPlus} />
+              ))}
             </motion.div>
           )}
 

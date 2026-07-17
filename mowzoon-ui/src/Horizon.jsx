@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TYPE_TINTS } from './data';
 import { Glyph, screen, item, spring } from './ui';
+import { isPlus, aheadCount, aheadFull, LIMITS } from './plus';
+import { PlusChip } from './PlusSheet';
 import { getInsights } from './api';
 import { todayISO } from './store';
 import { useI18n } from './i18n';
@@ -24,75 +26,169 @@ function subDaysUntil(sub) {
   return daysUntil(isoOf(dt));
 }
 
-// Timeline strip: upcoming items as dots sized by cost, today at the left
-// edge. Decorative (aria-hidden); the list below carries the details.
+function useMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+}
+
+// Timeline strip: glass orbs on an HTML rail (from refactor/ahead-page).
+// Same-day items group into one orb with a count badge; hover or
+// press-and-hold an orb and it swells while a tooltip lists the details.
 function TimelineViz({ items, i }) {
-  const W = 600;
-  const H = 72;
-  const PX = 18;
-  const BASE = 40;
-  const horizon = Math.max(60, Math.min(Math.max(...items.map((x) => x.days)) + 12, 130));
-  const maxAmt = Math.max(...items.map((x) => x.amount || 0), 1);
-  const x = (d) => PX + (Math.min(d, horizon) / horizon) * (W - PX * 2);
-  const r = (a) => (a ? 5 + Math.sqrt(a / maxAmt) * 5.5 : 5);
-  const ticks = [30, 60, 90, 120].filter((t) => t <= horizon - 8);
+  const [active, setActive] = useState(null); // hovered or held group key
+  const [held, setHeld] = useState(null);     // pressed - deeper swell + sheen
+  const isMobile = useMobile();
+
+  // Dynamic horizon: 14 days on phones, 30 on desktop, shrinking to the
+  // latest event (min 7 for visual balance). Farther items pin to the edge.
+  const MAX_HORIZON = isMobile ? 14 : 30;
+  const latestDays = items.length > 0 ? Math.max(...items.map((it) => it.days)) : 0;
+  const HORIZON = Math.max(7, Math.min(latestDays, MAX_HORIZON));
+
+  // group items that land on the same spot (clamped to HORIZON)
+  const groups = useMemo(() => {
+    const res = [];
+    items.forEach((it) => {
+      const d = Math.min(it.days, HORIZON);
+      let g = res.find((x) => x.days === d);
+      if (!g) {
+        g = { days: d, items: [], key: 'g' + d };
+        res.push(g);
+      }
+      g.items.push(it);
+    });
+    return res;
+  }, [items, HORIZON]);
+
+  const ticks = useMemo(() => {
+    if (HORIZON <= 7) return Array.from({ length: HORIZON + 1 }, (_, idx) => idx);
+    if (HORIZON <= 14) return [0, 3, 7, 10, HORIZON];
+    const res = [];
+    for (let j = 0; j < HORIZON; j += 5) res.push(j);
+    res.push(HORIZON);
+    return res;
+  }, [HORIZON]);
+
   return (
-    <div className="tl-viz" dir="ltr" aria-hidden="true">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <line className="tlv-axis" x1={PX} y1={BASE} x2={W - PX} y2={BASE} />
-        <line className="tlv-today" x1={PX} y1={BASE - 14} x2={PX} y2={BASE + 8} />
-        <text className="tlv-lab tlv-now" x={PX} y={BASE + 24}>{i.fmtDays(0)}</text>
+    <div className="tlv" dir="ltr">
+      {/* remount the rail when items change so the pulse animations sync */}
+      <div className="tlv-rail glass-lite" key={items.length}>
+        <div className="tlv-today-mark" />
+
         {ticks.map((t) => (
-          <g key={t}>
-            <line className="tlv-tick" x1={x(t)} y1={BASE - 4} x2={x(t)} y2={BASE + 4} />
-            <text className="tlv-lab" x={x(t)} y={BASE + 24}>{i.fmtNum(t)}</text>
-          </g>
+          <span key={t} className={`tlv-tick-label ${t === 0 ? 'now' : ''}`} style={{ left: `${(t / HORIZON) * 100}%` }}>
+            {t === 0 ? i.fmtDays(0) : i.fmtNum(t)}
+          </span>
         ))}
-        {(() => {
-          // items past the horizon pin at the edge; spread and dim them
-          // so far-off dates don't stack into one blob
-          let pinned = 0;
-          return items.map((it) => {
-            const beyond = it.days > horizon;
-            const cx = beyond ? W - PX - 13 * pinned++ : x(it.days);
-            const rr = r(it.amount);
-            const ring = rr + 4;
-            const C = 2 * Math.PI * ring;
-            return (
-              <g key={it.key} opacity={beyond ? 0.4 : 1}>
-                {it.kind === 'plan' && (
-                  <>
-                    <circle className="tlv-ring-track" cx={cx} cy={BASE} r={ring} />
-                    <circle
-                      className="tlv-ring"
-                      cx={cx}
-                      cy={BASE}
-                      r={ring}
-                      style={{ stroke: it.tint }}
-                      strokeDasharray={`${(it.funding || 0) * C} ${C}`}
-                      transform={`rotate(-90 ${cx} ${BASE})`}
-                    />
-                  </>
-                )}
-                <circle className={`tlv-dot ${it.days <= 7 ? 'near' : ''}`} cx={cx} cy={BASE} r={rr} style={{ fill: it.tint }} />
-              </g>
-            );
-          });
-        })()}
-      </svg>
+
+        {groups.map((g, idx) => {
+          const pct = (g.days / HORIZON) * 100;
+          const isActive = active === g.key;
+          const beyond = g.days >= HORIZON && latestDays > HORIZON;
+          return (
+            <div
+              key={g.key}
+              className={`tlv-orb glass-lite${isActive ? ' active' : ''}${held === g.key ? ' held' : ''}${beyond ? '' : ' near'}`}
+              style={{
+                left: `${pct}%`,
+                '--orb-color': g.items[0].tint,
+                opacity: beyond ? 0.6 : 1,
+                zIndex: isActive ? 50 : groups.length - idx,
+                animationDelay: `${idx * 0.3}s`,
+              }}
+              role="img"
+              aria-label={g.items.map((x) => `${x.name} · ${i.fmtDays(x.days)}`).join(', ')}
+              onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActive(g.key); }}
+              onPointerLeave={() => {
+                setActive((a) => (a === g.key ? null : a));
+                setHeld((h) => (h === g.key ? null : h));
+              }}
+              onPointerDown={(e) => {
+                setActive(g.key);
+                setHeld(g.key);
+                // capture can throw for already-released pointers; never let it
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {
+                  /* press continues uncaptured */
+                }
+              }}
+              onPointerUp={(e) => {
+                setHeld(null);
+                // touch has no hover to fall back on - release closes the tip
+                if (e.pointerType !== 'mouse') setActive(null);
+              }}
+              onPointerCancel={() => {
+                setHeld(null);
+                setActive(null);
+              }}
+            >
+              {/* funding ring for plans; full ring when items overlap */}
+              <svg className="tlv-orb-ring" viewBox="0 0 64 64">
+                {(() => {
+                  const it = g.items[0];
+                  const c = 2 * Math.PI * 16;
+                  const count = g.items.length;
+                  if (it.kind !== 'plan' && count <= 1) return null;
+                  return (
+                    <g>
+                      <circle cx="32" cy="32" r="16" fill="none" stroke="var(--fill-2)" strokeWidth="2.5" />
+                      <circle
+                        cx="32" cy="32" r="16"
+                        fill="none" stroke={it.tint} strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeDasharray={it.kind === 'plan' ? `${(it.funding || 0) * c} ${c}` : `${c} ${c}`}
+                        transform="rotate(-90 32 32)"
+                      />
+                    </g>
+                  );
+                })()}
+              </svg>
+
+              <span className="tlv-orb-dot" style={{ background: g.items[0].tint }} />
+
+              {g.items.length > 1 && (
+                <div className="tlv-orb-badge glass-lite">{i.fmtNum(g.items.length)}</div>
+              )}
+
+              {isActive && (
+                <div className={`tlv-tip glass ${pct < 20 ? 'align-left' : pct > 80 ? 'align-right' : ''}`}>
+                  {g.items.map((it, k) => (
+                    <div key={it.key} className={`tlv-tip-row${k < g.items.length - 1 ? ' sep' : ''}`}>
+                      <span className="tlv-tip-dot" style={{ background: it.tint }} />
+                      <strong>{it.name}</strong>
+                      <span>{i.fmtDays(it.days)}</span>
+                      {it.amount != null && <span>{i.fmtMoney(it.amount)}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 // Ahead: spike forecast, tracked subscriptions, and plans merged into
 // one dated timeline. Set-aside is derived from logged savings.
-export default function Horizon({ profile, app, setApp }) {
+export default function Horizon({ profile, app, setApp, onPlus }) {
   const i = useI18n();
   const id = profile ? (profile.model?.id ?? profile.archetype.id) : null;
   const [data, setData] = useState(() => (app.nudge?.spikes ? { spikes: app.nudge.spikes } : null));
   const [adding, setAdding] = useState(null); // 'plan' | 'sub' | null
   const blankForm = { name: '', amount: '', date: '', due: '', cycle: 'monthly' };
   const [f, setF] = useState(blankForm);
+
+  // Mowzoon+ gate: the free plan tracks LIMITS.aheadItems in total
+  const tracked = aheadCount(app);
+  const full = aheadFull(app);
 
   useEffect(() => {
     if (id == null) return undefined;
@@ -145,12 +241,20 @@ export default function Horizon({ profile, app, setApp }) {
   const planHint = f.amount && f.date ? i.fmtMoney(weeklyFor(Math.round(Number(f.amount)), f.date)) : null;
 
   const savePlan = () => {
+    if (aheadFull(app)) {
+      onPlus();
+      return;
+    }
     const target = Math.round(Number(f.amount));
     if (!f.name.trim() || !target || !f.date) return;
     setApp((s) => ({ ...s, plans: [...(s.plans || []), { id: 'p' + s.nextId, name: f.name.trim(), target, date: f.date, icon: 'peak', setAside: { weekly: weeklyFor(target, f.date), startedISO: todayISO() } }], nextId: s.nextId + 1 }));
     setAdding(null); setF(blankForm);
   };
   const saveSub = () => {
+    if (aheadFull(app)) {
+      onPlus();
+      return;
+    }
     const amt = Math.round(Number(f.amount));
     if (!f.name.trim() || !amt) return;
     setApp((s) => ({ ...s, subs: [...(s.subs || []), { id: 'm' + s.nextId, name: f.name.trim(), amount: amt, cycle: f.cycle, dueDay: Number(f.due) || 1, state: 'keep', source: 'manual', icon: 'calendar', tracked: true }], nextId: s.nextId + 1 }));
@@ -210,26 +314,31 @@ export default function Horizon({ profile, app, setApp }) {
         <AnimatePresence mode="wait" initial={false}>
           {adding === null ? (
             <motion.div key="choose" className="add-rows" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
-              <button className="add-row" onClick={() => { setF(blankForm); setAdding('plan'); }}>
-                <span className="add-row-ic" style={{ background: 'color-mix(in srgb, #0fa38f 13%, var(--surface))', color: '#0fa38f' }}>
-                  <Glyph id="peak" size={18} strokeWidth={2} />
+              <button className={`add-row${full ? ' add-row-locked' : ''}`} onClick={() => { if (full) { onPlus(); return; } setF(blankForm); setAdding('plan'); }}>
+                <span className="add-row-ic" style={full ? undefined : { background: 'color-mix(in srgb, #0fa38f 13%, var(--surface))', color: '#0fa38f' }}>
+                  <Glyph id={full ? 'lock' : 'peak'} size={18} strokeWidth={2} />
                 </span>
                 <span className="add-row-meta">
                   <b>{i.t('ahead.addplan')}</b>
-                  <em>{i.t('ahead.addplan.cap')}</em>
+                  <em>{i.t(full ? 'plus.ahead.full' : 'ahead.addplan.cap')}</em>
                 </span>
-                <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                {full ? <PlusChip /> : <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>}
               </button>
-              <button className="add-row" onClick={() => { setF(blankForm); setAdding('sub'); }}>
-                <span className="add-row-ic" style={{ background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 13%, var(--surface))`, color: TYPE_TINTS.fixed }}>
-                  <Glyph id="calendar" size={18} strokeWidth={2} />
+              <button className={`add-row${full ? ' add-row-locked' : ''}`} onClick={() => { if (full) { onPlus(); return; } setF(blankForm); setAdding('sub'); }}>
+                <span className="add-row-ic" style={full ? undefined : { background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 13%, var(--surface))`, color: TYPE_TINTS.fixed }}>
+                  <Glyph id={full ? 'lock' : 'calendar'} size={18} strokeWidth={2} />
                 </span>
                 <span className="add-row-meta">
                   <b>{i.t('ahead.addsub')}</b>
-                  <em>{i.t('ahead.addsub.cap')}</em>
+                  <em>{i.t(full ? 'plus.ahead.full' : 'ahead.addsub.cap')}</em>
                 </span>
-                <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                {full ? <PlusChip /> : <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>}
               </button>
+              {!isPlus(app) && (
+                <p className="ahead-cap-note">
+                  {i.t('plus.ahead.count', { n: i.fmtNum(Math.min(tracked, LIMITS.aheadItems)), t: i.fmtNum(LIMITS.aheadItems) })}
+                </p>
+              )}
             </motion.div>
           ) : adding === 'plan' ? (
             <motion.div key="plan" className="add-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={spring}>
