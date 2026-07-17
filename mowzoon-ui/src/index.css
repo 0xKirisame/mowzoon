@@ -318,7 +318,7 @@ textarea:focus {
 .settings-pop {
   position: fixed;
   top: 76px; /* fallback; real top/left come from the measured anchor */
-  width: 274px;
+  width: 296px;
   border-radius: 22px;
   z-index: 60;
   text-align: start;
@@ -332,7 +332,7 @@ textarea:focus {
   overflow: hidden;
 }
 .settings-pop-scroll {
-  max-height: min(760px, calc(100dvh - 96px));
+  max-height: min(810px, calc(100dvh - 96px));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 20px;
@@ -406,15 +406,11 @@ html.dark .pv img { filter: brightness(0.5) saturate(1.15); }
 }
 
 /* the Clear/Tinted dial */
+/* chromeless row: the glass capsule itself is the material now */
 .lg-pill {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.64));
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: 999px;
-  padding: 6px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 5px rgba(24, 30, 48, 0.08);
 }
 .lg-end {
   flex: none;
@@ -428,31 +424,59 @@ html.dark .pv img { filter: brightness(0.5) saturate(1.15); }
   transition: background 0.2s ease;
 }
 .lg-end:hover { background: rgba(99, 99, 102, 0.92); }
-.lg-range {
-  -webkit-appearance: none;
-  appearance: none;
+/* Liquid slider (LiquidSlider in ui.jsx): thin track + lozenge grabber.
+   At rest the grabber is a solid white pill; held, it grows into a clear
+   glass lens and the track/fill magnify and bend through it. */
+.lsl {
+  position: relative;
   flex: 1;
-  height: 6px;
+  height: 44px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--tint) var(--p, 50%), rgba(120, 120, 128, 0.2) var(--p, 50%));
   cursor: pointer;
+  touch-action: none;
+  outline-offset: 3px;
 }
-.lg-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+.lsl-track {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 12px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(120, 120, 128, 0.24);
+  overflow: hidden;
+}
+.lsl-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: 999px;
+  background: var(--tint);
+}
+.lsl-thumb {
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 30px;
+  transform: translate(-50%, -50%);
+  border-radius: 15px;
   background: #fff;
-  box-shadow: 0 1px 5px rgba(24, 30, 48, 0.32), 0 0 0 0.5px rgba(24, 30, 48, 0.08);
+  box-shadow: 0 2px 8px rgba(24, 30, 48, 0.35), 0 0 0 0.5px rgba(24, 30, 48, 0.06);
+  transition:
+    width 0.18s ease,
+    height 0.18s ease,
+    border-radius 0.18s ease,
+    background 0.18s ease;
 }
-.lg-range::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #fff;
-  border: 0;
-  box-shadow: 0 1px 5px rgba(24, 30, 48, 0.32);
+/* held: the grabber becomes the lens - near-clear so the refraction carries it */
+.lsl-thumb.held {
+  width: 58px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 6px 18px rgba(24, 30, 48, 0.22);
 }
+html.dark .lsl-thumb.held { background: rgba(255, 255, 255, 0.05); }
 .lg-cap {
   font-size: 12px;
   font-weight: 500;
@@ -461,13 +485,51 @@ html.dark .pv img { filter: brightness(0.5) saturate(1.15); }
   margin-top: 12px;
 }
 
-/* Near Clear, the backdrop gets displaced (lensing). Browsers that
-   can't resolve url() here drop the declaration and keep the plain
-   blur. Large surfaces only; feDisplacement per element is expensive. */
-.lensing .glass,
-.lensing .nav {
-  backdrop-filter: url(#mz-liquid) blur(var(--gb)) saturate(var(--gs));
-  border-color: rgba(255, 255, 255, 0.85);
+/* Refraction now lives in liquid.js: surfaces tagged [data-liquid] get a
+   per-geometry displacement filter (kube.io liquid-glass pipeline). The
+   specular pass is this ring - a gradient drawn only on a 1px rim via
+   mask-composite, bright toward the fixed top-left light, with a faint
+   counter-shine opposite. Applied to the same nav-layer surfaces. */
+/* zero-specificity default: any real positioning on the element (absolute
+   thumbs, fixed popovers) must win over this fallback */
+:where(.lg-spec) { position: relative; }
+.lg-spec::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.2px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0.28) 24%,
+    rgba(255, 255, 255, 0.05) 46%,
+    rgba(255, 255, 255, 0.02) 58%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 3;
+}
+html.dark .lg-spec::after {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.42),
+    rgba(255, 255, 255, 0.12) 24%,
+    rgba(255, 255, 255, 0.03) 46%,
+    rgba(255, 255, 255, 0.01) 58%,
+    rgba(255, 255, 255, 0.16) 100%
+  );
+}
+
+/* Engine-aware control materials: .lg-on is added by liquid.js only when a
+   surface actually lenses, so non-Chromium keeps the solid fallback look. */
+.fight-btn.lg-on {
+  background: color-mix(in srgb, var(--ft, var(--tint)) 84%, transparent);
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--ft, var(--tint)) 55%, transparent);
 }
 
 /* Buttons */
@@ -1432,7 +1494,7 @@ html.dark .pv img { filter: brightness(0.5) saturate(1.15); }
 .lform-amt input::-webkit-outer-spin-button,
 .lform-amt input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-/* Grid, not flex-wrap: when the row is tight the four types break 2×2,
+/* Grid, not flex-wrap: when the row is tight the four types break 2x2,
    never 3-and-an-orphan. */
 .tchips { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
 .tchip {
@@ -1512,18 +1574,40 @@ html.dark .pv img { filter: brightness(0.5) saturate(1.15); }
 
 /* Settings: data section */
 .pop-title-gap { margin-top: 18px; }
-.data-actions { display: grid; gap: 8px; }
-.data-btn {
-  min-height: 40px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 4px rgba(24, 30, 48, 0.05);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink);
+
+/* Grouped inset cards (iOS settings idiom): opaque fills over the glass
+   shell, hairline-separated cells, tinted icon chips. */
+.set-group {
+  border-radius: var(--r-lg);
+  background: var(--fill-3);
+  border: 1px solid var(--separator);
+  overflow: hidden;
 }
-.data-btn.danger { color: var(--neg); }
+.set-cell { padding: 12px; }
+.set-cell + .set-cell,
+.set-group .set-row + .set-row,
+.set-cell + .set-row { border-top: 1px solid var(--separator); }
+.set-cap {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  margin-bottom: 10px;
+}
+.set-ic {
+  width: 26px; height: 26px; border-radius: 8px; flex: none;
+  display: grid; place-items: center;
+  color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 12%, var(--surface));
+}
+.set-row {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 10px 12px; text-align: start;
+  font-size: 13.5px; font-weight: 600; color: var(--ink);
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.set-row:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.set-row.danger { color: var(--neg); }
+.set-row.danger .set-ic { color: var(--neg); background: color-mix(in srgb, var(--neg) 10%, var(--surface)); }
+.set-row.armed { background: color-mix(in srgb, var(--neg) 9%, transparent); }
 
 /* Responsive */
 
@@ -1640,20 +1724,10 @@ html.dark .seg-thumb {
     0 3px 8px rgba(0, 0, 0, 0.34),
     0 1px 1px rgba(0, 0, 0, 0.2);
 }
-html.dark .lg-pill {
-  background: linear-gradient(150deg, rgba(62, 62, 70, 0.85), rgba(46, 46, 54, 0.7));
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 1px 5px rgba(0, 0, 0, 0.3);
-}
 html.dark .nudge {
   background: color-mix(in srgb, var(--tint) 14%, rgba(40, 40, 48, 0.85));
   border-color: rgba(255, 255, 255, 0.09);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), var(--shadow-sm);
-}
-html.dark .data-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 html.dark .pop-plot svg {
   background: rgba(255, 255, 255, 0.05);
@@ -1675,11 +1749,6 @@ html[dir='rtl'] .settings-pop { transform-origin: top left; }
 /* "Back" points the other way when reading right-to-left */
 html[dir='rtl'] .back-btn svg { transform: scaleX(-1); }
 
-/* RTL flips the range input, but the fill gradient is physical, so
-   fill it from the right too or the tint trails from the wrong end. */
-html[dir='rtl'] .lg-range {
-  background: linear-gradient(to left, var(--tint) var(--p, 50%), rgba(120, 120, 128, 0.2) var(--p, 50%));
-}
 
 /* keep money and scores LTR so signs and symbols stay in place */
 html[dir='rtl'] .amt,
@@ -1843,9 +1912,12 @@ html.dark .src-pill { background: color-mix(in srgb, var(--tint) 22%, transparen
 
 /* The arena clears the stage: the rail's track collapses while the island
    itself glides off the edge. Width is pinned so it keeps its shape on the
-   way out instead of squishing. */
+   way out instead of squishing. Scoped to widths where the rail exists -
+   unscoped, this 3-class rule beats the phone shell's single column. */
 .app.macos { transition: grid-template-columns 0.5s cubic-bezier(0.32, 0.72, 0.22, 1); }
-.app.macos.rail-away { grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 0px; }
+@media (min-width: 1081px) {
+  .app.macos.rail-away { grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 0px; }
+}
 .rail { transition: transform 0.5s cubic-bezier(0.32, 0.72, 0.22, 1), opacity 0.32s ease; }
 .app.macos.rail-away .rail {
   width: var(--rail-w);
@@ -1992,6 +2064,69 @@ html.dark .tab-pill { background: color-mix(in srgb, var(--tint) 24%, transparen
 /* Settings row inside the profile sheet mirrors the tab bar's visibility. */
 .pf-row-phone { display: none; }
 
+/* Phone-only return breadcrumb to the host bank app: the iOS status-bar
+   "back to previous app" idiom - top-inline-start, so it mirrors under RTL
+   and never collides with the per-view chips that live on the trailing side. */
+.bank-crumb {
+  display: none;
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  inset-inline-start: 16px;
+  z-index: 44;
+  align-items: center;
+  gap: 5px;
+  padding-block: 6px;
+  padding-inline: 9px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  overflow: hidden;
+  /* alinma bronze: warm glass with a top gloss, so the pill reads as the
+     bank's own material rather than a dead grey chip */
+  color: #6b4526;
+  background: linear-gradient(
+    150deg,
+    rgba(235, 211, 185, calc(var(--ga) + 0.42)),
+    rgba(199, 160, 119, calc(var(--ga) + 0.26))
+  );
+  -webkit-backdrop-filter: blur(calc(var(--gb) * 0.6)) saturate(var(--gs));
+  backdrop-filter: blur(calc(var(--gb) * 0.6)) saturate(var(--gs));
+  border: 1px solid rgba(255, 238, 216, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 247, 234, 0.95),
+    inset 0 -7px 12px -8px rgba(122, 78, 40, 0.5),
+    0 6px 18px -6px rgba(122, 78, 40, 0.42);
+  -webkit-tap-highlight-color: transparent;
+}
+/* gloss streak across the crown */
+.bank-crumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 10%, rgba(255, 255, 255, 0.5) 26%, transparent 44%);
+  pointer-events: none;
+}
+.bank-crumb:active { color: #4d3018; }
+html.dark .bank-crumb {
+  color: #ecc99c;
+  background: linear-gradient(
+    150deg,
+    rgba(96, 66, 40, calc(var(--ga) + 0.42)),
+    rgba(58, 40, 26, calc(var(--ga) + 0.3))
+  );
+  border-color: rgba(255, 214, 170, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 224, 184, 0.32),
+    inset 0 -7px 12px -8px rgba(0, 0, 0, 0.5),
+    0 6px 18px -6px rgba(0, 0, 0, 0.5);
+}
+html.dark .bank-crumb::after {
+  background: linear-gradient(115deg, transparent 10%, rgba(255, 236, 208, 0.2) 26%, transparent 44%);
+}
+html.dark .bank-crumb:active { color: #ffe3bd; }
+html[dir='rtl'] .bank-crumb > svg:first-child { transform: scaleX(-1); }
+
 /* Shell responsive */
 @media (max-width: 1080px) {
   .app.macos { grid-template-columns: var(--sidebar-w) minmax(0, 1fr); }
@@ -2003,6 +2138,7 @@ html.dark .tab-pill { background: color-mix(in srgb, var(--tint) 24%, transparen
   .app.macos { grid-template-columns: minmax(0, 1fr); padding: 0; gap: 0; }
   .sidebar { display: none; }
   .tabbar { display: flex; }
+  .bank-crumb { display: inline-flex; }
   .pf-row-phone { display: flex; }
   .content { grid-column: 1; }
   .content-inner {
@@ -2676,7 +2812,21 @@ html.dark .af-save { background: #fff; color: #111; }
 
 /* Onboarding (full-bleed, outside the app shell) */
 .app.macos.ob-app { display: block; grid-template-columns: none; padding: 0; gap: 0; min-height: 100dvh; }
-.ob { position: relative; z-index: 1; min-height: 100dvh; display: grid; place-items: center; padding: 40px 24px; overflow-y: auto; }
+/* The onboarding shell is the scroll container (the app frame above it is
+   overflow:hidden). Steps center via auto margins, not place-items: center -
+   grid centering clips the top of an overflowing step with no way to reach
+   it, while auto margins degrade to top-aligned + scrollable. */
+.ob {
+  position: relative;
+  z-index: 1;
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px;
+}
+.ob > .ob-inner, .ob > .ob-cal { margin-block: auto; }
 .ob-inner { width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px; }
 .ob-title[tabindex], .ob-q[tabindex], .ob-arch-name[tabindex], .ob-arch-kick[tabindex] { outline: none; }
 .ob-back { position: fixed; inset-block-start: 22px; inset-inline-start: 24px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2); background: var(--fill-3); z-index: 3; }
@@ -2734,8 +2884,13 @@ html[dir='rtl'] .ob-back svg { transform: scaleX(-1); }
   border: 1px solid color-mix(in srgb, var(--tint) 26%, transparent);
 }
 
-/* Which spikes are yours. */
+/* Which spikes are yours. Two-up on taller-than-phone screens so the
+   calendar step (spikes + your own plans) fits without scrolling. */
 .ob-spikes { display: grid; gap: 9px; width: min(420px, 100%); }
+@media (min-width: 560px) {
+  .ob-spikes { width: min(520px, 100%); grid-template-columns: 1fr 1fr; }
+  .ob-spikes .ob-spike { font-size: 14px; padding: 11px 13px; }
+}
 .ob-spike {
   display: flex; align-items: center; gap: 12px;
   padding: 13px 16px; border-radius: var(--r-md);
@@ -2855,10 +3010,16 @@ html.dark .arena {
 .stat-meter { height: 6px; border-radius: 4px; background: var(--fill-1); overflow: hidden; }
 .stat-meter b { display: block; height: 100%; border-radius: 4px; background: var(--ft, var(--tint)); }
 .stat-val { font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; min-width: 34px; text-align: end; }
-.stage-items-cap { display: flex; align-items: baseline; justify-content: space-between; margin-top: 6px; }
+.stage-items-cap { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
 .stage-items-cap span { font-size: 10.5px; font-weight: 750; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
-.stage-edit { font-size: 12px; font-weight: 650; color: var(--ft, var(--tint)); }
-.stage-edit:hover { opacity: 0.75; }
+.stage-edit {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 700; color: var(--ft, var(--tint));
+  padding: 4px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--ft, var(--tint)) 11%, transparent);
+  transition: background 0.15s ease;
+}
+.stage-edit:hover { background: color-mix(in srgb, var(--ft, var(--tint)) 19%, transparent); }
 .stage-items { display: flex; flex-wrap: wrap; gap: 6px; }
 .stage-item {
   display: inline-flex; align-items: center; gap: 6px;
@@ -2889,9 +3050,34 @@ html.dark .arena {
 .stage-btn:hover { color: var(--ft, var(--tint)); }
 
 @media (max-width: 860px) {
-  .stage { grid-template-columns: 1fr; grid-template-areas: 'id' 'hero' 'actions' 'stats'; gap: 14px; }
-  .stage-hero { min-height: 192px; }
+  .stage { grid-template-columns: 1fr; grid-template-areas: 'id' 'hero' 'actions' 'stats'; gap: 16px; }
+  .stage-hero { min-height: 176px; }
+  /* thumb row: FIGHT full width, the three prep actions side by side below */
+  .stage-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .fight-btn { grid-column: 1 / -1; padding: 15px 20px; font-size: 16px; }
+  .stage-btn { flex-direction: column; gap: 5px; padding: 11px 4px 10px; font-size: 12px; }
 }
+
+/* header chips: how-it-works + rank */
+.arena-head-btns { display: flex; align-items: center; gap: 8px; flex: none; }
+.arena-help-chip { padding: 8px 10px; color: var(--ink-2); }
+.arena-help-chip:hover { color: var(--tint); }
+
+/* how-it-works sheet */
+.arena-how { display: grid; padding-top: 2px; }
+.how-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+.how-row + .how-row { border-top: 1px solid var(--separator); }
+.how-glyph {
+  flex: none; width: 44px; height: 44px; margin-top: 1px;
+  display: grid; place-items: center;
+  border-radius: 14px;
+  color: var(--ft, var(--tint));
+  background: color-mix(in srgb, var(--ft, var(--tint)) 10%, var(--fill-3));
+}
+.how-txt { display: grid; gap: 3px; }
+.how-txt b { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
+.how-txt small { font-size: 12.5px; line-height: 1.5; color: var(--ink-3); }
+.how-go { margin-top: 12px; justify-self: stretch; }
 
 /* loadout */
 .loadout { display: grid; gap: 14px; }
@@ -2978,7 +3164,7 @@ html.dark .arena {
 /* sprites: the body takes the character's color; dark/soft/deep tones
    derive from it. Props (banknote, coin, briefcase, sweat) keep the fixed
    colors from the hand-drawn Figma set. Part groups (rc-arm, sq-tail,
-   pc-f…) are puppeted by the keyframes below. */
+   pc-f...) are puppeted by the keyframes below. */
 .arch-sprite {
   display: block;
   --spt: var(--sp-tint, var(--tint));
@@ -3030,8 +3216,8 @@ html.dark .arena {
 .arch-sprite .rc-arm { transform-origin: 85% 25%; }
 .arch-sprite .sq-tail { transform-origin: 15% 95%; }
 .arch-sprite .sq-hold { transform-origin: 50% 50%; }
-/* each feather pivots at its inner tip (fill-box %, robust to the scale
-   wrapper the Figma artwork sits in) */
+/* each feather pivots at its inner tip (fill-box %, so the scale
+   wrapper the Figma artwork sits in doesn't move the pivot) */
 .arch-sprite .pc-f { transform-box: fill-box; }
 .arch-sprite .pc-f1 { transform-origin: 92% 78%; }
 .arch-sprite .pc-f2 { transform-origin: 86% 92%; }
@@ -3053,7 +3239,7 @@ html.dark .arena {
   85% { transform: translateY(0); }
 }
 
-/* ---- raccoon: lively and bouncy — a springy breath at rest, real hops
+/* ---- raccoon: lively and bouncy - a springy breath at rest, real hops
    saved for the bored special so the energy reads eager, not frantic.
    Squash-and-stretch follows the weight: compress, rebound past neutral,
    settle. */
@@ -3074,7 +3260,7 @@ html.dark .arena {
   40%, 80% { transform: rotate(6deg); }
 }
 /* the special: anticipate, hop (ease-out up, ease-in down), land with a
-   squash, one smaller echo hop, settle — then the banknote fan takes over */
+   squash, one smaller echo hop, settle - then the banknote fan takes over */
 @keyframes rc-hopset {
   0%, 100% { transform: translateY(0) scale(1, 1); }
   8% { transform: translateY(0) scale(1.07, 0.9); }
@@ -3087,7 +3273,7 @@ html.dark .arena {
 .anim-idle2.spx-raccoon .sp-puppet { animation: rc-hopset 1.5s cubic-bezier(0.34, 0.9, 0.4, 1) infinite; }
 .anim-idle2.spx-raccoon .rc-arm { animation: rc-fan 1.5s ease-in-out infinite; }
 .anim-idle2.spx-raccoon .rc-tail { animation: spr-wag 0.75s ease-in-out infinite; }
-/* wind-up: crouched, arm cocked, tail buzzing — the wheel decides.
+/* wind-up: crouched, arm cocked, tail buzzing - the wheel decides.
    The crouch is a static pose the settle transition eases into; the
    tremble loop starts on a delay from that exact pose, so no snap. */
 @keyframes rc-windup {
@@ -3128,7 +3314,7 @@ html.dark .arena {
 .anim-cheer.spx-raccoon .rc-t2 { animation: rc-ballpop 0.6s ease-in-out 0.08s infinite; }
 .anim-cheer.spx-raccoon .rc-t3 { animation: rc-ballpop 0.6s ease-in-out 0.16s infinite; }
 
-/* ---- squirrel: anxious — quick shallow breaths, a tail that flicks in
+/* ---- squirrel: anxious - quick shallow breaths, a tail that flicks in
    nervous bursts, forever clutching the coin. Sweats even when winning. */
 @keyframes sq-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.01, 0.982); } }
 /* translate distances here are in the squirrel's Figma space (~7.5 units/px) */
@@ -3157,7 +3343,7 @@ html.dark .arena {
 .anim-idle2.spx-squirrel .sp-puppet { animation: sq-shiver 0.34s linear infinite; }
 .anim-idle2.spx-squirrel .sq-sweat { animation: sq-sweatfall 1.4s ease-in infinite; }
 .anim-idle2.spx-squirrel .sq-hold { animation: sq-clutch 1.4s ease-in-out infinite; }
-/* wind-up: coin pulled close, trembling — bracing for the wheel */
+/* wind-up: coin pulled close, trembling - bracing for the wheel */
 .anim-windup.spx-squirrel .sp-puppet { animation: sq-shiver 0.3s linear infinite; }
 .anim-windup.spx-squirrel .sq-hold { transform: translateY(16px) scale(0.93); }
 /* the strike: one desperate coin thrust */
@@ -3178,7 +3364,7 @@ html.dark .arena {
 .anim-cheer.spx-squirrel .sq-tail { animation: sq-flick 1.6s ease-in-out infinite; }
 .anim-cheer.spx-squirrel .sq-sweat { animation: sq-sweatfall 2.2s ease-in infinite; }
 
-/* ---- peacock: serene — everything slow and gliding; the fan breathes,
+/* ---- peacock: serene - everything slow and gliding; the fan breathes,
    the head sways like it has nowhere to be. Flourishes when bored. */
 @keyframes pc-breatheL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-3deg); } }
 @keyframes pc-breatheR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(3deg); } }
@@ -3195,7 +3381,7 @@ html.dark .arena {
 .anim-idle2.spx-peacock .pc-f2, .anim-idle2.spx-peacock .pc-f4 { animation-delay: 0.2s; }
 .anim-idle2.spx-peacock .sp-puppet { animation: spr-bob 2.6s ease-in-out infinite; }
 .anim-idle2.spx-peacock .pc-head { animation: pc-sway 2.6s ease-in-out infinite; }
-/* wind-up: head reared back, fan drawn in a touch — poised */
+/* wind-up: head reared back, fan drawn in a touch - poised */
 .anim-windup.spx-peacock .pc-head { transform: rotate(7deg); }
 .anim-windup.spx-peacock .pc-f1, .anim-windup.spx-peacock .pc-f2 { transform: rotate(3deg); }
 .anim-windup.spx-peacock .pc-f4, .anim-windup.spx-peacock .pc-f5 { transform: rotate(-3deg); }
@@ -3220,7 +3406,7 @@ html.dark .arena {
 .anim-cheer.spx-peacock .pc-f4, .anim-cheer.spx-peacock .pc-f5 { animation: pc-cheerR 2.2s ease-in-out infinite; }
 .anim-cheer.spx-peacock .pc-head { animation: pc-proud 2.2s ease-in-out infinite; }
 
-/* ---- camel: deadpan — slow chew, the occasional unimpressed blink, a
+/* ---- camel: deadpan - slow chew, the occasional unimpressed blink, a
    long sigh when bored. Victory earns you one (1) nod. */
 /* translate distances in the camel's Figma space (~14.2 units/px) */
 @keyframes cm-chew { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1.8deg) translateY(8px); } }
@@ -3245,7 +3431,7 @@ html.dark .arena {
 .anim-idle2.spx-camel .sp-puppet { animation: cm-sigh 2.4s ease-in-out infinite; }
 .anim-idle2.spx-camel .cm-head { animation: cm-shake 2.4s ease-in-out infinite; }
 .anim-idle2.spx-camel .cm-eyes { animation: cm-blink 2.4s linear infinite; }
-/* wind-up: head cocked back, chewing stops — the calm before */
+/* wind-up: head cocked back, chewing stops - the calm before */
 .anim-windup.spx-camel .cm-head { transform: rotate(8deg); }
 /* the strike: one heavy headbutt, bag jolts from the momentum */
 @keyframes cm-strike {
@@ -3270,7 +3456,7 @@ html.dark .arena {
 .anim-cheer.spx-camel .cm-bag { animation: spr-sway 2.6s ease-in-out infinite; }
 .anim-cheer.spx-camel .sp-puppet { animation: spr-bob 2.6s ease-in-out infinite; }
 
-/* the two fighters must not bob in lockstep — offset the player's idle
+/* the two fighters must not bob in lockstep - offset the player's idle
    phase (scoped to the idle loops so wind-up/strike keep their timing) */
 .me-sprite .anim-idle .sp-puppet,
 .me-sprite .anim-idle2 .sp-puppet { animation-delay: -0.9s; }
@@ -3457,7 +3643,16 @@ html.dark .field::before {
 .result-rank.bad { color: var(--neg); background: color-mix(in srgb, var(--neg) 9%, transparent); }
 .battle-card-btns { display: flex; gap: 10px; margin-top: 6px; }
 
-.pass-setup { max-width: 400px; }
+.pass-setup {
+  max-width: 440px;
+  max-height: min(86dvh, 760px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* inside the narrow card the chips read best as a single list */
+.pass-setup .loadout { width: 100%; text-align: start; }
+.pass-setup .loadout-row { grid-template-columns: 1fr; }
+.pass-fair { font-size: 12px; line-height: 1.5; color: var(--ink-3); }
 .pass-name {
   width: 100%;
   border: 1.5px solid var(--separator);
@@ -3568,8 +3763,13 @@ html.dark .arena-scrim { background: rgba(0, 0, 0, 0.45); }
   .foe-sprite svg { width: 94px; height: 94px; }
   .me-sprite svg { width: 106px; height: 106px; }
   .info-box { width: min(200px, 52%); padding: 9px 11px; }
-  .console { grid-template-columns: auto 1fr; }
-  .console-actions { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
+  .console { grid-template-columns: auto minmax(0, 1fr); gap: 12px 14px; padding: 14px; }
+  /* the legend stacks under the wheel so its long labels don't squeeze the log */
+  .console .wheel-legend { flex-direction: column; gap: 3px; align-self: start; }
+  .console-msg { min-height: 84px; }
+  .console-actions { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
+  .console-actions .btn-attack, .console-actions .btn-ability { padding: 12px 14px; }
+  .btn-ability small { max-width: none; }
 }
 
 /* ===================== Arena: friends & leaderboard ==================== */
@@ -3689,3 +3889,71 @@ html.dark .ar-add-btn { color: #111; }
 @media (max-width: 560px) {
   .panel-h:has(.ar-lb-seg) { flex-direction: column; align-items: stretch; gap: 10px; }
 }
+
+/* Onboarding: the alinma bridge + where-to-start fork */
+
+.ob-marks { display: flex; align-items: center; gap: 14px; }
+.ob-mark-chip {
+  width: 62px; height: 62px; display: grid; place-items: center;
+  border-radius: 20px; color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 11%, var(--paper));
+  border: 1px solid color-mix(in srgb, var(--tint) 20%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+.ob-mark-alinma { color: var(--ink); background: var(--fill-3); border-color: var(--separator); }
+.ob-mark-link { color: var(--ink-3); display: grid; place-items: center; }
+
+.ob-eco { display: grid; gap: 10px; width: min(440px, 100%); }
+.ob-eco-row {
+  display: flex; align-items: flex-start; gap: 13px; text-align: start;
+  padding: 14px 16px; border-radius: var(--r-md); background: var(--fill-3);
+}
+.ob-eco-ic {
+  width: 34px; height: 34px; flex: none; display: grid; place-items: center;
+  border-radius: 11px; color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 13%, var(--surface));
+}
+.ob-eco-meta b { display: block; font-size: 14.5px; font-weight: 650; color: var(--ink); }
+.ob-eco-meta em { font-style: normal; font-size: 12.5px; line-height: 1.45; color: var(--ink-3); display: block; margin-top: 2px; }
+
+.ob-startcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(480px, 100%); }
+@media (max-width: 480px) { .ob-startcards { grid-template-columns: 1fr; } }
+.ob-startcard {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 24px 16px 20px; border-radius: var(--r-lg); text-align: center;
+  background: var(--fill-3); border: 1.5px solid var(--separator);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.ob-startcard:hover { border-color: color-mix(in srgb, var(--tint) 45%, transparent); box-shadow: var(--shadow-sm); }
+.ob-start-ic {
+  width: 58px; height: 58px; display: grid; place-items: center; margin-bottom: 6px;
+  border-radius: 18px; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--separator);
+}
+.ob-startcard b { font-size: 16px; font-weight: 700; color: var(--ink); }
+.ob-startcard em { font-style: normal; font-size: 12.5px; line-height: 1.45; color: var(--ink-3); max-width: 24ch; }
+.ob-start-note { font-size: 12px; color: var(--ink-4); }
+
+/* calendar step: add your own plans/subscriptions (reuses the Ahead forms) */
+.ob-ahead { width: min(420px, 100%); display: grid; gap: 8px; text-align: start; }
+@media (min-width: 560px) {
+  .ob-ahead { width: min(520px, 100%); }
+  .ob-ahead .add-rows { grid-template-columns: 1fr 1fr; }
+}
+.ob-ahead .ob-lbl { margin-bottom: 2px; }
+.ob-added { display: grid; gap: 6px; }
+.ob-added-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--r-md);
+  background: var(--fill-3); border: 1px solid var(--separator);
+}
+.ob-added-ic { width: 28px; height: 28px; border-radius: 9px; flex: none; display: grid; place-items: center; }
+.ob-added-meta { flex: 1; min-width: 0; display: grid; gap: 0; }
+.ob-added-meta b { font-size: 13.5px; font-weight: 650; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ob-added-meta em { font-style: normal; font-size: 11.5px; color: var(--ink-3); }
+.ob-added-x {
+  flex: none; width: 26px; height: 26px; border-radius: 8px;
+  display: grid; place-items: center;
+  color: var(--ink-3); font-size: 17px; line-height: 1;
+}
+.ob-added-x:hover { color: var(--ink); background: var(--fill-2); }

@@ -1,4 +1,4 @@
-// Arena battle engine. Pure functions, no React — the ghost, pass-and-play
+// Arena battle engine. Pure functions, no React - the ghost, pass-and-play
 // and simulation paths all drive this same state machine. Outcomes are pure
 // luck (Pokémon-style): the wheel lands on a uniformly random angle and the
 // arc sizes are the probabilities. Copy for abilities/effects lives in i18n.
@@ -95,7 +95,7 @@ export function initBattle(charA, charB, mode = 'ghost', first = 'A') {
 }
 
 // wheel geometry for one side's attack, folding in affinity and modifiers.
-// Arc order around the circle: miss → crit → hit (crit borders miss).
+// Arc order around the circle: miss -> crit -> hit (crit borders miss).
 export function arcsFor(state, side) {
   const me = state.fighters[side];
   const them = state.fighters[other(side)];
@@ -284,7 +284,7 @@ export function ghostDecide(state, side, rng = Math.random) {
   return { kind: 'attack' };
 }
 
-// full auto-battle, used for balance checks from the console — not by the UI
+// full auto-battle, used for balance checks from the console - not by the UI
 export function simulate(charA, charB, rng = Math.random) {
   let s = initBattle(charA, charB, 'ghost');
   let guardRail = 0;

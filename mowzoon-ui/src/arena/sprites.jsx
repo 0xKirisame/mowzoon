@@ -1,32 +1,25 @@
-// Arena fighter puppets, one per archetype — hand-drawn in Figma and
-// transplanted here verbatim (the shapes keep their original editor
-// coordinates inside a per-animal scale wrapper, so they stay easy to
-// round-trip back into Figma):
-//   0 Impulse Spender → triangle raccoon   1 Anxious Planner → drop squirrel
-//   2 Blind Investor  → oval peacock       3 Survivalist     → rectangle camel
-//
-// Every character is split into named part groups (tail, face, arm, fan,
-// head, bag…) so CSS keyframes in index.css can puppet them: `anim` picks
-// idle / idle2 (the bored special) / attack. Colors are driven by the
-// user's accent: sp-main is the tint, sp-dark/sp-soft/sp-deep derive from
-// it in CSS; props (banknote, coin, briefcase, sweat) keep fixed colors.
-//
-// NOTE for keyframe authors: translate distances in the per-animal
-// keyframes are in the FIGMA coordinate space (they sit inside the scale
-// wrapper), so 1 on-screen px ≈ 7.5–14 units depending on the animal.
-//
-// The camel is drawn in side profile facing LEFT (the enemy pose); the
-// front-facing three just mirror for the player's back view.
+// Arena fighter puppets, one per archetype - hand-drawn in Figma and
+// transplanted verbatim (shapes keep their editor coordinates inside a
+// per-animal scale wrapper, so they round-trip back into Figma):
+//   0 Impulse Spender -> triangle raccoon   1 Anxious Planner -> drop squirrel
+//   2 Blind Investor  -> oval peacock       3 Survivalist     -> rectangle camel
+// Characters are split into named part groups (tail, face, arm, fan...) so
+// the keyframes in index.css can puppet them; `anim` picks idle / idle2 /
+// attack. sp-main is the user's accent, sp-dark/soft/deep derive in CSS,
+// props (banknote, coin, briefcase, sweat) keep fixed colors.
+// NOTE for keyframes: translate distances are in FIGMA units (inside the
+// scale wrapper), so 1 on-screen px ~ 7.5-14 units depending on the animal.
+// The camel faces LEFT (enemy pose); the other three mirror for the player.
 
 import { useEffect, useRef, useState } from 'react';
 
 const ANIMAL_SLUG = { 0: 'raccoon', 1: 'squirrel', 2: 'peacock', 3: 'camel' };
 
-// CSS can't blend between two keyframe animations — switching classes snaps
+// CSS can't blend between two keyframe animations - switching classes snaps
 // to the new cycle's first frame. So state changes pass through a short
 // neutral beat: drop the old animation (the rig's transform transitions
 // glide every part home), then start the new cycle, which always begins at
-// neutral. 'strike' skips the beat — it's timed to the damage and its first
+// neutral. 'strike' skips the beat - it's timed to the damage and its first
 // frame IS the wind-up pose it interrupts.
 const BLEND_MS = 320;
 
@@ -268,7 +261,7 @@ function Camel() {
 const ANIMALS = { 0: Raccoon, 1: Squirrel, 2: Peacock, 3: Camel };
 
 // view 'front' = the enemy pose; view 'back' = mirrored, facing the foe.
-// anim: null | 'idle' | 'idle2' | 'attack' — CSS keyframes in index.css.
+// anim: null | 'idle' | 'idle2' | 'attack' - CSS keyframes in index.css.
 export function ArchSprite({ archetype, view = 'front', tint, size = 120, anim = null }) {
   const Animal = ANIMALS[archetype] || Raccoon;
   const slug = ANIMAL_SLUG[archetype] || 'raccoon';

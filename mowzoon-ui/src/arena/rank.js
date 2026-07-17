@@ -1,10 +1,10 @@
-// Rank Score — the leaderboard ladder. Separate from `drops` (which already
+// Rank Score - the leaderboard ladder. Separate from `drops` (which already
 // accumulates healthy behaviour and powers levels). This is the competitive
 // layer: an uncapped points ladder driven by gameplay, where financial health
 // is a live MULTIPLIER on gains and losses.
 //
-//   healthy habits  → gains up to x1.5, losses softened
-//   unhealthy habits → gains shrunk,     losses amplified
+//   healthy habits  -> gains up to x1.5, losses softened
+//   unhealthy habits -> gains shrunk,     losses amplified
 //
 // Ghost battles are ranked; pass-&-play is casual and leaves rank untouched.
 // Farming weak bots doesn't pay: oppFactor shrinks gains against opponents
@@ -12,20 +12,20 @@
 
 export const BASE_WIN = 25;
 export const BASE_LOSS = 20;
-export const HEALTH_SPREAD = 0.5; // multiplier range 0.5x…1.5x
+export const HEALTH_SPREAD = 0.5; // multiplier range 0.5x...1.5x
 export const LEVEL_STEP = 0.15;   // opponent-strength sensitivity
 export const HEALTH_MULT_CLAMP = [0.5, 1.5];
 export const OPP_FACTOR_CLAMP = [0.3, 1.8];
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-// Mean of the three live metrics (0..100) → the standing of a healthy player.
+// Mean of the three live metrics (0..100) -> the standing of a healthy player.
 export function healthOf(metrics) {
   if (!metrics) return 50; // neutral if we have no read yet
   return (metrics.efficiency + metrics.resilience + metrics.eq) / 3;
 }
 
-// health 0..100 → multiplier centred on 1.0 at average (50).
+// health 0..100 -> multiplier centred on 1.0 at average (50).
 export function healthMult(health) {
   return clamp(1 + ((health - 50) / 50) * HEALTH_SPREAD, HEALTH_MULT_CLAMP[0], HEALTH_MULT_CLAMP[1]);
 }

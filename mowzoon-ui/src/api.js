@@ -13,7 +13,7 @@ async function get(path, timeout = 3500) {
   }
 }
 
-// { id, name, description, probs[4], percentiles{efficiency,resilience,eq}, population }
+// { id, name, description, probs[4], point, cohort_percentiles{efficiency,resilience,eq}, cohort_size, population }
 export async function classify(metrics) {
   try {
     const res = await fetch(`${BASE}/classify`, {

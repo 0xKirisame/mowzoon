@@ -2,12 +2,15 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { determineArchetype, calculateLedgerMetrics } from './scoring';
 import { ARCHETYPE_META, DEFAULT_TINT, METRIC_LABELS } from './data';
-import { Seg, Glyph, LogoMark, LiquidMark, LiquidOrb, Meter, spring } from './ui';
+import { Seg, Glyph, LogoMark, LiquidMark, LiquidOrb, LiquidSlider, Meter, spring } from './ui';
 import { classify, getPopulation, getEngineInsights } from './api';
 import { DROPS, levelOf, issueQuest, questProgress, newlyEarned } from './game';
 import { useAppState, thisMonthTx, todayISO, monthKey, sampleMonth, streakOf } from './store';
 import { I18nProvider, i18nFor, useI18n, nudgeAr } from './i18n';
+import { initLiquid, setLiquidLevel } from './liquid';
 import Onboarding from './Onboarding';
+import Bank from './bank/Bank';
+import { AlinmaMark } from './bank/inma';
 import Home from './Home';
 import Ledger from './Ledger';
 import Horizon from './Horizon';
@@ -24,11 +27,25 @@ function GlassSettings({ t, setT, onClose, onLoadSample, onReset, hasDemo, onCle
   const barRef = useRef(null);
   const thumbRef = useRef(null);
   useOverlayScrollbar(barRef, thumbRef, scrollRef);
+  // reset erases the whole app - the row arms on the first tap, fires on the second
+  const [armed, setArmed] = useState(false);
+  const armTimer = useRef(null);
+  useEffect(() => () => clearTimeout(armTimer.current), []);
+  const onResetTap = () => {
+    if (armed) {
+      onReset();
+      return;
+    }
+    setArmed(true);
+    clearTimeout(armTimer.current);
+    armTimer.current = setTimeout(() => setArmed(false), 3200);
+  };
   return (
     <>
       <div className="pop-backdrop" onClick={onClose} />
       <motion.div
-        className="glass settings-pop"
+        className="glass settings-pop lg-spec"
+        data-liquid
         style={anchor ?? undefined}
         initial={{ opacity: 0, y: -8, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -44,10 +61,10 @@ function GlassSettings({ t, setT, onClose, onLoadSample, onReset, hasDemo, onCle
         <div className="pv">
           <img src={previewImg} alt="" />
           <div className="pv-ui">
-            <span className="glass pv-btn">
+            <span className="glass pv-btn lg-spec" data-liquid>
               <Glyph id="sliders" size={15} strokeWidth={2} />
             </span>
-            <span className="glass pv-search">
+            <span className="glass pv-search lg-spec" data-liquid>
               <Glyph id="search" size={15} strokeWidth={2} />
               {i.t('settings.search')}
             </span>
@@ -58,17 +75,7 @@ function GlassSettings({ t, setT, onClose, onLoadSample, onReset, hasDemo, onCle
           <button className="lg-end" aria-label="Clear" onClick={() => setT(0)}>
             <Glyph id="layers" size={15} strokeWidth={2} />
           </button>
-          <input
-            className="lg-range"
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={t}
-            aria-label="Glass appearance"
-            style={{ '--p': `${t * 100}%` }}
-            onChange={(e) => setT(Number(e.target.value))}
-          />
+          <LiquidSlider value={t} onChange={setT} step={0.05} label="Glass appearance" />
           <button className="lg-end" aria-label="Tinted" onClick={() => setT(1)}>
             <Glyph id="layersFill" size={15} strokeWidth={2} />
           </button>
@@ -76,38 +83,61 @@ function GlassSettings({ t, setT, onClose, onLoadSample, onReset, hasDemo, onCle
 
         <p className="lg-cap">{i.t('settings.glass.cap')}</p>
 
-        <p className="pop-title pop-title-gap">{i.t('settings.appearance')}</p>
-        <Seg
-          options={[
-            { id: 'auto', label: i.t('settings.auto') },
-            { id: 'light', label: i.t('settings.light') },
-            { id: 'dark', label: i.t('settings.dark') },
-          ]}
-          value={theme}
-          onChange={setTheme}
-        />
-
-        <p className="pop-title pop-title-gap">{i.t('settings.language')}</p>
-        <Seg
-          options={[
-            { id: 'en', label: 'English' },
-            { id: 'ar', label: 'العربية' },
-          ]}
-          value={lang}
-          onChange={setLang}
-        />
+        <div className="set-group pop-title-gap">
+          <div className="set-cell">
+            <span className="set-cap">
+              <span className="set-ic"><Glyph id="moon" size={15} strokeWidth={2} /></span>
+              {i.t('settings.appearance')}
+            </span>
+            <Seg
+              options={[
+                { id: 'auto', label: i.t('settings.auto') },
+                { id: 'light', label: i.t('settings.light') },
+                { id: 'dark', label: i.t('settings.dark') },
+              ]}
+              value={theme}
+              onChange={setTheme}
+            />
+          </div>
+          <div className="set-cell">
+            <span className="set-cap">
+              <span className="set-ic"><Glyph id="globe" size={15} strokeWidth={2} /></span>
+              {i.t('settings.language')}
+            </span>
+            <Seg
+              options={[
+                { id: 'en', label: 'English' },
+                { id: 'ar', label: 'العربية' },
+              ]}
+              value={lang}
+              onChange={setLang}
+            />
+          </div>
+        </div>
 
         <p className="pop-title pop-title-gap">{i.t('settings.data')}</p>
-        <div className="data-actions">
+        <div className="set-group">
           {hasDemo ? (
-            <button className="data-btn" onClick={onClearDemo}>{i.t('settings.removeSample')}</button>
+            <button className="set-row" onClick={onClearDemo}>
+              <span className="set-ic"><Glyph id="calendar" size={15} strokeWidth={2} /></span>
+              {i.t('settings.removeSample')}
+            </button>
           ) : (
-            <button className="data-btn" onClick={onLoadSample}>{i.t('settings.loadSample')}</button>
+            <button className="set-row" onClick={onLoadSample}>
+              <span className="set-ic"><Glyph id="calendar" size={15} strokeWidth={2} /></span>
+              {i.t('settings.loadSample')}
+            </button>
           )}
           {hiddenSpikes > 0 && (
-            <button className="data-btn" onClick={onRestoreSpikes}>{i.t('settings.restoreSpikes', { n: i.fmtNum(hiddenSpikes) })}</button>
+            <button className="set-row" onClick={onRestoreSpikes}>
+              <span className="set-ic"><Glyph id="redo" size={15} strokeWidth={2} /></span>
+              {i.t('settings.restoreSpikes', { n: i.fmtNum(hiddenSpikes) })}
+            </button>
           )}
-          <button className="data-btn danger" onClick={onReset}>{i.t('settings.reset')}</button>
+          <button className={`set-row danger${armed ? ' armed' : ''}`} onClick={onResetTap}>
+            <span className="set-ic"><Glyph id="trash" size={15} strokeWidth={2} /></span>
+            {i.t(armed ? 'settings.reset.confirm' : 'settings.reset')}
+          </button>
         </div>
         <p className="lg-cap">{i.t('settings.data.cap')}</p>
         </div>
@@ -139,7 +169,8 @@ function WelcomeCoach({ app, profile, lvl, onClose }) {
   return (
     <motion.div className="sheet-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <motion.div
-        className="wc-card"
+        className="wc-card lg-spec"
+        data-liquid
         role="dialog"
         aria-modal="true"
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -186,10 +217,14 @@ function WelcomeCoach({ app, profile, lvl, onClose }) {
 }
 
 function Toast({ t, onDone }) {
+  // onDone is a fresh closure each App render; hold it in a ref so
+  // unrelated re-renders don't restart the 4.6s clock
+  const done = useRef(onDone);
+  done.current = onDone;
   useEffect(() => {
-    const id = setTimeout(onDone, 4600);
+    const id = setTimeout(() => done.current(), 4600);
     return () => clearTimeout(id);
-  }, [onDone]);
+  }, []);
   return (
     <motion.div
       className="toast"
@@ -240,10 +275,10 @@ function SrcRow({ v, view, setView, glyph, label }) {
   );
 }
 
-function Sidebar({ view, setView, i, app, profile, profileOpen, settingsBtnRef, onSettings, onProfile }) {
+function Sidebar({ view, setView, i, app, profile, profileOpen, settingsBtnRef, onSettings, onProfile, onBank }) {
   const { pname } = avatarOf(app, profile);
   return (
-    <aside className="sidebar">
+    <aside className="sidebar lg-spec" data-liquid>
       <button className="sidebar-brand" onClick={() => setView('home')}>
         <LogoMark size={21} strokeWidth={2} />
         <span>{i.lang === 'ar' ? 'موزون' : 'Mowzoon'}</span>
@@ -262,6 +297,9 @@ function Sidebar({ view, setView, i, app, profile, profileOpen, settingsBtnRef, 
         >
           <AvatarCircle className="avatar-circle" app={app} profile={profile} />
           <span className="avatar-name">{pname}</span>
+        </button>
+        <button className="foot-gear" aria-label={i.t('nav.bank')} title={i.t('nav.bank')} onClick={onBank}>
+          <AlinmaMark size={16} />
         </button>
         <button ref={settingsBtnRef} className="foot-gear" aria-label="Settings" onClick={onSettings}>
           <Glyph id="sliders" size={17} strokeWidth={2} />
@@ -285,7 +323,7 @@ function TabItem({ v, view, setView, glyph, label }) {
 // phone tab bar, shown under 720px
 function TabBar({ view, setView, i, app, profile, profileOpen, onProfile }) {
   return (
-    <nav className="tabbar" aria-label="Primary">
+    <nav className="tabbar lg-spec" aria-label="Primary" data-liquid>
       <TabItem v="home" view={view} setView={setView} glyph="home" label={i.t('nav.home')} />
       <TabItem v="ahead" view={view} setView={setView} glyph="calendar" label={i.t('nav.ahead')} />
       <TabItem v="spending" view={view} setView={setView} glyph="cart" label={i.t('nav.spending')} />
@@ -338,7 +376,7 @@ function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, on
   const live = i.lang === 'ar' ? 'مباشر' : 'live';
   if (!profile) {
     return (
-      <aside className="rail">
+      <aside className="rail lg-spec" data-liquid>
         <div className="rail-head">
           <span className="rail-mk"><LiquidMark size={22} /></span>
           <span className="rail-title">{title}</span>
@@ -377,7 +415,7 @@ function CoachRail({ profile, app, lvl, questProg, onOpenMap, onOpenProgress, on
         ? 'var(--neg)'
         : meta.tint;
   return (
-    <aside className="rail">
+    <aside className="rail lg-spec" data-liquid>
       <div className="rail-head">
         <span className="rail-mk"><LiquidMark size={22} /></span>
         <span className="rail-title">{title}</span>
@@ -483,7 +521,7 @@ export default function App() {
   const [app, setApp] = useAppState();
 
   const hasData = !!(app.survey || app.tx.length);
-  // 'home' | 'ahead' | 'spending' | 'arena' — ?view= deep-links a tab
+  // 'home' | 'ahead' | 'spending' | 'arena' - ?view= deep-links a tab
   const [view, setView] = useState(() => {
     try {
       const v = new URLSearchParams(window.location.search).get('view');
@@ -530,7 +568,7 @@ export default function App() {
   // anchor the popover to the settings button while open; side-aware for RTL
   useLayoutEffect(() => {
     if (!settingsOpen) return undefined;
-    const POPW = 274;
+    const POPW = 296; // must match .settings-pop width
     const MARGIN = 12;
     const place = () => {
       const btn = settingsBtnRef.current;
@@ -543,8 +581,10 @@ export default function App() {
       const rtl = i.dir === 'rtl';
       let left = rtl ? r.right - POPW : r.left;
       left = Math.max(MARGIN, Math.min(left, window.innerWidth - POPW - MARGIN));
-      // open upward from the sidebar footer so the tall popover stays on screen
-      setAnchor({ bottom: Math.round(window.innerHeight - r.top + 8), left: Math.round(left) });
+      // open upward from the sidebar footer so the tall popover stays on
+      // screen; top:auto beats the stylesheet's top fallback, which would
+      // otherwise over-constrain the box on tall viewports
+      setAnchor({ top: 'auto', bottom: Math.round(window.innerHeight - r.top + 8), left: Math.round(left) });
     };
     place();
     window.addEventListener('resize', place);
@@ -557,7 +597,15 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('mz-glass', JSON.stringify({ t: glassT }));
+    // Clear leans on refraction, Tinted mostly on frost. Scale-only update -
+    // no displacement maps are rebuilt (see liquid.js).
+    setLiquidLevel(0.55 + (1 - glassT) * 0.65);
   }, [glassT]);
+
+  // per-surface refraction filters for everything tagged [data-liquid]
+  useEffect(() => {
+    initLiquid();
+  }, []);
 
   // Appearance: auto follows the system setting
   const [sysDark, setSysDark] = useState(
@@ -676,6 +724,20 @@ export default function App() {
     }
   }, [app]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // alinma integration: which shell is on screen. ?app= deep-links a surface
+  // (StrictMode-safe: the update is idempotent).
+  const setSurface = (v) => setApp((s) => (s.surface === v ? s : { ...s, surface: v }));
+  useEffect(() => {
+    try {
+      const a = new URLSearchParams(window.location.search).get('app');
+      if (a === 'bank' || a === 'mz') setSurface(a);
+    } catch { /* ignore */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const openMowzoon = (v) => {
+    if (v) setView(v);
+    setSurface('mz');
+  };
+
   // arriving on a friend's share link (?add=CODE) follows them once, then
   // lands on the arena. Ref-guarded: StrictMode double-fires effects.
   const addedRef = useRef(false);
@@ -699,7 +761,7 @@ export default function App() {
   // Engine read (POST /insights): feeds the rail's insights and the coach's-
   // focus panel on Home. Refetched (debounced) whenever the ledger moves so
   // the read stays live; cached in app.insights. Display-only, so a mid-day
-  // change is harmless — the reward quest above owns its own lifecycle.
+  // change is harmless - the reward quest above owns its own lifecycle.
   const ledgerSig = useMemo(() => {
     let n = 0;
     let sum = 0;
@@ -779,8 +841,9 @@ export default function App() {
 
   // glass material values derived from the Clear/Tinted dial
   const ga = 0.04 + glassT * 0.6;
-  const gb = Math.round(glassT * 40 * 10) / 10;
-  const disp = glassT < 0.35 ? Math.round(((0.35 - glassT) / 0.35) * 70) : 0;
+  // blur stays subtle - the material's body now comes from refraction +
+  // alpha; the old 40px ceiling frosted the lens effect away entirely
+  const gb = Math.round((2 + glassT * 16) * 10) / 10;
 
   useEffect(() => {
     contentRef.current?.scrollTo(0, 0);
@@ -820,7 +883,7 @@ export default function App() {
   };
 
   // finish or skip onboarding
-  const finishOnboarding = ({ name, accent, answers, metrics, income, seed, spikeHidden }) => {
+  const finishOnboarding = ({ name, accent, answers, metrics, income, seed, spikeHidden, plans, subs, start }) => {
     const day = todayISO();
     const mk = monthKey(day);
     const inc = income || app.income;
@@ -828,6 +891,10 @@ export default function App() {
       const seedTx = seed
         ? sampleMonth().map((t, idx) => ({ ...t, desc: i.desc(t.desc), id: s.nextId + idx }))
         : [];
+      // plans/subs picked on the calendar step get real ids here
+      let nid = s.nextId + seedTx.length;
+      const newPlans = (plans || []).map((p) => ({ ...p, id: 'p' + nid++ }));
+      const newSubs = (subs || []).map((x) => ({ ...x, id: 'm' + nid++ }));
       return {
         ...s,
         profile: { ...s.profile, name: (name || '').trim(), accent: accent || s.profile.accent },
@@ -835,9 +902,12 @@ export default function App() {
         income: inc,
         incomeByMonth: { ...s.incomeByMonth, [mk]: inc },
         tx: [...seedTx, ...s.tx],
-        nextId: s.nextId + seedTx.length,
+        plans: [...(s.plans || []), ...newPlans],
+        subs: [...(s.subs || []), ...newSubs],
+        nextId: nid,
         spikeHidden: spikeHidden ?? s.spikeHidden,
         onboarded: true,
+        surface: start === 'bank' ? 'bank' : 'mz',
         // pay the calibration drops promised on the reveal step
         game: metrics ? { ...s.game, drops: s.game.drops + DROPS.calibrate } : s.game,
       };
@@ -848,6 +918,18 @@ export default function App() {
     setApp((s) => ({ ...s, onboarded: true }));
     setView('home');
   };
+
+  // the alinma shell replaces the whole Mowzoon chrome; same store, same
+  // profile, so both apps read one set of numbers
+  if ((app.onboarded || hasData) && !retaking && app.surface === 'bank') {
+    return (
+      <I18nProvider value={app.lang}>
+        <MotionConfig reducedMotion="user">
+          <Bank app={app} setApp={setApp} profile={profile} dark={dark} onOpenMowzoon={openMowzoon} />
+        </MotionConfig>
+      </I18nProvider>
+    );
+  }
 
   // first runs and retakes render the onboarding flow outside the app shell
   if (!(app.onboarded || hasData) || retaking) {
@@ -871,7 +953,7 @@ export default function App() {
     <I18nProvider value={app.lang}>
     <MotionConfig reducedMotion="user">
       <div
-        className={`app macos${disp > 0 ? ' lensing' : ''}${view === 'arena' ? ' rail-away' : ''}`}
+        className={`app macos${view === 'arena' ? ' rail-away' : ''}`}
         style={{
           '--tint': tint,
           '--ga': ga,
@@ -879,14 +961,6 @@ export default function App() {
           '--gs': 1.85,
         }}
       >
-        {/* backdrop displacement filter for the glass lensing effect */}
-        <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
-          <filter id="mz-liquid" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="1" seed="7" result="n" />
-            <feGaussianBlur in="n" stdDeviation="1.6" result="nb" />
-            <feDisplacementMap in="SourceGraphic" in2="nb" scale={disp} xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </svg>
         <Aurora />
 
         {/* toast queue */}
@@ -909,6 +983,7 @@ export default function App() {
           settingsBtnRef={settingsBtnRef}
           onSettings={() => setSettingsOpen((o) => !o)}
           onProfile={() => openProfile()}
+          onBank={() => setSurface('bank')}
         />
 
         {/* Rendered outside the nav: the nav's backdrop-filter is a backdrop
@@ -957,6 +1032,10 @@ export default function App() {
               initialPanel={profilePanel}
               onClose={() => setProfileOpen(false)}
               onRetake={begin}
+              onBank={() => {
+                setProfileOpen(false);
+                setSurface('bank');
+              }}
               onSettings={() => {
                 setProfileOpen(false);
                 setSettingsOpen(true);
@@ -974,6 +1053,17 @@ export default function App() {
           profileOpen={profileOpen}
           onProfile={() => openProfile()}
         />
+
+        {/* phone: iOS-style return breadcrumb to the host bank app - the
+            sidebar's alinma button is hidden there, and digging through the
+            profile sheet made switching back a chore */}
+        <button className="bank-crumb" data-liquid data-liquid-strength="0.6" data-liquid-blur="8" onClick={() => setSurface('bank')} aria-label={i.t('nav.bank')}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+          <AlinmaMark size={13} />
+          <span>{i.t('bank.crumb')}</span>
+        </button>
 
         <main className="content" ref={contentRef}>
           <div className="content-inner">

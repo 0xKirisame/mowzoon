@@ -6,6 +6,7 @@ import { streakOf } from './store';
 import { Glyph, LiquidMark, LiquidOrb, Meter, spring, springSoft } from './ui';
 import { useI18n } from './i18n';
 import Population from './Population';
+import { AlinmaMark } from './bank/inma';
 
 const Chevron = ({ dir = 'right' }) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -52,7 +53,7 @@ function AvatarInner({ p, meta, size }) {
   return <LiquidMark size={Math.round(size * 0.5)} />;
 }
 
-export default function ProfileSheet({ app, setApp, profile, source, onClose, onRetake, onSettings, initialPanel }) {
+export default function ProfileSheet({ app, setApp, profile, source, onClose, onRetake, onSettings, onBank, initialPanel }) {
   const i = useI18n();
   // root | read | scores | standing | population | customize
   const [panel, setPanel] = useState(initialPanel || 'root');
@@ -114,7 +115,8 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="pf-sheet"
+        className="pf-sheet lg-spec"
+        data-liquid
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
@@ -172,6 +174,15 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
                   )}
 
                   <div className="pf-group">
+                    {onBank && (
+                      <button className="pf-row" onClick={onBank}>
+                        <span className="pf-row-ic" style={{ background: 'color-mix(in srgb, var(--ink) 9%, var(--surface))', color: 'var(--ink)' }}>
+                          <AlinmaMark size={15} />
+                        </span>
+                        <span className="pf-row-label">{i.t('nav.bank')}</span>
+                        <span className="pf-row-chev"><Chevron /></span>
+                      </button>
+                    )}
                     <button className="pf-row" onClick={() => { onRetake(); onClose(); }}>
                       <span className="pf-row-ic" style={{ background: 'color-mix(in srgb, var(--tint) 15%, var(--surface))', color: 'var(--tint)' }}>
                         <Glyph id="redo" size={17} strokeWidth={2} />
@@ -306,7 +317,7 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
                   runway: { label: t('Savings coverage', 'تغطية المدخرات'), val: (s) => months(s.value), cap: t('How long your savings would cover your spending. A healthy range is 3 to 6 months.', 'كم تغطي مدخراتك من إنفاقك. النطاق الصحي من ٣ إلى ٦ أشهر.') },
                   lifestyle_share: { label: t('Lifestyle spending', 'إنفاق نمط الحياة'), val: (s) => i.fmtPct(Math.round(s.value * 100)), cap: t('The share of income going to lifestyle and fun.', 'نسبة الدخل التي تذهب للترفيه ونمط الحياة.') },
                   weekend_ratio: { label: t('Weekend spending', 'إنفاق نهاية الأسبوع'), val: (s) => times(s.value), cap: t('Weekend spending against an even split. 1x means weekends match the rest of the week.', 'إنفاق نهاية الأسبوع مقابل توزيع متساوٍ. ١× يعني أنها كبقية الأسبوع.') },
-                  momentum: { label: t('This week’s pace', 'إيقاع هذا الأسبوع'), val: (s) => times(s.value), cap: t('This week’s spending against your typical week.', 'إنفاق هذا الأسبوع مقابل أسبوعك المعتاد.') },
+                  momentum: { label: t("This week's pace", 'إيقاع هذا الأسبوع'), val: (s) => times(s.value), cap: t("This week's spending against your typical week.", 'إنفاق هذا الأسبوع مقابل أسبوعك المعتاد.') },
                   anomaly: { label: t('Unusual purchases', 'مشتريات غير معتادة'), val: (s) => (s.value > 0 ? i.fmtNum(s.value) : t('None', 'لا شيء')), cap: t('Purchases above your usual range in the last 7 days.', 'مشتريات أعلى من مداك المعتاد في آخر ٧ أيام.') },
                 };
                 return (

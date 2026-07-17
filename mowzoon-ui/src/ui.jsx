@@ -1,6 +1,6 @@
 // Shared motion primitives and small components.
 
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { motion, animate } from 'framer-motion';
 import { useI18n } from './i18n';
 
@@ -240,6 +240,27 @@ const ICON_PATHS = {
       <path d="M9.6 10.4h.01M14.4 10.4h.01" />
     </>
   ),
+  help: (
+    <>
+      <path d="M9.1 9.4a3 3 0 1 1 4.6 2.5c-1 .7-1.7 1.3-1.7 2.6" />
+      <path d="M12 18.2h.01" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="8.6" />
+      <path d="M3.4 12h17.2" />
+      <ellipse cx="12" cy="12" rx="3.9" ry="8.6" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4.5 6.6h15" />
+      <path d="M9.2 6.6V5a1.3 1.3 0 0 1 1.3-1.3h3A1.3 1.3 0 0 1 14.8 5v1.6" />
+      <path d="M6.4 6.6l.8 12.2a1.6 1.6 0 0 0 1.6 1.5h6.4a1.6 1.6 0 0 0 1.6-1.5l.8-12.2" />
+      <path d="M10.1 10.6v5.6M13.9 10.6v5.6" />
+    </>
+  ),
 };
 
 export function Glyph({ id, size = 26, strokeWidth = 1.9 }) {
@@ -268,6 +289,9 @@ export function NumberFlow({ value, duration = 0.9, delay = 0, from, format }) {
   const ref = useRef(null);
   const prev = useRef(from ?? value);
   const initial = useRef(from ?? value);
+  // a language flip makes React reconcile the text node back to the mount
+  // value; keying the effect on lang re-writes the real one right after
+  const lang = useI18n()?.lang;
   useEffect(() => {
     const node = ref.current;
     const start = prev.current;
@@ -284,7 +308,7 @@ export function NumberFlow({ value, duration = 0.9, delay = 0, from, format }) {
       onUpdate: (v) => { node.textContent = fmt(Math.round(v)); },
     });
     return () => controls.stop();
-  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [value, lang]); // eslint-disable-line react-hooks/exhaustive-deps
   return <span ref={ref}>{fmt(initial.current)}</span>;
 }
 
@@ -318,6 +342,76 @@ export function Meter({ label, value, delay = 0, caption }) {
   );
 }
 
+// The article's slider: a thin track with a lozenge grabber that is a solid
+// white pill at rest and, while held, grows into a CLEAR glass lens - the
+// track and fill visibly magnify and bend through it ("you can see the
+// current level through the glass, while the sides refract the background").
+// Convex bezel, blur 0. The held state changes the element's real size, so
+// the engine rebuilds the map for the grown lens.
+export function LiquidSlider({ value, onChange, min = 0, max = 1, step = 0.05, label }) {
+  const { dir } = useI18n();
+  const trackRef = useRef(null);
+  const [held, setHeld] = useState(false);
+  const rtl = dir === 'rtl';
+  const pct = ((value - min) / (max - min)) * 100;
+  const fromPointer = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    let f = (clientX - r.left) / r.width;
+    if (rtl) f = 1 - f;
+    onChange(min + Math.min(1, Math.max(0, f)) * (max - min));
+  };
+  const nudge = (e) => {
+    const d =
+      e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1
+      : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1
+      : 0;
+    if (!d) return;
+    e.preventDefault();
+    // horizontal arrows are physical; vertical ones aren't
+    const flip = rtl && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') ? -1 : 1;
+    onChange(Math.min(max, Math.max(min, value + d * flip * step)));
+  };
+  return (
+    <div
+      className="lsl"
+      ref={trackRef}
+      role="slider"
+      tabIndex={0}
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={Math.round(value * 100) / 100}
+      onPointerDown={(e) => {
+        setHeld(true);
+        fromPointer(e.clientX);
+        // capture can throw for already-released pointers; never let it
+        // take the state update down with it
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          /* gesture continues uncaptured */
+        }
+      }}
+      onPointerMove={(e) => e.buttons & 1 && fromPointer(e.clientX)}
+      onPointerUp={() => setHeld(false)}
+      onPointerCancel={() => setHeld(false)}
+      onKeyDown={nudge}
+    >
+      <span className="lsl-track" aria-hidden="true">
+        <span className="lsl-fill" style={{ width: `${pct}%` }} />
+      </span>
+      <span
+        className={`lsl-thumb lg-spec${held ? ' held' : ''}`}
+        data-liquid
+        data-liquid-bezel="16"
+        data-liquid-blur="0"
+        aria-hidden="true"
+        style={{ left: `${rtl ? 100 - pct : pct}%` }}
+      />
+    </div>
+  );
+}
+
 // Segmented control. Equal-width segments with a CSS-sprung thumb, no
 // shared-layout measurement, so it can't mis-track on scroll jumps.
 export function Seg({ options, value, onChange }) {
@@ -328,6 +422,8 @@ export function Seg({ options, value, onChange }) {
   const step = dir === 'rtl' ? -100 : 100;
   return (
     <div className="seg" role="tablist">
+      {/* no lens here: the thumb rides a flat track - there is nothing for
+          refraction to bend, it only made the thumb look washed out */}
       <span
         className="seg-thumb"
         aria-hidden="true"

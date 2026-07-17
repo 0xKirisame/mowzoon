@@ -14,6 +14,7 @@ const EMPTY = {
   lang: 'en',        // 'en' | 'ar'
   theme: 'auto',     // 'auto' | 'light' | 'dark'
   onboarded: false,  // set once onboarding finishes or is skipped
+  surface: 'mz',     // 'mz' | 'bank' - which app shell is on screen (alinma integration)
 
   // newer fields, all optional; old docs merge via {...EMPTY, ...raw}
   profile: {
@@ -32,6 +33,7 @@ const EMPTY = {
   monthNotes: {},    // { [monthKey]: string }
   incomeByMonth: {}, // { [monthKey]: number }
   recurring: null,   // memoized detection { series, scannedAt }
+  insights: null,    // cached engine read { aid, list, quest, day }, see App.jsx
   spikeHidden: [],   // forecast names the user marked "not mine"
 
   // arena battles, see arena/engine.js. Combat state is ephemeral (lives in
@@ -46,6 +48,7 @@ const EMPTY = {
     rankScore: 0,  // ladder standing (see arena/rank.js)
     friends: [],   // followed rivals' handles ['sara-4821', ...]
     friendCards: {}, // cache { [handle]: { name, archetype, level, rankScore, updatedAt } }
+    introSeen: false, // the how-it-works sheet auto-opens until dismissed once
   },
 
   // game layer, see game.js

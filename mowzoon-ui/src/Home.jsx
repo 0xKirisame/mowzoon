@@ -14,8 +14,13 @@ const daysAgoISO = (n) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 const subDueToday = (s, now) => {
-  if (s.cycle === 'yearly' && typeof s.dueDay === 'string') {
-    const [, m, d] = s.dueDay.split('-').map(Number);
+  if (typeof s.dueDay === 'string') {
+    const [y, m, d] = s.dueDay.split('-').map(Number);
+    if (s.cycle === 'weekly') {
+      // weekly subs store their last seen date; due every 7 days from it
+      const days = Math.round((now - new Date(y, m - 1, d)) / 86400000);
+      return days >= 0 && days % 7 === 0;
+    }
     return m === now.getMonth() + 1 && d === now.getDate();
   }
   return Number(s.dueDay) === now.getDate();
@@ -40,7 +45,9 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
     return () => { alive = false; };
   }, [id, cacheValid, today]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const spikes = ((cacheValid ? cache.spikes : cache?.spikes) ?? []).filter(
+  // a stale same-archetype cache still shows (day counts refresh with the
+  // next fetch); a different archetype's forecast doesn't
+  const spikes = ((cache?.archetypeId === id ? cache.spikes : []) ?? []).filter(
     (s) => !(app.spikeHidden || []).includes(s.name),
   );
   const streak = streakOf(app.visits);
@@ -126,12 +133,16 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
       .map((pl) => ({ key: 'plan' + pl.id, glyph: pl.icon || 'peak', name: pl.name, meta: i.t('home.today.now') })),
     ...spikes.filter((s) => s.days <= 7).map((s) => ({ key: 'spike' + s.name, glyph: 'calendar', name: i.spikeName(s.name), meta: i.fmtDays(s.days), near: true })),
   ];
-  const logSub = (sub) => setApp((s) => ({
-    ...s,
-    tx: [{ id: s.nextId, desc: sub.name, amount: sub.amount, type: 'fixed', icon: sub.icon || 'home', date: today, recurringId: sub.id }, ...s.tx],
-    nextId: s.nextId + 1,
-    game: { ...s.game, drops: s.game.drops + DROPS.log },
-  }));
+  const subLoggedToday = (sub) => app.tx.some((t) => t.recurringId === sub.id && t.date === today);
+  const logSub = (sub) => setApp((s) => {
+    if (s.tx.some((t) => t.recurringId === sub.id && t.date === today)) return s;
+    return {
+      ...s,
+      tx: [{ id: s.nextId, desc: sub.name, amount: sub.amount, type: 'fixed', icon: sub.icon || 'home', date: today, recurringId: sub.id }, ...s.tx],
+      nextId: s.nextId + 1,
+      game: { ...s.game, drops: s.game.drops + DROPS.log },
+    };
+  });
 
   const quest = app.game?.quest;
   const QUEST_GLYPHS = { mindful: 'calendar', treat: 'cup', buffer: 'shield', setaside: 'peak' };
@@ -152,7 +163,7 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
   // weekly quest. Text is localized from the tied insight's signal when we
   // have it. A quest without an insight_key is the engine's "fresh start"
   // opportunity (its rationale arrives as raw English), so that card is
-  // rendered from a local key instead — days-to-month-start recomputed here.
+  // rendered from a local key instead - days-to-month-start recomputed here.
   const eng = app.insights && app.insights.aid === id ? app.insights : null;
   const focus = eng?.quest || null;
   const focusInsight = focus ? (eng.list || []).find((x) => x.insight_key === focus.insight_key) : null;
@@ -243,7 +254,7 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                 <span>{i.t('home.saved')}</span>
               </button>
               <button className={`stat glass-lite stat-tap ${left < 0 ? 'neg' : ''}`} onClick={onLedger}>
-                <b>{left < 0 && '−'}<NumberFlow value={Math.abs(left)} duration={0.5} format={i.fmtMoney} /></b>
+                <b>{left < 0 && '-'}<NumberFlow value={Math.abs(left)} duration={0.5} format={i.fmtMoney} /></b>
                 <span>{i.t('home.left')}</span>
               </button>
             </div>
@@ -370,7 +381,7 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                     <span className="ag-icon"><Glyph id={a.glyph} size={17} strokeWidth={2} /></span>
                     <span className="ag-name">{a.name}</span>
                     <span className={`ag-meta ${a.near ? 'near' : ''}`}>{a.meta}</span>
-                    {a.sub && (
+                    {a.sub && !subLoggedToday(a.sub) && (
                       <button className="ag-log" onClick={() => logSub(a.sub)}>{i.t('home.today.log')}</button>
                     )}
                   </div>
@@ -393,7 +404,7 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                       <Glyph id={t.icon} size={14} strokeWidth={2.1} />
                     </span>
                     <span className="rc-name">{t.desc}<em>{dayLabel(t.date)}</em></span>
-                    <span className="rc-amt" style={{ color: TYPE_TINTS[t.type] }}>{t.type === 'savings' ? '+' : '−'}{i.fmtMoney(t.amount)}</span>
+                    <span className="rc-amt" style={{ color: TYPE_TINTS[t.type] }}>{t.type === 'savings' ? '+' : '-'}{i.fmtMoney(t.amount)}</span>
                   </button>
                 ))}
               </div>
@@ -405,7 +416,7 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
             {moved && (
               <motion.button
                 className="cohort-chip"
-                onClick={onProfile}
+                onClick={() => onProfile()}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}

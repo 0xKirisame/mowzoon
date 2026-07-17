@@ -264,7 +264,7 @@ export default function Horizon({ profile, app, setApp }) {
                 </div>
                 <div className="af-col">
                   <label className="lbl">{i.t('ahead.sub.due')}</label>
-                  <input className="af-date" type="number" inputMode="numeric" min="1" max="31" placeholder="1–31" value={f.due} onChange={(e) => setF({ ...f, due: e.target.value })} />
+                  <input className="af-date" type="number" inputMode="numeric" min="1" max="31" placeholder="1-31" value={f.due} onChange={(e) => setF({ ...f, due: e.target.value })} />
                 </div>
               </div>
               <div className="af-actions">

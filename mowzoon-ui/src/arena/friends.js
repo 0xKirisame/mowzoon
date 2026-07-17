@@ -1,5 +1,5 @@
 // Friends: add via a share URL or QR code (both encode the SAME link, so the
-// logic is identical — a QR is just a render of the URL string). A friend is a
+// logic is identical - a QR is just a render of the URL string). A friend is a
 // followed arena handle; one-way follow, no accept flow for the hackathon.
 
 import { getArenaCharacter } from '../api';
@@ -25,6 +25,9 @@ export function parseAddParam(search) {
 // Returns the cached card, or null (unknown handle / server offline).
 export async function addFriend(app, setApp, handle) {
   if (!handle) return null;
+  // the server stores handles lowercased; normalize here so hand-typed
+  // ?add= links can't cache a card the roster refresh never matches
+  handle = handle.toLowerCase();
   const a = app.arena || {};
   if (handle === app.profile?.handle) return null; // don't follow yourself
   if ((a.friends || []).includes(handle)) return a.friendCards?.[handle] ?? null; // already added

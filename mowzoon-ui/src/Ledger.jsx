@@ -189,7 +189,7 @@ export default function Ledger({ app, setApp, monthTx, profile, onLoadSample }) 
       <motion.div className="stats sim-stats" variants={item}>
         <div className="stat glass-lite"><b style={{ color: 'var(--neg)' }}><NumberFlow value={spent} duration={0.5} format={i.fmtMoney} /></b><span>{i.t('home.spent')}</span></div>
         <div className="stat glass-lite"><b style={{ color: 'var(--pos)' }}><NumberFlow value={saved} duration={0.5} format={i.fmtMoney} /></b><span>{i.t('home.saved')}</span></div>
-        <div className={`stat glass-lite ${left < 0 ? 'neg' : ''}`}><b>{left < 0 && '−'}<NumberFlow value={Math.abs(left)} duration={0.5} format={i.fmtMoney} /></b><span>{i.t('home.left')}</span></div>
+        <div className={`stat glass-lite ${left < 0 ? 'neg' : ''}`}><b>{left < 0 && '-'}<NumberFlow value={Math.abs(left)} duration={0.5} format={i.fmtMoney} /></b><span>{i.t('home.left')}</span></div>
       </motion.div>
 
       {/* income breakdown */}
@@ -249,7 +249,12 @@ export default function Ledger({ app, setApp, monthTx, profile, onLoadSample }) 
         <label className="lbl" htmlFor="income">{i.t('ledger.income')}</label>
         <div className="field">
           <span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span>
-          <input id="income" type="number" inputMode="numeric" min="0" value={app.income} onChange={(e) => setApp((s) => ({ ...s, income: Number(e.target.value) }))} />
+          <input id="income" type="number" inputMode="numeric" min="0" value={app.income} onChange={(e) => setApp((s) => {
+            // keep the current month's entry in step, like onboarding does;
+            // Ledger/engine/bank all read incomeByMonth first
+            const inc = Number(e.target.value);
+            return { ...s, income: inc, incomeByMonth: { ...s.incomeByMonth, [monthKey(todayISO())]: inc } };
+          })} />
         </div>
 
         <span className="lbl">{i.t('spend.log')}</span>
@@ -335,7 +340,7 @@ export default function Ledger({ app, setApp, monthTx, profile, onLoadSample }) 
                 <button className="note-btn" aria-label={i.t('spend.note')} onClick={() => setNoteFor(noteFor === t.id ? null : t.id)}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z" /><path d="M13.5 7.5l3 3" /></svg>
                 </button>
-                <span className="amt" style={{ color: TYPE_TINTS[t.type] }}>{t.type === 'savings' ? '+' : '−'}{i.fmtMoney(t.amount)}</span>
+                <span className="amt" style={{ color: TYPE_TINTS[t.type] }}>{t.type === 'savings' ? '+' : '-'}{i.fmtMoney(t.amount)}</span>
                 <button className="x-btn" aria-label={`Remove ${t.desc}`} onClick={() => remove(t.id)}>×</button>
                 {noteFor === t.id && (
                   <input className="note-input" autoFocus defaultValue={t.note || ''} placeholder={i.t('spend.note')}

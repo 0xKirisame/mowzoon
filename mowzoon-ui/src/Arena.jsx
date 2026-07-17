@@ -1,6 +1,6 @@
 // Arena: turn-based archetype battles. Your fighter's stats come from your
 // real financial metrics; outcomes come from the luck wheel (arc sizes are
-// the probabilities). The engine lives in arena/engine.js — this file is UI.
+// the probabilities). The engine lives in arena/engine.js - this file is UI.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
@@ -55,7 +55,7 @@ function QrCard({ url }) {
 /* ---------------------------------- wheel --------------------------------- */
 
 // Stroke-dash donut: three arcs starting at 12 o'clock, clockwise, in the
-// engine's order miss → crit → hit. The pointer div rotates to spin.angle
+// engine's order miss -> crit -> hit. The pointer div rotates to spin.angle
 // (plus full turns), so the pointer always lands exactly where the roll said.
 const SPIN_S = 1.6;
 
@@ -179,12 +179,12 @@ function logLine(l, st, i) {
   if (l.kind === 'attack') {
     if (l.outcome === 'miss') return i.t('arena.log.miss', { name });
     const base = i.t('arena.log.attack', { name, outcome: i.t(`arena.${l.outcome}`), n: i.fmtNum(l.dmg) });
-    return l.saved ? `${base} — ${i.t('arena.log.saved', { name: st.fighters[l.actor === 'A' ? 'B' : 'A'].name })}` : base;
+    return l.saved ? `${base}. ${i.t('arena.log.saved', { name: st.fighters[l.actor === 'A' ? 'B' : 'A'].name })}` : base;
   }
   if (l.kind === 'heal') return i.t('arena.log.heal', { name, n: i.fmtNum(l.heal) });
   if (l.kind === 'ability') {
     const line = i.t('arena.log.ability', { name, ability: i.t(`arena.ab.${l.ability}`) });
-    return l.heal ? `${line} — ${i.t('arena.log.heal', { name, n: i.fmtNum(l.heal) })}` : line;
+    return l.heal ? `${line}. ${i.t('arena.log.heal', { name, n: i.fmtNum(l.heal) })}` : line;
   }
   return '';
 }
@@ -306,7 +306,7 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
         key: st.log.length,
         side: last.actor === 'A' ? 'B' : 'A',
         kind: last.outcome, // 'miss' | 'hit' | 'crit'
-        text: last.outcome === 'miss' ? i.t('arena.miss') : `−${i.fmtNum(last.dmg)}`,
+        text: last.outcome === 'miss' ? i.t('arena.miss') : `-${i.fmtNum(last.dmg)}`,
       };
     }
     if (last.kind === 'heal' || (last.kind === 'ability' && last.heal))
@@ -344,7 +344,7 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
       </motion.div>
 
       {/* the field: foe top-right facing you, your fighter bottom-left
-          looking ahead — dir=ltr so the staging never mirrors under RTL */}
+          looking ahead - dir=ltr so the staging never mirrors under RTL */}
       <motion.div variants={item} className="glass field" dir="ltr">
         <motion.div className="field-inner" animate={shakeCtl}>
           <InfoBox f={oppF} mine={false} active={st.turn === 'B' && !st.winner} i={i} />
@@ -413,7 +413,13 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
             disabled={!abilityUsable}
             whileTap={{ scale: 0.96 }}
             transition={gel}
-            onClick={() => setSt(castAbility(st, st.turn))}
+            onClick={() => {
+              // abilities can end the turn too; pass-and-play still needs
+              // the hand-the-device beat, same as after an attack
+              const next = castAbility(st, st.turn);
+              setSt(next);
+              if (mode === 'pass' && !next.winner && next.turn !== st.turn) setHandoff(true);
+            }}
           >
             <Glyph id={ABILITY_GLYPH[turnF.ability]} size={16} strokeWidth={2.1} />
             <span>
@@ -492,26 +498,26 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
 
 /* --------------------------------- loadout -------------------------------- */
 
-function LoadoutPanel({ me, loadout, level, setApp, i, bare }) {
+// Controlled: hands the next loadout to onChange, so it can write to the
+// app store (my fighter) or plain local state (pass-&-play's player 2).
+function LoadoutPanel({ archetype, loadout, level, onChange, i, bare }) {
   const slots = slotsFor(level);
-  const abilities = ABILITIES[me.archetype] || ABILITIES[0];
+  const abilities = ABILITIES[archetype] || ABILITIES[0];
   const chosenAbility =
     slots.abilityChoice && abilities.includes(loadout.ability) ? loadout.ability : abilities[0];
 
   const toggleEffect = (id) => {
-    setApp((s) => {
-      const cur = s.arena.loadout.effects.filter((x) => EFFECTS.includes(x));
-      const next = cur.includes(id)
-        ? cur.filter((x) => x !== id)
-        : cur.length < slots.effectSlots
-          ? [...cur, id]
-          : [...cur.slice(1), id]; // full: swap out the oldest pick
-      return { ...s, arena: { ...s.arena, loadout: { ...s.arena.loadout, effects: next } } };
-    });
+    const cur = loadout.effects.filter((x) => EFFECTS.includes(x));
+    const next = cur.includes(id)
+      ? cur.filter((x) => x !== id)
+      : cur.length < slots.effectSlots
+        ? [...cur, id]
+        : [...cur.slice(1), id]; // full: swap out the oldest pick
+    onChange({ ...loadout, effects: next });
   };
   const pickAbility = (id) => {
     if (!slots.abilityChoice) return;
-    setApp((s) => ({ ...s, arena: { ...s.arena, loadout: { ...s.arena.loadout, ability: id } } }));
+    onChange({ ...loadout, ability: id });
   };
 
   return (
@@ -565,9 +571,13 @@ function LoadoutPanel({ me, loadout, level, setApp, i, bare }) {
 
 /* ------------------------------- pass setup ------------------------------- */
 
-function PassSetup({ onStart, onClose, i }) {
+// Player 2 borrows the player's level and financial metrics so the duel is
+// decided by archetype, loadout, and the wheel - never by a stat gap.
+function PassSetup({ me, onStart, onClose, i }) {
   const [arch, setArch] = useState(0);
   const [name, setName] = useState('');
+  const [loadout, setLoadout] = useState({ effects: [], ability: null });
+  const abilities = ABILITIES[arch] || ABILITIES[0];
   return (
     <motion.div className="battle-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <div className="glass battle-card pass-setup">
@@ -593,6 +603,8 @@ function PassSetup({ onStart, onClose, i }) {
             </button>
           ))}
         </div>
+        <LoadoutPanel archetype={arch} loadout={loadout} level={me.level} onChange={setLoadout} i={i} bare />
+        <p className="pass-fair">{i.t('arena.pass.fair')}</p>
         <div className="battle-card-btns">
           <button className="btn-ability" onClick={onClose}>{i.t('arena.back')}</button>
           <button
@@ -602,9 +614,15 @@ function PassSetup({ onStart, onClose, i }) {
                 handle: 'p2',
                 name: name.trim() || i.t('arena.p2'),
                 archetype: arch,
-                metrics: { efficiency: 60, resilience: 60, eq: 60 },
-                level: 3,
-                loadout: { effects: ['cashback'], ability: (ABILITIES[arch] || ABILITIES[0])[0] },
+                metrics: { ...me.metrics },
+                level: me.level,
+                loadout: {
+                  effects: loadout.effects.slice(0, slotsFor(me.level).effectSlots),
+                  ability:
+                    slotsFor(me.level).abilityChoice && abilities.includes(loadout.ability)
+                      ? loadout.ability
+                      : abilities[0],
+                },
               })
             }
           >
@@ -618,6 +636,39 @@ function PassSetup({ onStart, onClose, i }) {
 
 /* ---------------------------------- sheets --------------------------------- */
 
+// static odds donut for the how-it-works sheet: miss / crit / hit
+function MiniWheel({ tint }) {
+  const seg = (len, start, color, key) => (
+    <circle
+      key={key}
+      cx="20" cy="20" r="13" fill="none"
+      stroke={color} strokeWidth="8.5" pathLength="100"
+      strokeDasharray={`${len - 2} ${102 - len}`} strokeDashoffset={-start - 1}
+    />
+  );
+  return (
+    <svg viewBox="0 0 40 40" width="26" height="26" aria-hidden="true">
+      <g transform="rotate(-90 20 20)">
+        {seg(26, 0, 'var(--arc-miss)', 'm')}
+        {seg(14, 26, tint, 'c')}
+        {seg(60, 40, 'var(--arc-hit)', 'h')}
+      </g>
+    </svg>
+  );
+}
+
+function HowRow({ visual, title, desc }) {
+  return (
+    <div className="how-row">
+      <span className="how-glyph">{visual}</span>
+      <span className="how-txt">
+        <b>{title}</b>
+        <small>{desc}</small>
+      </span>
+    </div>
+  );
+}
+
 function ArenaSheet({ open, title, onClose, children }) {
   return (
     <AnimatePresence>
@@ -630,7 +681,8 @@ function ArenaSheet({ open, title, onClose, children }) {
           onClick={onClose}
         >
           <motion.div
-            className="glass arena-sheet"
+            className="glass arena-sheet lg-spec"
+            data-liquid
             initial={{ opacity: 0, y: 26, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -764,7 +816,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   const i = useI18n();
   const [battle, setBattle] = useState(null); // { opp, mode, key }
   const [passOpen, setPassOpen] = useState(false);
-  const [roster, setRoster] = useState(null); // null = server unreachable → bots
+  const [roster, setRoster] = useState(null); // null = server unreachable -> bots
   const [inbox, setInbox] = useState(null);
   const [board, setBoard] = useState(null); // global ladder, null = offline
   const [rankDelta, setRankDelta] = useState(null); // shown on the result card
@@ -778,6 +830,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const addTimer = useRef(null);
+  const copyTimer = useRef(null);
   const paidRef = useRef(null);
 
   const aid = profile ? (profile.model?.id ?? profile.archetype.id) : null;
@@ -786,7 +839,9 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     () =>
       profile && {
         handle: myHandle || 'you',
-        name: (app.profile.name || '').trim() || i.t('arena.you'),
+        // the server caps name at 32 chars; a longer one would 422 the
+        // register call and silently drop us off the roster
+        name: ((app.profile.name || '').trim() || i.t('arena.you')).slice(0, 32),
         archetype: aid,
         metrics: profile.metrics,
         level: lvl.n,
@@ -801,9 +856,10 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   // ghost battles need a shareable handle; mint one from the name once
   useEffect(() => {
     if (!profile || myHandle) return;
+    // server caps handles at 24 chars: 19 for the base + '-' + 4 digits
     const base =
-      (app.profile.name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') ||
-      'fighter';
+      ((app.profile.name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') ||
+        'fighter').slice(0, 19).replace(/-+$/, '');
     const gen = `${base}-${Math.floor(1000 + Math.random() * 9000)}`;
     setApp((s) => (s.profile.handle ? s : { ...s, profile: { ...s.profile, handle: gen } }));
   }, [profile, myHandle]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -816,7 +872,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
   }, [meChar, myHandle]);
 
   // roster + inbox, refetched after every battle; retries cover the
-  // free-tier cold start — the bot roster carries the arena meanwhile
+  // free-tier cold start - the bot roster carries the arena meanwhile
   useEffect(() => {
     if (!myHandle || battle) return undefined;
     let alive = true;
@@ -881,7 +937,21 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
     return () => clearInterval(t);
   }, [battle]);
   const lobbyAnim = lobbyTick % 10 >= 8 ? 'idle2' : 'idle';
-  useEffect(() => () => matchTimers.current.forEach(clearTimeout), []);
+  useEffect(() => () => {
+    matchTimers.current.forEach(clearTimeout);
+    clearTimeout(addTimer.current);
+    clearTimeout(copyTimer.current);
+  }, []);
+
+  // first visit with a fighter: walk through how the arena works, once
+  const introDue = !!profile && !app.arena.introSeen;
+  useEffect(() => {
+    if (introDue) setSheet('how');
+  }, [introDue]);
+  const closeHow = () => {
+    setSheet(null);
+    if (!app.arena.introSeen) setApp((s) => ({ ...s, arena: { ...s.arena, introSeen: true } }));
+  };
 
   if (!profile) {
     return (
@@ -1038,10 +1108,20 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
           <h1>{i.t('arena.title')}</h1>
           <p className="home-sub">{i.t('arena.sub')}</p>
         </div>
-        <button className="streak glass-lite arena-rank-chip" title={i.t('arena.lb')} onClick={() => setSheet('lb')}>
-          <Glyph id="trophy" size={15} strokeWidth={2} />
-          <NumberFlow value={Math.round(app.arena.rankScore || 0)} duration={0.6} format={i.fmtNum} />
-        </button>
+        <div className="arena-head-btns">
+          <button
+            className="streak glass-lite arena-help-chip"
+            title={i.t('arena.how.title')}
+            aria-label={i.t('arena.how.title')}
+            onClick={() => setSheet('how')}
+          >
+            <Glyph id="help" size={16} strokeWidth={2.2} />
+          </button>
+          <button className="streak glass-lite arena-rank-chip" title={i.t('arena.lb')} onClick={() => setSheet('lb')}>
+            <Glyph id="trophy" size={15} strokeWidth={2} />
+            <NumberFlow value={Math.round(app.arena.rankScore || 0)} duration={0.6} format={i.fmtNum} />
+          </button>
+        </div>
       </motion.header>
 
       {/* the stage: stats+items | hero | actions */}
@@ -1075,7 +1155,10 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
 
           <div className="stage-items-cap">
             <span>{i.t('arena.loadout')}</span>
-            <button className="stage-edit" onClick={() => setSheet('loadout')}>{i.t('arena.edit')}</button>
+            <button className="stage-edit" onClick={() => setSheet('loadout')}>
+              <Glyph id="sliders" size={12} strokeWidth={2.4} />
+              {i.t('arena.edit')}
+            </button>
           </div>
           <div className="stage-items">
             <button className="stage-item" onClick={() => setSheet('loadout')} title={i.t(`arena.ab.${meF.ability}.d`)}>
@@ -1108,7 +1191,10 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
 
         <div className="stage-actions">
           <motion.button
-            className="fight-btn"
+            className="fight-btn lg-spec"
+            data-liquid
+            data-liquid-strength="0.7"
+            data-liquid-blur="5"
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.02 }}
             transition={gel}
@@ -1118,6 +1204,10 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
             <Glyph id="swords" size={19} strokeWidth={2.2} />
             {i.t('arena.fight')}
           </motion.button>
+          <button className="stage-btn glass-lite" onClick={() => setSheet('loadout')}>
+            <Glyph id="sliders" size={16} strokeWidth={2.1} />
+            {i.t('arena.loadout')}
+          </button>
           <button className="stage-btn glass-lite" onClick={() => setSheet('friends')}>
             <Glyph id="people" size={16} strokeWidth={2.1} />
             {i.t('arena.friends')}
@@ -1144,7 +1234,8 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
               onClick={() => {
                 navigator.clipboard?.writeText(myHandle);
                 setCopied('code');
-                setTimeout(() => setCopied(false), 2000);
+                clearTimeout(copyTimer.current);
+                copyTimer.current = setTimeout(() => setCopied(false), 2000);
               }}
             >
               {copied === 'code' ? i.t('arena.copied') : myHandle}
@@ -1154,7 +1245,8 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
               onClick={() => {
                 navigator.clipboard?.writeText(shareLink(myHandle));
                 setCopied('link');
-                setTimeout(() => setCopied(false), 2000);
+                clearTimeout(copyTimer.current);
+                copyTimer.current = setTimeout(() => setCopied(false), 2000);
               }}
             >
               <Glyph id="link" size={15} strokeWidth={2.1} />
@@ -1265,7 +1357,41 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
 
       {/* loadout sheet */}
       <ArenaSheet open={sheet === 'loadout'} title={i.t('arena.loadout')} onClose={() => setSheet(null)}>
-        <LoadoutPanel me={meChar} loadout={app.arena.loadout} level={lvl.n} setApp={setApp} i={i} bare />
+        <LoadoutPanel
+          archetype={aid}
+          loadout={app.arena.loadout}
+          level={lvl.n}
+          onChange={(next) => setApp((s) => ({ ...s, arena: { ...s.arena, loadout: next } }))}
+          i={i}
+          bare
+        />
+      </ArenaSheet>
+
+      {/* how it works: auto-opens on the first visit, lives behind the ? chip after */}
+      <ArenaSheet open={sheet === 'how'} title={i.t('arena.how.title')} onClose={closeHow}>
+        <div className="arena-how" style={{ '--ft': meta.tint }}>
+          <HowRow
+            visual={<ArchSprite archetype={aid} view="front" tint={app.profile.accent || meta.tint} size={38} />}
+            title={i.t('arena.how.fighter')}
+            desc={i.t('arena.how.fighter.d')}
+          />
+          <HowRow
+            visual={<MiniWheel tint={meta.tint} />}
+            title={i.t('arena.how.wheel')}
+            desc={i.t('arena.how.wheel.d')}
+          />
+          <HowRow
+            visual={<Glyph id="sliders" size={21} strokeWidth={2} />}
+            title={i.t('arena.how.loadout')}
+            desc={i.t('arena.how.loadout.d')}
+          />
+          <HowRow
+            visual={<Glyph id="trophy" size={21} strokeWidth={2} />}
+            title={i.t('arena.how.rank')}
+            desc={i.t('arena.how.rank.d')}
+          />
+          <button className="btn-attack how-go" onClick={closeHow}>{i.t('arena.how.go')}</button>
+        </div>
       </ArenaSheet>
 
       {/* matchmaking theatre */}
@@ -1328,6 +1454,7 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate })
         {passOpen && (
           <PassSetup
             i={i}
+            me={meChar}
             onClose={() => setPassOpen(false)}
             onStart={(p2) => {
               setPassOpen(false);

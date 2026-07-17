@@ -3,9 +3,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ACCENTS, ARCHETYPE_META } from './data';
+import { ACCENTS, ARCHETYPE_META, TYPE_TINTS } from './data';
 import { DROPS } from './game';
-import { Glyph, LogoMark, LiquidOrb, screen, item, spring, gel } from './ui';
+import { todayISO } from './store';
+import { Glyph, LogoMark, LiquidMark, LiquidOrb, screen, item, spring, gel } from './ui';
+import { AlinmaMark } from './bank/inma';
 import { useI18n, SURVEY_AR } from './i18n';
 import { SURVEY, scoreSurvey } from './survey';
 import { determineArchetype } from './scoring';
@@ -21,6 +23,14 @@ const SPIKES = [
 const METRIC_KEYS = ['efficiency', 'resilience', 'eq'];
 // clamp bad server ids so the reveal can't white-screen
 const CLAMP_ID = (n) => (Number.isInteger(n) && n >= 0 && n < 4 ? n : null);
+
+// plan set-aside math, same as the Ahead room's
+const daysUntil = (isoStr) => {
+  const [y, m, d] = isoStr.split('-').map(Number);
+  const n = new Date();
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())) / 86400000);
+};
+const weeklyFor = (target, date) => Math.round(target / Math.max(1, Math.ceil(Math.max(1, daysUntil(date)) / 7)));
 
 function ReadStrip({ metrics, i }) {
   return (
@@ -59,7 +69,7 @@ function MixBar({ probs }) {
 export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) {
   const i = useI18n();
   const retake = mode === 'retake';
-  const [step, setStep] = useState(retake ? 'cal' : 'cover'); // cover | name | cal | reveal | spikes | setup
+  const [step, setStep] = useState(retake ? 'cal' : 'cover'); // cover | name | cal | reveal | spikes | setup | bridge | start
   const [name, setName] = useState('');
   const [accent, setAccent] = useState(null);
   const [answers, setAnswers] = useState([]);
@@ -69,6 +79,11 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
   const [income, setIncome] = useState('5000');
   const [seed, setSeed] = useState(true);
   const [spikeOn, setSpikeOn] = useState(() => Object.fromEntries(SPIKES.map((s) => [s.name, true])));
+  // plans/subs added on the calendar step, handed to the Ahead room on finish
+  const [aheadAdding, setAheadAdding] = useState(null); // 'plan' | 'sub' | null
+  const [af, setAf] = useState({ name: '', amount: '', date: '', due: '' });
+  const [obPlans, setObPlans] = useState([]);
+  const [obSubs, setObSubs] = useState([]);
   const [flights, setFlights] = useState([]);
   const flightId = useRef(0);
   const orbRef = useRef(null);
@@ -83,6 +98,8 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
   useEffect(() => {
     const root = obRef.current;
     if (!root) return;
+    // a tall step may have been scrolled; the next one starts at the top
+    root.scrollTo?.(0, 0);
     const t =
       root.querySelector('.ob-nameinput') ||
       root.querySelector('.ob-q') ||
@@ -145,7 +162,7 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
     else setStep('name');
   };
 
-  const finish = () =>
+  const finish = (start) =>
     onDone({
       name: name.trim(),
       accent,
@@ -154,7 +171,38 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
       income: Math.max(0, Math.round(Number(income)) || 0),
       seed,
       spikeHidden: SPIKES.filter((s) => !spikeOn[s.name]).map((s) => s.name),
+      plans: obPlans,
+      subs: obSubs,
+      start: start === 'bank' ? 'bank' : 'mz',
     });
+
+  const saveAheadItem = () => {
+    const amt = Math.round(Number(af.amount));
+    if (!af.name.trim() || !amt) return;
+    if (aheadAdding === 'plan') {
+      if (!af.date) return;
+      setObPlans((p) => [...p, {
+        name: af.name.trim(),
+        target: amt,
+        date: af.date,
+        icon: 'peak',
+        setAside: { weekly: weeklyFor(amt, af.date), startedISO: todayISO() },
+      }]);
+    } else {
+      setObSubs((s) => [...s, {
+        name: af.name.trim(),
+        amount: amt,
+        cycle: 'monthly',
+        dueDay: Math.min(31, Math.max(1, Math.round(Number(af.due)) || 1)),
+        state: 'keep',
+        source: 'manual',
+        icon: 'calendar',
+        tracked: true,
+      }]);
+    }
+    setAheadAdding(null);
+    setAf({ name: '', amount: '', date: '', due: '' });
+  };
 
   const revealId = CLAMP_ID(model?.id) ?? (metrics ? determineArchetype(metrics).id : 0);
   const revealMeta = ARCHETYPE_META[revealId];
@@ -167,6 +215,8 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
     cal: calBack,
     spikes: () => setStep('reveal'),
     setup: () => setStep('spikes'),
+    bridge: () => setStep('setup'),
+    start: () => setStep('bridge'),
   }[step];
 
   return (
@@ -373,6 +423,99 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
               </button>
             ))}
           </motion.div>
+
+          {/* your own dates: plans and subscriptions, same forms as the Ahead room */}
+          <motion.div className="ob-ahead" variants={item}>
+            <p className="ob-lbl">{i.t('ob.ahead.h')}</p>
+            {(obPlans.length > 0 || obSubs.length > 0) && (
+              <div className="ob-added">
+                {obPlans.map((p, idx) => (
+                  <div className="ob-added-row" key={`p${idx}`}>
+                    <span className="ob-added-ic" style={{ background: 'color-mix(in srgb, #0fa38f 13%, var(--surface))', color: '#0fa38f' }}>
+                      <Glyph id="peak" size={14} strokeWidth={2.2} />
+                    </span>
+                    <span className="ob-added-meta">
+                      <b>{p.name}</b>
+                      <em>{i.fmtMoney(p.target)} · {p.date}</em>
+                    </span>
+                    <button className="ob-added-x" aria-label={i.t('ahead.cancel')} onClick={() => setObPlans((s) => s.filter((_, j) => j !== idx))}>×</button>
+                  </div>
+                ))}
+                {obSubs.map((s, idx) => (
+                  <div className="ob-added-row" key={`s${idx}`}>
+                    <span className="ob-added-ic" style={{ background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 13%, var(--surface))`, color: TYPE_TINTS.fixed }}>
+                      <Glyph id="calendar" size={14} strokeWidth={2.2} />
+                    </span>
+                    <span className="ob-added-meta">
+                      <b>{s.name}</b>
+                      <em>{i.fmtMoney(s.amount)} · {i.t('ahead.sub.due')} {i.fmtNum(s.dueDay)}</em>
+                    </span>
+                    <button className="ob-added-x" aria-label={i.t('ahead.cancel')} onClick={() => setObSubs((st) => st.filter((_, j) => j !== idx))}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {aheadAdding === null ? (
+              <div className="add-rows">
+                <button className="add-row" onClick={() => { setAf({ name: '', amount: '', date: '', due: '' }); setAheadAdding('plan'); }}>
+                  <span className="add-row-ic" style={{ background: 'color-mix(in srgb, #0fa38f 13%, var(--surface))', color: '#0fa38f' }}>
+                    <Glyph id="peak" size={18} strokeWidth={2} />
+                  </span>
+                  <span className="add-row-meta">
+                    <b>{i.t('ahead.addplan')}</b>
+                    <em>{i.t('ahead.addplan.cap')}</em>
+                  </span>
+                  <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <button className="add-row" onClick={() => { setAf({ name: '', amount: '', date: '', due: '' }); setAheadAdding('sub'); }}>
+                  <span className="add-row-ic" style={{ background: `color-mix(in srgb, ${TYPE_TINTS.fixed} 13%, var(--surface))`, color: TYPE_TINTS.fixed }}>
+                    <Glyph id="calendar" size={18} strokeWidth={2} />
+                  </span>
+                  <span className="add-row-meta">
+                    <b>{i.t('ahead.addsub')}</b>
+                    <em>{i.t('ahead.addsub.cap')}</em>
+                  </span>
+                  <svg className="add-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                </button>
+              </div>
+            ) : (
+              <div className="add-form">
+                <label className="lbl">{i.t(aheadAdding === 'plan' ? 'ahead.plan.name' : 'ahead.sub.name')}</label>
+                <input className="af-input" autoFocus value={af.name} onChange={(e) => setAf({ ...af, name: e.target.value })} />
+                <div className="af-row">
+                  <div className="af-col">
+                    <label className="lbl">{i.t(aheadAdding === 'plan' ? 'ahead.plan.target' : 'ahead.sub.amount')}</label>
+                    <div className="af-amt">
+                      <span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span>
+                      <input type="number" inputMode="numeric" min="0" placeholder="0" value={af.amount} onChange={(e) => setAf({ ...af, amount: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="af-col">
+                    <label className="lbl">{i.t(aheadAdding === 'plan' ? 'ahead.plan.date' : 'ahead.sub.due')}</label>
+                    {aheadAdding === 'plan' ? (
+                      <input className="af-date" type="date" min={todayISO()} value={af.date} onChange={(e) => setAf({ ...af, date: e.target.value })} />
+                    ) : (
+                      <input className="af-date" type="number" inputMode="numeric" min="1" max="31" placeholder="1-31" value={af.due} onChange={(e) => setAf({ ...af, due: e.target.value })} />
+                    )}
+                  </div>
+                </div>
+                {aheadAdding === 'plan' && af.amount && af.date && (
+                  <p className="af-hint">{i.t('ahead.plan.hint', { a: i.fmtMoney(weeklyFor(Math.round(Number(af.amount)), af.date)) })}</p>
+                )}
+                <div className="af-actions">
+                  <button className="af-cancel" onClick={() => setAheadAdding(null)}>{i.t('ahead.cancel')}</button>
+                  <button
+                    className="af-save"
+                    disabled={!af.name.trim() || !Number(af.amount) || (aheadAdding === 'plan' && !af.date)}
+                    onClick={saveAheadItem}
+                  >
+                    {i.t('ahead.save')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+
           <motion.div className="ob-cta" variants={item}>
             <motion.button className="btn-ink" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} transition={gel} onClick={() => setStep('setup')}>
               {i.t('ob.continue')}
@@ -403,10 +546,62 @@ export default function Onboarding({ onDone, onSkip, setTint, mode = 'first' }) 
             </button>
           </motion.div>
           <motion.div className="ob-cta" variants={item}>
-            <motion.button className="btn-ink" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} transition={gel} disabled={!Number(income)} onClick={finish}>
-              {i.t('ob.setup.enter')}
+            <motion.button className="btn-ink" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} transition={gel} disabled={!Number(income)} onClick={() => setStep('bridge')}>
+              {i.t('ob.continue')}
             </motion.button>
           </motion.div>
+        </motion.div>
+      )}
+
+      {/* The alinma bridge: what being part of the bank means */}
+      {step === 'bridge' && (
+        <motion.div key="bridge" className="ob-inner" variants={screen} initial="initial" animate="animate">
+          <motion.div className="ob-marks" variants={item} aria-hidden="true">
+            <span className="ob-mark-chip ob-mark-alinma"><AlinmaMark size={26} /></span>
+            <span className="ob-mark-link"><Glyph id="link" size={15} strokeWidth={2.2} /></span>
+            <span className="ob-mark-chip"><LiquidMark size={26} /></span>
+          </motion.div>
+          <motion.h1 className="ob-title" variants={item}>{i.t('ob.bridge.title')}</motion.h1>
+          <motion.p className="ob-sub" variants={item}>{i.t('ob.bridge.sub')}</motion.p>
+          <motion.div className="ob-eco" variants={item}>
+            {['live', 'agree', 'private'].map((k) => (
+              <div className="ob-eco-row" key={k}>
+                <span className="ob-eco-ic">
+                  <Glyph id={{ live: 'bolt', agree: 'trend', private: 'shield' }[k]} size={16} strokeWidth={2} />
+                </span>
+                <span className="ob-eco-meta">
+                  <b>{i.t(`ob.bridge.${k}`)}</b>
+                  <em>{i.t(`ob.bridge.${k}.d`)}</em>
+                </span>
+              </div>
+            ))}
+          </motion.div>
+          <motion.div className="ob-cta" variants={item}>
+            <motion.button className="btn-ink" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} transition={gel} onClick={() => setStep('start')}>
+              {i.t('ob.continue')}
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Where to begin: the bank, or straight to the coach */}
+      {step === 'start' && (
+        <motion.div key="start" className="ob-inner" variants={screen} initial="initial" animate="animate">
+          <motion.h1 className="ob-title" variants={item}>{i.t('ob.start.title')}</motion.h1>
+          <motion.p className="ob-sub" variants={item}>{i.t('ob.start.sub')}</motion.p>
+          <motion.div className="ob-startcards" variants={item}>
+            <motion.button className="ob-startcard ob-startcard-bank" whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} transition={gel} onClick={() => finish('bank')}>
+              <span className="ob-start-ic"><AlinmaMark size={30} /></span>
+              <b>{i.t('ob.start.bank')}</b>
+              <em>{i.t('ob.start.bank.d')}</em>
+            </motion.button>
+            <motion.button className="ob-startcard" whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} transition={gel} onClick={() => finish('mz')}>
+              <span className="ob-start-ic ob-start-ic-mz"><LiquidOrb size={34} fill={0.62} /></span>
+              <b>{i.t('ob.start.mz')}</b>
+              <em>{i.t('ob.start.mz.d')}</em>
+            </motion.button>
+          </motion.div>
+          <motion.p className="ob-start-note" variants={item}>{i.t('ob.start.note')}</motion.p>
         </motion.div>
       )}
     </div>
