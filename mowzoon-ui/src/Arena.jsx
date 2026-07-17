@@ -30,6 +30,25 @@ const ABILITY_GLYPH = {
   splurge: 'bolt', retail: 'cart', contingency: 'shield', overplan: 'compass',
   allin: 'trend', diversify: 'layers', reserve: 'peak', rationing: 'cup',
 };
+
+// one daily play: filled while it's still yours, hollow and gray once spent
+function BoltPip({ spent }) {
+  return (
+    <svg
+      className={`bolt-pip${spent ? ' spent' : ''}`}
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill={spent ? 'none' : 'currentColor'}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M13 2 6 13.5h5L9.5 22 18 10.5h-5L13 2Z" />
+    </svg>
+  );
+}
 const EFFECT_GLYPH = { compound: 'trend', cashback: 'redo', highyield: 'flame' };
 
 // +1 me over them, -1 them over me, 0 even
@@ -1135,12 +1154,14 @@ export default function Arena({ profile, app, setApp, lvl, toast, onCalibrate, o
             <button
               className={`streak glass-lite arena-plays-chip${gated ? ' out' : ''}`}
               title={i.t('plus.arena.cta')}
-              onClick={onPlus}
-            >
-              <Glyph id="bolt" size={15} strokeWidth={2.2} />
-              {gated
+              aria-label={gated
                 ? i.t('plus.arena.out')
                 : i.t('plus.arena.left', { n: i.fmtNum(playsLeft), t: i.fmtNum(LIMITS.arenaPlays) })}
+              onClick={onPlus}
+            >
+              {[...Array(LIMITS.arenaPlays)].map((_, k) => (
+                <BoltPip key={k} spent={k >= playsLeft} />
+              ))}
             </button>
           )}
           <button

@@ -4201,6 +4201,46 @@ html.dark .pay-due-cap { color: #98989f; }
 .ip-fc-subs { padding: 8px 4px 0; font-size: 11.5px; color: var(--ink-3); }
 .ip-panel .plus-lock-under { padding-top: 2px; }
 
+/* arena: three daily plays as bolts - lit while yours, hollow once spent */
+.arena-plays-chip { gap: 4px; }
+.bolt-pip { display: block; }
+.bolt-pip.spent { color: var(--ink-4); }
+
+/* profile: the member badge under the name */
+.pf-plus-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: -4px; padding: 4px 11px 4px 9px; border-radius: 999px;
+  font-size: 12px; color: #fff;
+  background: linear-gradient(135deg, var(--tint), color-mix(in srgb, var(--tint) 45%, #7d4cf0));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--tint) 30%, transparent);
+}
+.pf-plus-badge .plus-word { font-size: 12px; }
+.pf-plus-badge .plus-word i { color: #fff; }
+
+/* sidebar: the brand wears its + with a slow sheen for members */
+.brand-shine {
+  background: linear-gradient(
+    100deg,
+    var(--ink) 42%,
+    color-mix(in srgb, var(--tint) 62%, #fff) 50%,
+    var(--ink) 58%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--ink);
+  animation: brand-sheen 4.2s ease-in-out infinite;
+}
+.brand-shine i { font-style: normal; }
+@keyframes brand-sheen {
+  0%, 18% { background-position: 135% 0; }
+  70%, 100% { background-position: -165% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-shine { animation: none; background-position: -165% 0; }
+}
+
 @media (max-width: 480px) {
   .pay-flag-txt { max-width: 82px; font-size: 12.5px; }
   .ip-bars { gap: 7px; height: 110px; }

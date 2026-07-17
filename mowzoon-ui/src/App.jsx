@@ -279,11 +279,17 @@ function SrcRow({ v, view, setView, glyph, label }) {
 
 function Sidebar({ view, setView, i, app, profile, profileOpen, settingsBtnRef, onSettings, onProfile, onBank }) {
   const { pname } = avatarOf(app, profile);
+  const plus = isPlus(app);
   return (
     <aside className="sidebar lg-spec" data-liquid>
       <button className="sidebar-brand" onClick={() => setView('home')}>
         <LogoMark size={21} strokeWidth={2} />
-        <span>{i.lang === 'ar' ? 'موزون' : 'Mowzoon'}</span>
+        {/* members see the brand wear its +, with a slow sheen across it */}
+        {plus ? (
+          <span className="brand-shine">{i.lang === 'ar' ? 'موزون' : 'Mowzoon'}<i>+</i></span>
+        ) : (
+          <span>{i.lang === 'ar' ? 'موزون' : 'Mowzoon'}</span>
+        )}
       </button>
       <nav className="source-list">
         <SrcRow v="home" view={view} setView={setView} glyph="home" label={i.t('nav.home')} />

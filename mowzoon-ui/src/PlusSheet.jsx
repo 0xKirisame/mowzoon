@@ -27,6 +27,28 @@ export function ApplePayMark({ height = 18 }) {
   );
 }
 
+// The Mowzoon+ emblem: the brand's circle-and-wave, with the plus
+// bursting off its shoulder. One drawn mark for every Plus surface.
+export function PlusMark({ size = 16, strokeWidth = 2 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="10.5" cy="13.5" r="7.6" />
+      <path d="M3.6 13.5c2.3-2.3 4.6 2.3 6.9 0s4.6-2.3 6.9 0" />
+      <path d="M19 2v6M16 5h6" />
+    </svg>
+  );
+}
+
 // "Mowzoon+" as a wordmark; the plus rides the tint
 export function PlusWord({ className }) {
   const i = useI18n();
@@ -260,7 +282,7 @@ export default function PlusSheet({ app, setApp, onClose, toast }) {
         <div className="sheet-scroll">
           <div className="plus-hero">
             <span className="plus-hero-mark" aria-hidden="true">
-              <Glyph id="spark" size={26} strokeWidth={1.9} />
+              <PlusMark size={28} strokeWidth={1.9} />
             </span>
             <h2 className="plus-title"><PlusWord /></h2>
             <p className="plus-tag">{active ? i.t('plus.active') : i.t('plus.tagline')}</p>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ACCENTS, ARCHETYPE_META, METRIC_LABELS } from './data';
 import { BADGES, DROPS, levelOf } from './game';
 import { isPlus } from './plus';
-import { PlusChip, PlusLock, PlusWord } from './PlusSheet';
+import { PlusChip, PlusLock, PlusMark, PlusWord } from './PlusSheet';
 import { streakOf } from './store';
 import { Glyph, LiquidMark, LiquidOrb, Meter, spring, springSoft } from './ui';
 import { useI18n } from './i18n';
@@ -157,6 +157,12 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
                       <span className="pf-avatar-cam"><CameraMark /></span>
                     </button>
                     <p className="pf-name">{p.name || t('Add your name', 'أضف اسمك')}</p>
+                    {isPlus(app) && (
+                      <span className="pf-plus-badge">
+                        <PlusMark size={13} strokeWidth={2.2} />
+                        <PlusWord />
+                      </span>
+                    )}
                   </div>
 
                   {profile && (
@@ -188,7 +194,7 @@ export default function ProfileSheet({ app, setApp, profile, source, onClose, on
                     {onPlus && (
                       <button className="pf-row" onClick={onPlus}>
                         <span className="pf-row-ic pf-row-ic-plus">
-                          <Glyph id="spark" size={17} strokeWidth={2} />
+                          <PlusMark size={18} strokeWidth={2} />
                         </span>
                         <span className="pf-row-label"><PlusWord /></span>
                         <span className="pf-row-meta">{i.t(isPlus(app) ? 'plus.row.active' : 'plus.row.free')}</span>
