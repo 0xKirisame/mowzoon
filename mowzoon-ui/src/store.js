@@ -49,14 +49,6 @@ const EMPTY = {
     friends: [],   // followed rivals' handles ['sara-4821', ...]
     friendCards: {}, // cache { [handle]: { name, archetype, level, rankScore, updatedAt } }
     introSeen: false, // the how-it-works sheet auto-opens until dismissed once
-    plays: null,   // { day: ISO, count } - free-plan battles today (see plus.js)
-  },
-
-  // Mowzoon+ subscription, see plus.js. The charge itself lives in subs.
-  plus: {
-    active: false,
-    since: null,    // ISO day of the first subscribe
-    renewDay: null, // day of month the fake billing renews
   },
 
   // game layer, see game.js
@@ -64,7 +56,6 @@ const EMPTY = {
     drops: 0,        // lifetime total; levels derive from it
     lastDaily: null, // ISO day of the last daily-open award
     quest: null,     // { key, aid, startedISO, done }
-    extraQuests: [], // Mowzoon+ companion quests, same shape (see plus.js)
     questsDone: 0,
     lastQuestCollect: null, // ISO day of the last quest payout; reissues start after it
     badges: {},      // { [badgeId]: ISO day earned }
@@ -101,7 +92,6 @@ function load() {
         ...(raw.arena || {}),
         loadout: { ...EMPTY.arena.loadout, ...(raw.arena?.loadout || {}) },
       },
-      plus: { ...EMPTY.plus, ...(raw.plus || {}) },
     };
   } catch {
     return { ...EMPTY };
