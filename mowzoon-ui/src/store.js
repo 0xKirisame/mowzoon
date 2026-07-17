@@ -143,25 +143,51 @@ export function useAppState() {
 export const thisMonthTx = (tx) =>
   tx.filter((t) => monthKey(t.date) === monthKey(todayISO()));
 
-// demo-mode sample month; days are relative to today so it always reads current
+// Demo-mode sample ledger: three months ending today, so history-hungry
+// reads (signals, trends, recurring detection) have something to chew on.
+// Amounts vary per month but stay inside the recurring detector's 15%
+// band, and the current month stops at today - nothing is post-dated.
 export function sampleMonth() {
   const base = new Date();
-  const day = (n) => {
-    const d = new Date(base.getFullYear(), base.getMonth(), Math.max(1, Math.min(base.getDate(), n)));
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
-  return [
-    { desc: 'Rent',             amount: 1500, type: 'fixed',         icon: 'home',    date: day(1) },
-    { desc: 'Utilities',        amount: 140,  type: 'fixed',         icon: 'home',    date: day(2) },
-    { desc: 'Groceries',        amount: 220,  type: 'fixed',         icon: 'cart',    date: day(3) },
-    { desc: 'Index fund',       amount: 400,  type: 'savings',       icon: 'trend',   date: day(3) },
-    { desc: 'Dinner out',       amount: 85,   type: 'discretionary', icon: 'moon',    date: day(6) },
-    { desc: 'Videogame',        amount: 60,   type: 'discretionary', icon: 'gamepad', date: day(8) },
-    { desc: 'Groceries',        amount: 190,  type: 'fixed',         icon: 'cart',    date: day(11) },
-    { desc: 'Late-night order', amount: 30,   type: 'discretionary', icon: 'moon',    date: day(13) },
-    { desc: 'Car repair',       amount: 450,  type: 'spike',         icon: 'car',     date: day(15) },
-    { desc: 'Coffee runs',      amount: 45,   type: 'discretionary', icon: 'cup',     date: day(18) },
-    { desc: 'Emergency fund',   amount: 250,  type: 'savings',       icon: 'shield',  date: day(20) },
-    { desc: 'Groceries',        amount: 205,  type: 'fixed',         icon: 'cart',    date: day(24) },
-  ].map((t) => ({ ...t, demo: true }));
+  const out = [];
+  // one row per line: [desc, [amount m-2, m-1, m0], type, icon, day]
+  // (0 in an amount slot skips that month)
+  const SCRIPT = [
+    ['Rent',             [1500, 1500, 1500], 'fixed',         'home',    1],
+    ['Electricity bill', [148, 172, 155],    'fixed',         'home',    2],
+    ['Groceries',        [215, 195, 205],    'fixed',         'cart',    3],
+    ['Index fund',       [400, 400, 400],    'savings',       'trend',   3],
+    ['Water bill',       [42, 45, 44],       'fixed',         'home',    4],
+    ['Internet bill',    [249, 249, 249],    'fixed',         'home',    5],
+    ['Mobile bill',      [89, 89, 89],       'fixed',         'home',    6],
+    ['Coffee runs',      [45, 52, 38],       'discretionary', 'cup',     7],
+    ['Dinner out',       [85, 120, 95],      'discretionary', 'moon',    8],
+    ['Videogame',        [60, 0, 79],        'discretionary', 'gamepad', 9],
+    ['Groceries',        [190, 210, 185],    'fixed',         'cart',    10],
+    ['Late-night order', [30, 42, 35],       'discretionary', 'moon',    13],
+    ['Doctor visit',     [220, 0, 0],        'spike',         'plus',    15],
+    ['Car repair',       [0, 450, 0],        'spike',         'car',     15],
+    ['Traffic violation', [0, 0, 180],       'spike',         'car',     12],
+    ['Groceries',        [225, 205, 210],    'fixed',         'cart',    17],
+    ['Emergency fund',   [250, 200, 300],    'savings',       'shield',  20],
+    ['Coffee runs',      [40, 48, 44],       'discretionary', 'cup',     21],
+    ['Groceries',        [200, 185, 220],    'fixed',         'cart',    24],
+    ['Dinner out',       [0, 110, 90],       'discretionary', 'moon',    27],
+  ];
+  for (let m = 2; m >= 0; m--) {
+    const anchor = new Date(base.getFullYear(), base.getMonth() - m, 1);
+    const daysIn = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+    // past months render in full; the current month stops at today
+    const cap = m === 0 ? base.getDate() : daysIn;
+    for (const [desc, amounts, type, icon, n] of SCRIPT) {
+      const amount = amounts[2 - m];
+      if (!amount || n > cap) continue;
+      const d = Math.min(n, daysIn);
+      out.push({
+        desc, amount, type, icon,
+        date: `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+      });
+    }
+  }
+  return out.map((t) => ({ ...t, demo: true }));
 }

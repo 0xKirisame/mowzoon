@@ -383,15 +383,12 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                         style={{ background: ARCHETYPE_META[id].tint }}
                       />
                     </div>
-                    <p className={`quest-sub${questDone || questCollected ? ' good' : questFresh ? ' fresh' : ''}`}>
-                      {questCollected
-                        ? i.t('quest.alldone')
-                        : questDone
-                          ? i.t('quest.done')
-                          : questFresh
-                            ? i.t('quest.tomorrow')
-                            : questLabel}
-                    </p>
+                    {/* the collected chip says it all - no sub-line clutter */}
+                    {!questCollected && (
+                      <p className={`quest-sub${questDone ? ' good' : questFresh ? ' fresh' : ''}`}>
+                        {questDone ? i.t('quest.done') : questFresh ? i.t('quest.tomorrow') : questLabel}
+                      </p>
+                    )}
                   </div>
                   {questCollected ? (
                     <motion.span
