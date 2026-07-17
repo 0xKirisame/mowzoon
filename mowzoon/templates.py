@@ -56,8 +56,8 @@ TEMPLATES = {
     # --- 1 The Anxious Planner -------------------------------------------
     'anxious_oversaving': {
         'intervention': 'permission_reframe',
-        'text': "You're saving {pct}% of your income, well above the 20% that's considered "
-                "healthy. Your plan is already covered. It's okay to spend some of this on yourself.",
+        'text': "You're saving {pct}% of your income, well above the 20% most people aim for. "
+                "Your plan is already covered. It's okay to spend some of this on yourself.",
     },
     'anxious_deprivation': {
         'intervention': 'permission_reframe',
@@ -66,8 +66,8 @@ TEMPLATES = {
     },
     'anxious_hoarded_buffer': {
         'intervention': 'permission_reframe',
-        'text': "Your savings now cover about {months} months of spending, more than the 6 a "
-                "healthy range needs. Anything above that is money you're free to use.",
+        'text': "Your savings now cover about {months} months of spending, more than the 6 "
+                "months you need to be safe. Anything above that is money you're free to use.",
     },
     # Text claims only what the rule checks (lifestyle share above the
     # deprivation floor), not savings quality, which this rule does not see.
@@ -90,8 +90,8 @@ TEMPLATES = {
     },
     'blind_big_position': {
         'intervention': 'liquidity_first',
-        'text': "One recent outflow was far above your usual range. Before the next big move, "
-                "check that your cash covers you first.",
+        'text': "One recent payment was much bigger than your usual spending. Before the next "
+                "big move, check that your cash covers you first.",
     },
     'blind_cashflow_leak': {
         'intervention': 'precommitment_smart',
@@ -105,7 +105,7 @@ TEMPLATES = {
     },
     'blind_buffer_built_praise': {
         'intervention': None,
-        'text': "Your cash reserve is holding in the healthy range. That's a solid base for "
+        'text': "Your cash savings are holding in the healthy range. That's a solid base for "
                 "everything else you're doing.",
     },
 
@@ -175,7 +175,7 @@ def build_context(signal):
     if signal.get('name') == 'landmark':
         spike = (signal.get('evidence') or {}).get('next_spike') \
             or (signal.get('evidence') or {}).get('nearest') or {}
-        ctx['event'] = spike.get('event', 'A known expense')
+        ctx['event'] = spike.get('event', 'An upcoming expense')
         ctx['days'] = spike.get('days', int(value))
     return ctx
 
