@@ -105,6 +105,6 @@ e.g. the −0.5 bar in savings rate. Percentile labels are computed on unclipped
 - **The signal layer (`signals.py`):** the severity-band table above becomes the threshold config;
   momentum uses the v2 nonzero-week normalization; anomaly fences are per-user, not global.
 - **Evidence base:** findings 1–2 (CFPB coherence) strengthen §4.2 with an in-house replication
-  on real accounts.
+  on the Berka accounts.
 - **Re-tuning path:** every threshold is a named constant; when real user data arrives, this same
   script re-derives the table.

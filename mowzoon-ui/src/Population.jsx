@@ -21,7 +21,7 @@ function PopulationPlot({ points, you, tint, filter }) {
 
   return (
     <div className="pop-plot pop-plot-lg" dir="ltr">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="You plotted among real bank accounts">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="You plotted among the model's training accounts">
         {points.map((p, idx) => {
           const on = filter === 'all' || String(p.a) === filter;
           return (

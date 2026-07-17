@@ -7,7 +7,7 @@
 
   <rect x="6" y="52" width="168" height="64" rx="14" fill="#0a0c12" fill-opacity="0.035" stroke="#0a0c12" stroke-opacity="0.16"/>
   <text x="90" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#1d1d1f">Berka dataset</text>
-  <text x="90" y="99" text-anchor="middle" font-size="12" fill="#6e6e73">4,500 real accounts</text>
+  <text x="90" y="99" text-anchor="middle" font-size="12" fill="#6e6e73">4,500 accounts</text>
 
   <rect x="210" y="52" width="168" height="64" rx="14" fill="#0a0c12" fill-opacity="0.035" stroke="#0a0c12" stroke-opacity="0.16"/>
   <text x="294" y="79" text-anchor="middle" font-size="15" font-weight="650" fill="#1d1d1f">features.py</text>

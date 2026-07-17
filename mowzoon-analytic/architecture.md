@@ -63,7 +63,7 @@ Seven measurements, each returned as
 | landmark        | days to next seasonal spike and next fresh start                | instantly                |
 
 `band` grades strength on calm / note / elevated / high, using thresholds derived from 4,417
-real accounts ([berka-profiling.md](berka-profiling.md)) blended with normative anchors (CFPB
+Berka accounts ([berka-profiling.md](berka-profiling.md)) blended with normative anchors (CFPB
 3-6 month buffer, the 20% savings norm). `direction` says which side of the healthy zone the
 value sits (below_anchor / at_anchor / above_anchor) — band measures how far, direction says
 which way, and the split is what makes layer 2 possible. `evidence` carries the anchor name

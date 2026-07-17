@@ -18,7 +18,7 @@ def main():
     print("MOWZOON - AI Financial Coaching PoC (Real-World Data)")
     print("="*50)
     
-    # 1. Ingest Real Data
+    # 1. Ingest Data
     print("\n[1] Downloading and Ingesting PKDD99 Berka Dataset...")
     transactions_df = load_data()
     print(f"Loaded {len(transactions_df)} real historical transactions.")

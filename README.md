@@ -18,7 +18,7 @@ Mowzoon classifies you into one of four money archetypes, tracks three living sc
 
 ## The archetypes
 
-Four behaviour patterns the model finds in real accounts. The environment takes the tint of whoever you are today, and the read updates live as you log.
+Four behaviour patterns the model finds in the data. The environment takes the tint of whoever you are today, and the read updates live as you log.
 
 <img src="docs/archetypes.svg" alt="The Impulse Spender, The Anxious Planner, The Blind Investor, The Survivalist" width="100%">
 
@@ -29,7 +29,7 @@ Four behaviour patterns the model finds in real accounts. The environment takes 
   <img src="docs/pipeline-light.svg" alt="Pipeline from the Berka dataset through K-Means and XGBoost to the FastAPI service and the app" width="100%">
 </picture>
 
-`mowzoon/` is a FastAPI service (port 8000) around a pipeline trained on the Berka dataset: 4,500 real bank accounts with a full year of transactions each.
+`mowzoon/` is a FastAPI service (port 8000) around a pipeline trained on the Berka dataset, a public research corpus of 4,500 anonymized bank accounts with a full year of transactions each.
 
 - `features.py` scores every account on the three metrics.
 - K-Means (k=4) discovers the behaviour clusters, centroid heuristics map them to the archetypes, and an XGBoost classifier is trained on those labels.
