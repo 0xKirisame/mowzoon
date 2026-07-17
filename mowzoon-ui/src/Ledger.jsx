@@ -246,15 +246,18 @@ export default function Ledger({ app, setApp, monthTx, profile, onLoadSample }) 
 
       {/* Log */}
       <motion.div className="glass panel" variants={item}>
-        <label className="lbl" htmlFor="income">{i.t('ledger.income')}</label>
-        <div className="field">
-          <span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span>
-          <input id="income" type="number" inputMode="numeric" min="0" value={app.income} onChange={(e) => setApp((s) => {
-            // keep the current month's entry in step, like onboarding does;
-            // Ledger/engine/bank all read incomeByMonth first
-            const inc = Number(e.target.value);
-            return { ...s, income: inc, incomeByMonth: { ...s.incomeByMonth, [monthKey(todayISO())]: inc } };
-          })} />
+        {/* one compact row - the old full-width box was mostly dead space */}
+        <div className="income-row">
+          <label className="income-lbl" htmlFor="income">{i.t('ledger.income')}</label>
+          <div className="income-amt">
+            <span>{i.lang === 'ar' ? 'ر.س' : 'SAR'}</span>
+            <input id="income" type="number" inputMode="numeric" min="0" value={app.income} onChange={(e) => setApp((s) => {
+              // keep the current month's entry in step, like onboarding does;
+              // Ledger/engine/bank all read incomeByMonth first
+              const inc = Number(e.target.value);
+              return { ...s, income: inc, incomeByMonth: { ...s.incomeByMonth, [monthKey(todayISO())]: inc } };
+            })} />
+          </div>
         </div>
 
         <span className="lbl">{i.t('spend.log')}</span>

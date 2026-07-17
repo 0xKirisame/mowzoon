@@ -32,7 +32,7 @@ const STR = {
     'room.horizon.against': 'Weighed against your resilience of {r}',
     'room.horizon.nearest': 'Nearest',
     'room.cal.title': 'Calibration',
-    'room.cal.sub': 'Ten questions that seed your profile before the ledger has enough signal. Retake it any time.',
+    'room.cal.sub': 'Five questions that seed your profile before the ledger has enough signal. Retake it any time.',
     'room.cal.src.ledger': 'Your read is currently driven by your ledger this month.',
     'room.cal.src.survey': 'Your read is currently driven by your assessment.',
     'room.cal.src.none': 'No read yet. Take the assessment or log a few expenses.',
@@ -65,11 +65,11 @@ const STR = {
     'hero.kicker.word': 'mowzoon',
     'hero.kicker.meaning': 'balanced',
     'hero.title': 'Money, in balance.',
-    'hero.sub': 'Ten honest questions. Three living scores. A coach that reads how you actually behave with money, not just where it goes.',
+    'hero.sub': 'Five honest questions. Three living scores. A coach that reads how you actually behave with money, not just where it goes.',
     'hero.begin': 'Begin the journey',
     'hero.skip': 'Skip to the ledger',
     'hero.which': 'Which one are you?',
-    'hero.foot': 'Built at the Amad Hackathon · about two minutes · no sign-up',
+    'hero.foot': 'Built at the Amad Hackathon · about a minute · no sign-up',
 
     'analyzing.0': 'Listening to your answers...',
     'analyzing.1': 'Mapping how you spend...',
@@ -515,7 +515,7 @@ const STR = {
     'bank.coach.live': 'live',
     'bank.coach.open': 'Open Mowzoon',
     'bank.coach.meet': 'Meet your coach',
-    'bank.coach.emptyBody': 'Ten honest questions and your spending become a living read of how you handle money.',
+    'bank.coach.emptyBody': 'Five honest questions and your spending become a living read of how you handle money.',
 
     'bank.quick.bills': 'Pay bills',
     'bank.quick.transfer': 'Quick transfers',
@@ -700,7 +700,7 @@ const STR = {
     'room.horizon.against': 'موازنةً بمرونتك البالغة {r}',
     'room.horizon.nearest': 'الأقرب',
     'room.cal.title': 'المعايرة',
-    'room.cal.sub': 'عشرة أسئلة تُمهّد ملفك قبل أن يجمع السجل إشارة كافية. أعِدها متى شئت.',
+    'room.cal.sub': 'خمسة أسئلة تُمهّد ملفك قبل أن يجمع السجل إشارة كافية. أعِدها متى شئت.',
     'room.cal.src.ledger': 'قراءتك الآن يقودها سجلّك هذا الشهر.',
     'room.cal.src.survey': 'قراءتك الآن يقودها تقييمك.',
     'room.cal.src.none': 'لا قراءة بعد. خض التقييم أو سجّل بعض المصاريف.',
@@ -733,11 +733,11 @@ const STR = {
     'hero.kicker.word': 'mowzoon',
     'hero.kicker.meaning': 'متوازن',
     'hero.title': 'مالك، في توازن.',
-    'hero.sub': 'عشرة أسئلة صادقة. ثلاث درجات حيّة. ومدرّب يقرأ سلوكك الفعلي مع المال، لا وجهته فحسب.',
+    'hero.sub': 'خمسة أسئلة صادقة. ثلاث درجات حيّة. ومدرّب يقرأ سلوكك الفعلي مع المال، لا وجهته فحسب.',
     'hero.begin': 'ابدأ الرحلة',
     'hero.skip': 'تجاوز إلى السجل',
     'hero.which': 'أيّهم أنت؟',
-    'hero.foot': 'صُنع في هاكاثون عماد · دقيقتان تقريبًا · بلا تسجيل',
+    'hero.foot': 'صُنع في هاكاثون عماد · دقيقة تقريبًا · بلا تسجيل',
 
     'analyzing.0': 'نُصغي إلى إجاباتك...',
     'analyzing.1': 'نرسم طريقة إنفاقك...',
@@ -1182,7 +1182,7 @@ const STR = {
     'bank.coach.live': 'مباشر',
     'bank.coach.open': 'افتح موزون',
     'bank.coach.meet': 'تعرّف على مدرّبك',
-    'bank.coach.emptyBody': 'عشرة أسئلة صادقة مع إنفاقك تتحول إلى قراءة حيّة لطريقة تعاملك مع المال.',
+    'bank.coach.emptyBody': 'خمسة أسئلة صادقة مع إنفاقك تتحول إلى قراءة حيّة لطريقة تعاملك مع المال.',
 
     'bank.quick.bills': 'دفع الفواتير',
     'bank.quick.transfer': 'تحويل سريع',
@@ -1360,55 +1360,35 @@ export const ARCH_I18N = {
 
 // Arabic survey, same order and weights as survey.js
 export const SURVEY_AR = [
-  { category: 'الفطرة', text: 'وصلتك مكافأة مفاجئة بـ ٥٬٠٠٠ ر.س. ماذا يحدث فعلًا بعدها؟', options: [
-    'إلى الاستثمار مباشرة قبل أن أفكر مرتين.',
-    'رحلة عفوية، مال كهذا خُلق للعيش.',
-    'يبقى في الحساب. بلا حراك. تحسبًا.',
+  { category: 'الفطرة', text: 'وصلتك الليلة مكافأة بـ ٥٬٠٠٠ ر.س. أين تجدها بعد أسبوع؟', options: [
+    'معظمها في الاستثمار — حوّلتها قبل نهاية الأسبوع.',
+    'معظمها راح — رحلة وهدايا وبضع سهرات جميلة.',
+    'ما زالت في الحساب الجاري، بلا حراك. تحسبًا.',
+    'مقسومة عن قصد: جزء ادُّخر وجزء استُمتع به، بلا ذنب.',
   ] },
-  { category: 'العادات', text: 'إلى أي حد تعرف اشتراكاتك النشطة؟', options: [
-    'لا فكرة لدي. تتجدد وألاحظ أحيانًا.',
-    'أتصفح كشف حسابي مرة في الشهر تقريبًا.',
-    'كل اشتراك مرصود ومسعَّر وقيد المراجعة.',
+  { category: 'المرونة', text: 'سيارتك تحتاج إصلاحًا بـ ١٬٢٠٠ ر.س قبل صباح الغد. كيف يُدفع فعلًا؟', options: [
+    'من صندوق الطوارئ — موجود لهذا بالضبط.',
+    'بالبطاقة الائتمانية الآن، وليقلق الشهر القادم بشأنها.',
+    'سأضطر للاقتراض من الأهل أو صديق.',
+    'النقد يغطيه، لكن بقية الشهر ستصبح ضيقة جدًا.',
   ] },
-  { category: 'المرونة', text: 'سيارتك تحتاج إصلاحًا بـ ١٬٠٠٠ ر.س قبل الغد. كيف تُدفع؟', options: [
-    'بالبطاقة الائتمانية. وليتدبرها «أنا» المستقبل.',
-    'صندوق الطوارئ موجود لهذا بالضبط.',
-    'سأضطر للاقتراض من شخص قريب.',
+  { category: 'الوعي', text: 'دون فتح تطبيق البنك: كم ستقترب لو خمّنت ما أنفقته هذا الشهر؟', options: [
+    'في حدود ١٠٠ ر.س تقريبًا — أعرف رقمي.',
+    'في حدود بضع مئات، زيادة أو نقصانًا.',
+    'بصراحة، سأخطئ بفارق كبير.',
+    'أتجنب النظر أصلًا. الرقم يوتّرني.',
   ] },
-  { category: 'الاندفاع', text: 'منتصف الليل ولا تستطيع النوم. ما مدى خطورة هاتفك؟', options: [
-    'خطير جدًا. سلال الشراء الليلية طريقتي للاسترخاء.',
-    'لا يغريني إلا تخفيض كبير حقًا.',
-    'ولا قليلًا. لا أشتري باندفاع.',
+  { category: 'الاندفاع', text: 'بعد منتصف الليل، والنوم بعيد، وفي سلة الشراء شيء ينتظر. ماذا يحدث عادة؟', options: [
+    'أُتمّ الشراء قبل أن أُقنع نفسي بالعدول عنه.',
+    'أنام عليه — معظم السلال تموت قبل الصباح.',
+    'حسب الشهر. «أنا» يوم الراتب شخص خطير.',
+    'سلتي فارغة أصلًا. الرغبة لا تعني الشراء.',
   ] },
-  { category: 'الاستراتيجية', text: 'أي وصف أقرب إلى أسلوبك في الاستثمار؟', options: [
-    'جريء: عملات رقمية وخيارات وتقلبات كبيرة.',
-    'منوَّع وهادئ، تمامًا كما يجب.',
-    'لا أستثمر. النقد أكثر أمانًا.',
-  ] },
-  { category: 'العادات', text: 'هل لديك ميزانية فعلًا؟', options: [
-    'لا. أنفق، والرصيد هو ما يكون.',
-    'رقم تقريبي أحفظه في رأسي.',
-    'ميزانية حقيقية: فئات وحدود ومراجعات.',
-  ] },
-  { category: 'المجتمع', text: 'أصدقاؤك يدعونك إلى مكان مكلف في شهر ضيق. ماذا تفعل؟', options: [
-    'أذهب، وأقلق بشأن الأثر لاحقًا.',
-    'أذهب، ثم أعيد ضبط بقية الشهر بهدوء.',
-    'أعتذر، ثم يؤرقني التفكير في المال طوال الليل.',
-  ] },
-  { category: 'المرونة', text: 'لو توقف دخلك اليوم، كم تصمد حياتك كما هي؟', options: [
-    'أقل من شهر. وتسوء الأمور سريعًا.',
-    'من شهر إلى ثلاثة إن توخيت الحذر.',
-    'ستة أشهر أو أكثر، وبراحة.',
-  ] },
-  { category: 'الاندفاع', text: 'كم مرة تنتصر «أنا أستحق هذا» عند الدفع؟', options: [
-    'كثيرًا. إنها فلسفتي المالية الأولى.',
-    'أحيانًا، غالبًا قرب يوم الراتب.',
-    'نادرًا جدًا. الرغبة لا تعني الشراء.',
-  ] },
-  { category: 'الوعي', text: 'ماذا يحدث في جسدك حين تفتح تطبيق البنك؟', options: [
-    'لا شيء، لأنني أتجنب فتحه أصلًا.',
-    'هدوء. أعرف تقريبًا ما فيه مسبقًا.',
-    'موجة قلق، حتى حين يكون الرقم بخير.',
+  { category: 'الاستراتيجية', text: 'أي جملة تشبه مالك الآن أكثر؟', options: [
+    'رهانات كبيرة ووسادة رقيقة — لكن فكّر في المكسب.',
+    'لكل ريال مهمة: فئات وحدود ومراجعات.',
+    'الالتزامات الثابتة تلتهم كل شيء تقريبًا؛ أنجو بالشهر بالكاد.',
+    'أدّخر بقوة، لكن لا أسمح لنفسي بالاستمتاع بشيء منه.',
   ] },
 ];
 

@@ -345,8 +345,8 @@ function BattleScreen({ meChar, oppChar, mode, rankDelta, onEnd, onExit }) {
 
       {/* the field: foe top-right facing you, your fighter bottom-left
           looking ahead - dir=ltr so the staging never mirrors under RTL */}
-      <motion.div variants={item} className="glass field" dir="ltr">
-        <motion.div className="field-inner" animate={shakeCtl}>
+      <motion.div variants={item} className="glass battlefield" dir="ltr">
+        <motion.div className="battlefield-inner" animate={shakeCtl}>
           <InfoBox f={oppF} mine={false} active={st.turn === 'B' && !st.winner} i={i} />
           <motion.div
             className={`sprite foe-sprite${hitSide === 'B' ? ' sprite-hit' : ''}`}

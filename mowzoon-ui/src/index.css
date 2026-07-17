@@ -979,31 +979,27 @@ html.dark .lg-spec::after {
 }
 .lbl:first-child { margin-top: 0; }
 
-.field {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 13px 18px;
-  border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: inset 0 1px 3px rgba(24, 30, 48, 0.05);
-  font-size: 20px;
-  font-weight: 600;
+/* monthly income: label and amount share one line; the pill only spans
+   what the number needs */
+.income-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 2px 0;
 }
-.field span { color: var(--ink-3); }
-.field input {
-  border: 0;
-  background: none;
-  outline: none;
-  width: 100%;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--ink);
+.income-lbl { font-size: 13.5px; font-weight: 650; color: var(--ink-2); }
+.income-amt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px;
+  background: var(--fill-3); border: 1px solid var(--separator);
+}
+.income-amt span { color: var(--ink-3); font-size: 12px; font-weight: 700; }
+.income-amt input {
+  border: 0; background: none; outline: none;
+  width: 88px; text-align: end;
+  font-size: 16px; font-weight: 650; color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
-.field input::-webkit-outer-spin-button,
-.field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.income-amt input::-webkit-outer-spin-button,
+.income-amt input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 .chips {
   display: grid;
@@ -1462,7 +1458,7 @@ html.dark .lg-spec::after {
 /* Text fields carry focus in their border, not a ring. */
 .lform-desc:focus,
 .lform-amt:focus-within,
-.field:focus-within,
+.income-amt:focus-within,
 .ob-income:focus-within {
   border-color: color-mix(in srgb, var(--tint) 55%, transparent);
 }
@@ -3655,11 +3651,11 @@ html.dark .arena {
   .info-box.on, .wheel-hub, .sprite-hit .arch-sprite { animation: none !important; }
 }
 
-/* the field: foe top-right, you bottom-left, info boxes on the free corners.
-   A soft key light from the top and a grounding shade at the base give the
-   stage some depth without stealing focus from the fighters. */
-.field { position: relative; min-height: 300px; border-radius: var(--r-xl); overflow: hidden; }
-.field::before {
+/* the battlefield: foe top-right, you bottom-left, info boxes on the free
+   corners. A soft key light from the top and a grounding shade at the base
+   give the stage some depth without stealing focus from the fighters. */
+.battlefield { position: relative; min-height: 300px; border-radius: var(--r-xl); overflow: hidden; }
+.battlefield::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -3669,13 +3665,13 @@ html.dark .arena {
     linear-gradient(to top, color-mix(in srgb, var(--ink) 7%, transparent), transparent 34%);
   opacity: 0.5;
 }
-html.dark .field::before {
+html.dark .battlefield::before {
   background:
     radial-gradient(120% 60% at 50% -8%, color-mix(in srgb, #fff 9%, transparent) 0%, transparent 55%),
     linear-gradient(to top, color-mix(in srgb, #000 36%, transparent), transparent 34%);
   opacity: 0.7;
 }
-.field-inner { position: absolute; inset: 0; }
+.battlefield-inner { position: absolute; inset: 0; }
 .sprite { position: absolute; }
 .foe-sprite { top: 14px; right: 7%; }
 .me-sprite { bottom: 6px; left: 6%; }
@@ -3945,7 +3941,7 @@ html.dark .arena-scrim { background: rgba(0, 0, 0, 0.45); }
 
 @media (max-width: 719px) {
   .loadout-row { grid-template-columns: 1fr; }
-  .field { min-height: 252px; }
+  .battlefield { min-height: 252px; }
   .foe-sprite svg { width: 94px; height: 94px; }
   .me-sprite svg { width: 106px; height: 106px; }
   .info-box { width: min(200px, 52%); padding: 9px 11px; }
