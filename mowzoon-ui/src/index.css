@@ -3167,6 +3167,9 @@ html.dark .arena {
    pc-f...) are puppeted by the keyframes below. */
 .arch-sprite {
   display: block;
+  /* the keyframes hop, lunge, and raise props past the 120x120 viewBox;
+     without this the svg shears them off at its own edge mid-animation */
+  overflow: visible;
   --spt: var(--sp-tint, var(--tint));
   --spt-dark: color-mix(in srgb, var(--spt) 66%, #231628);
   --spt-deep: color-mix(in srgb, var(--spt) 42%, #200f16);
