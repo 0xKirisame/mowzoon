@@ -95,13 +95,21 @@ export function PlusLock({ label, onPlus, children }) {
 
 /* ----------------------------- fake Apple Pay ----------------------------- */
 
-// side-button pictogram from the real sheet: a rounded rect with an arrow
-function SideButtonMark({ size = 26 }) {
+// The Face ID glyph (from Apple's 80x80 mark): four scan corners around
+// the face. One corner and one eye are drawn once and mirrored.
+function FaceIdMark({ size = 24 }) {
+  const corner = 'M4.11428571,21.9428571 L4.11428571,13.0285714 C4.11428571,7.99327149 7.99327149,4.11428571 13.0285714,4.11428571 L21.9428571,4.11428571 C23.0789858,4.11428571 24,3.19327149 24,2.05714286 C24,0.921014229 23.0789858,0 21.9428571,0 L13.0285714,0 C5.72101423,0 0,5.72101423 0,13.0285714 L0,21.9428571 C0,23.0789858 0.921014229,24 2.05714286,24 C3.19327149,24 4.11428571,23.0789858 4.11428571,21.9428571 Z';
+  const eye = 'M0,2.14285714 L0,7.86037654 C0,9.04384386 0.8954305,10.0032337 2,10.0032337 C3.1045695,10.0032337 4,9.04384386 4,7.86037654 L4,2.14285714 C4,0.959389822 3.1045695,0 2,0 C0.8954305,0 0,0.959389822 0,2.14285714 Z';
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9.4" />
-      <path d="M14.6 7.6a5.1 5.1 0 1 0 1.9 4" />
-      <path d="M16.9 9.2l-.4 2.4-2.4-.4" />
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="currentColor" aria-hidden="true">
+      <path d={corner} />
+      <path d={corner} transform="matrix(-1 0 0 1 80 0)" />
+      <path d={corner} transform="matrix(1 0 0 -1 0 80)" />
+      <path d={corner} transform="matrix(-1 0 0 -1 80 80)" />
+      <path d={eye} transform="translate(21.754386 28.070175)" />
+      <path d={eye} transform="translate(54.736842 28.070175)" />
+      <path d="M25.9319616,59.0829234 C29.8331111,62.7239962 34.5578726,64.5614035 40,64.5614035 C45.4421274,64.5614035 50.1668889,62.7239962 54.0680384,59.0829234 C54.9180398,58.2895887 54.9639773,56.9574016 54.1706427,56.1074002 C53.377308,55.2573988 52.0451209,55.2114613 51.1951195,56.0047959 C48.0787251,58.9134307 44.382434,60.3508772 40,60.3508772 C35.617566,60.3508772 31.9212749,58.9134307 28.8048805,56.0047959 C27.9548791,55.2114613 26.622692,55.2573988 25.8293573,56.1074002 C25.0360227,56.9574016 25.0819602,58.2895887 25.9319616,59.0829234 Z" />
+      <path d="M40,30.1754386 L40,44.9122807 C40,45.85537 39.539042,46.3157895 38.5912711,46.3157895 L37.1929825,46.3157895 C36.0302777,46.3157895 35.0877193,47.2583479 35.0877193,48.4210526 C35.0877193,49.5837574 36.0302777,50.5263158 37.1929825,50.5263158 L38.5912711,50.5263158 C41.8633505,50.5263158 44.2105263,48.1818819 44.2105263,44.9122807 L44.2105263,30.1754386 C44.2105263,29.0127339 43.2679679,28.0701754 42.1052632,28.0701754 C40.9425584,28.0701754 40,29.0127339 40,30.1754386 Z" />
     </svg>
   );
 }
@@ -191,7 +199,7 @@ function ApplePaySheet({ app, onConfirm, onClose }) {
           <AnimatePresence mode="wait" initial={false}>
             {stage === 'idle' ? (
               <motion.span key="idle" className="pay-confirm-in" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
-                <SideButtonMark />
+                <FaceIdMark />
                 <span>{i.t('pay.confirm')}</span>
               </motion.span>
             ) : stage === 'busy' ? (
