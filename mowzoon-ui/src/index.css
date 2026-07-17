@@ -2643,6 +2643,15 @@ html[dir='rtl'] .sheet-back svg { transform: scaleX(-1); }
 }
 .quest-sub.good { color: var(--pos); }
 .quest-sub.fresh { color: var(--tint); }
+/* collected: the finished quest stays on screen at rest - full bar, check
+   tile, a quiet green receipt chip - until tomorrow's quest takes over */
+.quest-row.collected .quest-track::after { animation: none; opacity: 0; }
+.quest-claimed-chip {
+  flex: none; display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 13px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; color: var(--pos);
+  background: color-mix(in srgb, var(--pos) 12%, transparent);
+}
 .quest-collect.claimed {
   background: var(--pos);
   box-shadow: 0 6px 16px color-mix(in srgb, var(--pos) 40%, transparent);

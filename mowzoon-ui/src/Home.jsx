@@ -161,6 +161,10 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
   // reissues start tomorrow (the farm guard), so the fresh bar sitting at
   // 0% today is expected - say so instead of looking stuck
   const questFresh = quest && quest.startedISO > today;
+  // Collected today: the reissue shares the old quest's key, so the panel
+  // keeps showing the finished quest at rest ("that's everything this
+  // week") instead of revealing tomorrow's quest early.
+  const questCollected = questFresh && app.game?.lastQuestCollect === today;
 
   // Collecting plays a short celebration beat, then the fresh quest slides
   // in; without it the panel snapped to 0% and read as a silent reset.
@@ -331,14 +335,17 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
             <motion.div className="glass panel quest-panel" variants={item}>
               <div className="panel-h">
                 <p className="panel-title" style={{ margin: 0 }}>{i.t('quest.title')}</p>
-                <span className="quest-bounty">{i.t('toast.drops', { n: i.fmtNum(DROPS.quest) })}</span>
+                {!questCollected && (
+                  <span className="quest-bounty">{i.t('toast.drops', { n: i.fmtNum(DROPS.quest) })}</span>
+                )}
               </div>
-              {/* keyed by quest identity: collecting animates the finished
-                  quest away and the fresh one in, instead of snapping to 0% */}
+              {/* Keyed by quest key only: collecting keeps this row mounted
+                  and settles it into the "collected" resting state in place.
+                  Tomorrow's quest simply takes over when its day arrives. */}
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
-                  key={quest.key + quest.startedISO}
-                  className={`quest-row${questDone ? ' done' : ''}`}
+                  key={quest.key}
+                  className={`quest-row${questDone || questCollected ? ' done' : ''}${questCollected ? ' collected' : ''}`}
                   style={{ '--qt': ARCHETYPE_META[id].tint }}
                   initial={{ opacity: 0, y: 16, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -347,11 +354,11 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                 >
                   <span
                     className="quest-ic"
-                    style={questDone
+                    style={questDone || questCollected
                       ? { background: ARCHETYPE_META[id].tint, color: '#fff' }
                       : { background: `color-mix(in srgb, ${ARCHETYPE_META[id].tint} 14%, var(--surface))`, color: ARCHETYPE_META[id].tint }}
                   >
-                    {questDone ? (
+                    {questDone || questCollected ? (
                       <motion.svg
                         width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"
@@ -371,16 +378,32 @@ export default function Home({ profile, app, setApp, monthTx, level, questProg, 
                     <div className="quest-track">
                       <motion.i
                         initial={false}
-                        animate={{ width: `${Math.round(questProg.pct * 100)}%` }}
+                        animate={{ width: `${questCollected ? 100 : Math.round(questProg.pct * 100)}%` }}
                         transition={{ type: 'spring', stiffness: 200, damping: 26 }}
                         style={{ background: ARCHETYPE_META[id].tint }}
                       />
                     </div>
-                    <p className={`quest-sub${questDone ? ' good' : questFresh ? ' fresh' : ''}`}>
-                      {questDone ? i.t('quest.done') : questFresh ? i.t('quest.tomorrow') : questLabel}
+                    <p className={`quest-sub${questDone || questCollected ? ' good' : questFresh ? ' fresh' : ''}`}>
+                      {questCollected
+                        ? i.t('quest.alldone')
+                        : questDone
+                          ? i.t('quest.done')
+                          : questFresh
+                            ? i.t('quest.tomorrow')
+                            : questLabel}
                     </p>
                   </div>
-                  {questDone && (
+                  {questCollected ? (
+                    <motion.span
+                      className="quest-claimed-chip"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={springBounce}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.8l4.2 4.2L19 7.4" /></svg>
+                      {i.t('quest.claimed', { n: i.fmtNum(DROPS.quest) })}
+                    </motion.span>
+                  ) : questDone && (
                     <motion.button
                       className={`quest-collect${claiming ? ' claimed' : ''}`}
                       onClick={claim}
