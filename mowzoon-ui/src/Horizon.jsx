@@ -24,62 +24,152 @@ function subDaysUntil(sub) {
   return daysUntil(isoOf(dt));
 }
 
-// Timeline strip: upcoming items as dots sized by cost, today at the left
-// edge. Decorative (aria-hidden); the list below carries the details.
+function useMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+}
+
+// Timeline strip: glass orbs on an HTML rail (from refactor/ahead-page).
+// Same-day items group into one orb with a count badge; hover or
+// press-and-hold an orb and it swells while a tooltip lists the details.
 function TimelineViz({ items, i }) {
-  const W = 600;
-  const H = 72;
-  const PX = 18;
-  const BASE = 40;
-  const horizon = Math.max(60, Math.min(Math.max(...items.map((x) => x.days)) + 12, 130));
-  const maxAmt = Math.max(...items.map((x) => x.amount || 0), 1);
-  const x = (d) => PX + (Math.min(d, horizon) / horizon) * (W - PX * 2);
-  const r = (a) => (a ? 5 + Math.sqrt(a / maxAmt) * 5.5 : 5);
-  const ticks = [30, 60, 90, 120].filter((t) => t <= horizon - 8);
+  const [active, setActive] = useState(null); // hovered or held group key
+  const [held, setHeld] = useState(null);     // pressed - deeper swell + sheen
+  const isMobile = useMobile();
+
+  // Dynamic horizon: 14 days on phones, 30 on desktop, shrinking to the
+  // latest event (min 7 for visual balance). Farther items pin to the edge.
+  const MAX_HORIZON = isMobile ? 14 : 30;
+  const latestDays = items.length > 0 ? Math.max(...items.map((it) => it.days)) : 0;
+  const HORIZON = Math.max(7, Math.min(latestDays, MAX_HORIZON));
+
+  // group items that land on the same spot (clamped to HORIZON)
+  const groups = useMemo(() => {
+    const res = [];
+    items.forEach((it) => {
+      const d = Math.min(it.days, HORIZON);
+      let g = res.find((x) => x.days === d);
+      if (!g) {
+        g = { days: d, items: [], key: 'g' + d };
+        res.push(g);
+      }
+      g.items.push(it);
+    });
+    return res;
+  }, [items, HORIZON]);
+
+  const ticks = useMemo(() => {
+    if (HORIZON <= 7) return Array.from({ length: HORIZON + 1 }, (_, idx) => idx);
+    if (HORIZON <= 14) return [0, 3, 7, 10, HORIZON];
+    const res = [];
+    for (let j = 0; j < HORIZON; j += 5) res.push(j);
+    res.push(HORIZON);
+    return res;
+  }, [HORIZON]);
+
   return (
-    <div className="tl-viz" dir="ltr" aria-hidden="true">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <line className="tlv-axis" x1={PX} y1={BASE} x2={W - PX} y2={BASE} />
-        <line className="tlv-today" x1={PX} y1={BASE - 14} x2={PX} y2={BASE + 8} />
-        <text className="tlv-lab tlv-now" x={PX} y={BASE + 24}>{i.fmtDays(0)}</text>
+    <div className="tlv" dir="ltr">
+      {/* remount the rail when items change so the pulse animations sync */}
+      <div className="tlv-rail glass-lite" key={items.length}>
+        <div className="tlv-today-mark" />
+
         {ticks.map((t) => (
-          <g key={t}>
-            <line className="tlv-tick" x1={x(t)} y1={BASE - 4} x2={x(t)} y2={BASE + 4} />
-            <text className="tlv-lab" x={x(t)} y={BASE + 24}>{i.fmtNum(t)}</text>
-          </g>
+          <span key={t} className={`tlv-tick-label ${t === 0 ? 'now' : ''}`} style={{ left: `${(t / HORIZON) * 100}%` }}>
+            {t === 0 ? i.fmtDays(0) : i.fmtNum(t)}
+          </span>
         ))}
-        {(() => {
-          // items past the horizon pin at the edge; spread and dim them
-          // so far-off dates don't stack into one blob
-          let pinned = 0;
-          return items.map((it) => {
-            const beyond = it.days > horizon;
-            const cx = beyond ? W - PX - 13 * pinned++ : x(it.days);
-            const rr = r(it.amount);
-            const ring = rr + 4;
-            const C = 2 * Math.PI * ring;
-            return (
-              <g key={it.key} opacity={beyond ? 0.4 : 1}>
-                {it.kind === 'plan' && (
-                  <>
-                    <circle className="tlv-ring-track" cx={cx} cy={BASE} r={ring} />
-                    <circle
-                      className="tlv-ring"
-                      cx={cx}
-                      cy={BASE}
-                      r={ring}
-                      style={{ stroke: it.tint }}
-                      strokeDasharray={`${(it.funding || 0) * C} ${C}`}
-                      transform={`rotate(-90 ${cx} ${BASE})`}
-                    />
-                  </>
-                )}
-                <circle className={`tlv-dot ${it.days <= 7 ? 'near' : ''}`} cx={cx} cy={BASE} r={rr} style={{ fill: it.tint }} />
-              </g>
-            );
-          });
-        })()}
-      </svg>
+
+        {groups.map((g, idx) => {
+          const pct = (g.days / HORIZON) * 100;
+          const isActive = active === g.key;
+          const beyond = g.days >= HORIZON && latestDays > HORIZON;
+          return (
+            <div
+              key={g.key}
+              className={`tlv-orb glass-lite${isActive ? ' active' : ''}${held === g.key ? ' held' : ''}${beyond ? '' : ' near'}`}
+              style={{
+                left: `${pct}%`,
+                '--orb-color': g.items[0].tint,
+                opacity: beyond ? 0.6 : 1,
+                zIndex: isActive ? 50 : groups.length - idx,
+                animationDelay: `${idx * 0.3}s`,
+              }}
+              role="img"
+              aria-label={g.items.map((x) => `${x.name} · ${i.fmtDays(x.days)}`).join(', ')}
+              onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActive(g.key); }}
+              onPointerLeave={() => {
+                setActive((a) => (a === g.key ? null : a));
+                setHeld((h) => (h === g.key ? null : h));
+              }}
+              onPointerDown={(e) => {
+                setActive(g.key);
+                setHeld(g.key);
+                // capture can throw for already-released pointers; never let it
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {
+                  /* press continues uncaptured */
+                }
+              }}
+              onPointerUp={(e) => {
+                setHeld(null);
+                // touch has no hover to fall back on - release closes the tip
+                if (e.pointerType !== 'mouse') setActive(null);
+              }}
+              onPointerCancel={() => {
+                setHeld(null);
+                setActive(null);
+              }}
+            >
+              {/* funding ring for plans; full ring when items overlap */}
+              <svg className="tlv-orb-ring" viewBox="0 0 64 64">
+                {(() => {
+                  const it = g.items[0];
+                  const c = 2 * Math.PI * 16;
+                  const count = g.items.length;
+                  if (it.kind !== 'plan' && count <= 1) return null;
+                  return (
+                    <g>
+                      <circle cx="32" cy="32" r="16" fill="none" stroke="var(--fill-2)" strokeWidth="2.5" />
+                      <circle
+                        cx="32" cy="32" r="16"
+                        fill="none" stroke={it.tint} strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeDasharray={it.kind === 'plan' ? `${(it.funding || 0) * c} ${c}` : `${c} ${c}`}
+                        transform="rotate(-90 32 32)"
+                      />
+                    </g>
+                  );
+                })()}
+              </svg>
+
+              <span className="tlv-orb-dot" style={{ background: g.items[0].tint }} />
+
+              {g.items.length > 1 && (
+                <div className="tlv-orb-badge glass-lite">{i.fmtNum(g.items.length)}</div>
+              )}
+
+              {isActive && (
+                <div className={`tlv-tip glass ${pct < 20 ? 'align-left' : pct > 80 ? 'align-right' : ''}`}>
+                  {g.items.map((it, k) => (
+                    <div key={it.key} className={`tlv-tip-row${k < g.items.length - 1 ? ' sep' : ''}`}>
+                      <span className="tlv-tip-dot" style={{ background: it.tint }} />
+                      <strong>{it.name}</strong>
+                      <span>{i.fmtDays(it.days)}</span>
+                      {it.amount != null && <span>{i.fmtMoney(it.amount)}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

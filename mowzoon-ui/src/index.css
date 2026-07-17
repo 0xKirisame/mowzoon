@@ -2230,17 +2230,158 @@ html.dark .content .glass-lite {
 .pop-key.on { color: var(--ink); border-color: color-mix(in srgb, var(--tint) 45%, transparent); }
 
 /* Horizon: dated timeline of upcoming spikes */
-.tl-viz { margin: -4px 0 10px; }
-.tl-viz svg { width: 100%; height: 72px; display: block; }
-.tlv-axis { stroke: var(--separator); stroke-width: 1.5; }
-.tlv-tick { stroke: var(--ink-4); stroke-width: 1.5; }
-.tlv-today { stroke: var(--ink-2); stroke-width: 2; stroke-linecap: round; }
-.tlv-lab { font-size: 10.5px; font-weight: 600; fill: var(--ink-3); text-anchor: middle; }
-.tlv-now { fill: var(--ink-2); text-anchor: start; }
-.tlv-dot { fill-opacity: 0.85; }
-.tlv-dot.near { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--tint) 55%, transparent)); }
-.tlv-ring-track { fill: none; stroke: var(--fill-2); stroke-width: 2.5; }
-.tlv-ring { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+/* Timeline orbs (from refactor/ahead-page): glass beads on an HTML rail.
+   Hover or press-and-hold swells the orb like a bead of liquid glass. */
+.tlv { margin: 8px 0 16px; }
+.tlv-rail {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  margin: 48px 12px 32px;
+}
+.tlv-today-mark {
+  position: absolute;
+  left: 0; top: 50%;
+  width: 3px; height: 18px; border-radius: 2px;
+  background: var(--tint);
+  transform: translateY(-50%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--tint) 50%, transparent);
+}
+.tlv-tick-label {
+  position: absolute;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+  font-size: 10.5px; font-weight: 600; color: var(--ink-4);
+  white-space: nowrap; pointer-events: none;
+}
+.tlv-tick-label.now { color: var(--tint); font-weight: 700; }
+
+.tlv-orb {
+  position: absolute;
+  top: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: grid; place-items: center;
+  /* springy overshoot so a press lands like a poke into gel */
+  transition: transform 0.45s cubic-bezier(0.22, 1.61, 0.36, 1), box-shadow 0.3s ease;
+  z-index: 1;
+  touch-action: none;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-backdrop-filter: blur(var(--gb)) saturate(var(--gs));
+  backdrop-filter: blur(var(--gb)) saturate(var(--gs));
+}
+.tlv-orb:hover,
+.tlv-orb.active {
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 16px color-mix(in srgb, var(--orb-color, var(--tint)) 35%, transparent),
+    var(--shadow-sm);
+  z-index: 5;
+}
+.tlv-orb.near {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 10px color-mix(in srgb, var(--orb-color, var(--tint)) 30%, transparent),
+    var(--shadow-sm);
+  animation: orb-pulse 3s ease-out infinite;
+}
+/* the idle pulse yields to the hand: hover/press animates the orb itself */
+.tlv-orb.near:hover,
+.tlv-orb.near.active { animation: none; }
+@keyframes orb-pulse {
+  0%, 30%, 100% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 10px color-mix(in srgb, var(--orb-color, var(--tint)) 30%, transparent), var(--shadow-sm);
+    transform: translate(-50%, -50%) scale(1);
+  }
+  15% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 24px color-mix(in srgb, var(--orb-color, var(--tint)) 60%, transparent), var(--shadow-sm);
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+/* press-and-hold: deeper swell, a highlight blooming across the glass,
+   then a slow jelly breath while the finger stays down */
+.tlv-orb::after {
+  content: '';
+  position: absolute; inset: 2px; border-radius: 50%;
+  background: radial-gradient(120% 120% at 30% 22%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 55%);
+  opacity: 0; transform: scale(0.4);
+  transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+  pointer-events: none; z-index: 1;
+}
+.tlv-orb.held::after { opacity: 0.8; transform: scale(1); }
+.tlv-orb.held,
+.tlv-orb.near.held {
+  transform: translate(-50%, -50%) scale(1.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 0 22px color-mix(in srgb, var(--orb-color, var(--tint)) 50%, transparent),
+    var(--shadow-sm);
+  animation: orb-hold 1.7s ease-in-out 0.45s infinite;
+}
+.tlv-orb.held .tlv-orb-dot { width: 13px; height: 13px; }
+@keyframes orb-hold {
+  0%, 100% { transform: translate(-50%, -50%) scale(1.32); }
+  30% { transform: translate(-50%, -50%) scale(1.32) scaleX(1.05) scaleY(0.95); }
+  70% { transform: translate(-50%, -50%) scale(1.32) scaleX(0.95) scaleY(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tlv-orb.near, .tlv-orb.held, .tlv-orb.near.held { animation: none; }
+}
+
+/* dot centered above the ring layer */
+.tlv-orb-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 10px; height: 10px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--orb-color, var(--tint)) 50%, transparent);
+  transition: width 0.25s ease, height 0.25s ease;
+  z-index: 2;
+}
+.tlv-orb.active .tlv-orb-dot { width: 12px; height: 12px; }
+
+/* funding ring (SVG overlay inside the orb) */
+.tlv-orb-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 64px; height: 64px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* badge for grouped items */
+.tlv-orb-badge {
+  position: absolute;
+  top: -6px; right: -10px;
+  padding: 0 5px; min-width: 18px; height: 18px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10.5px; font-weight: 750; color: var(--ink);
+  z-index: 10; pointer-events: none;
+}
+
+/* tooltip; .glass so it follows the liquid-glass dial */
+.tlv-tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 14px; border-radius: var(--r-md);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  white-space: nowrap; pointer-events: none;
+  z-index: 10; min-width: max-content;
+}
+.tlv-tip.align-left { transform: translateX(-12px); }
+.tlv-tip.align-right { transform: translateX(calc(-100% + 12px)); }
+.tlv-tip strong { font-size: 12px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+.tlv-tip span { font-size: 11px; font-weight: 600; color: var(--ink-2); }
+.tlv-tip-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+.tlv-tip-row.sep { border-bottom: 1px solid var(--separator); padding-bottom: 6px; margin-bottom: 6px; }
+.tlv-tip-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 
 .timeline { display: flex; flex-direction: column; }
 .tl-row { display: flex; align-items: center; gap: 14px; padding: 14px 2px; border-bottom: 1px solid var(--separator); }
